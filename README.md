@@ -68,7 +68,7 @@ npm run build
 
 ## 🔗 Live Demo
 Stay tuned! The live demo link will be available soon.
-[Visit Live Demo (Coming Soon)]()
+https://poject-intern.vercel.app/
 
 ---
 *Developed with ❤️ as part of the Antigravity Candy Intern Project.*
