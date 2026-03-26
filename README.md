@@ -1,73 +1,74 @@
-# 🍭 Antigravity Candy E-Commerce Platform
+# 🍭 Antigravity Candy - E-Commerce Platform
 
-A premium, high-fidelity e-commerce experience for artisanal candies. Built with a focus on vibrant aesthetics, bouncy micro-animations, and robust administrative control.
+Welcome to the **Antigravity Candy Shop**, a premium, high-fidelity e-commerce experience designed for artisanal candy lovers. This platform combines vibrant aesthetics with robust functionality, providing a seamless journey from browsing to secure checkout.
 
-## 🚀 Features
-
-### Storefront
-- **Dynamic Catalog**: Browse and filter candies by category.
-- **Premium UI**: Glassmorphism effects, custom typography (DM Sans), and playful transitions.
-- **Smart Cart**: Persistent shopping cart with real-time subtotal calculation.
-- **Secure Checkout**: Guest-to-auth redirect logic ensuring seamless user conversion.
-
-### Administrative Portal
-- **Dashboard Overview**: Real-time sales stats, order charts, and inventory alerts.
-- **Product Management**: Full CRUD for products with multi-category support.
-- **Order Management**: Track, view details, and update shipping statuses.
-- **Banner Management**: Control homepage hero and promotional content.
-- **Responsive Design**: Fully optimized for mobile (375x812) and desktop viewports.
-
-## 🛡️ Quality & Security
-
-### Authentication & Authorization
-- **JWT Simulation**: Secure session management using tokens stored in local storage.
-- **Role-Based Access Control (RBAC)**: 
-  - `admin`: Full access to the Management Portal and storefront.
-  - `user`: Access to personal profile, order history, and storefront.
-- **Protected Routes**: Middleware-style wrappers ensure unauthorized users are redirected to login while preserving their target URL.
-
-### Data Integrity
-- **Strict Validation**: 
-  - Email Regex verification on all forms.
-  - Required field checks for product creation and checkout.
-  - Numeric validation ensuring prices are strictly positive.
+## 🌟 Introduction
+Antigravity Candy is more than just a store; it's a visual delight. Built with modern web technologies, it features a "bouncy" design language, glassmorphism UI elements, and high-performance state management. Whether you're a customer looking for the perfect treat or an admin managing a global inventory, the platform offers a polished and intuitive interface.
 
 ## 🛠️ Tech Stack
-- **Frontend**: React (Vite)
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Animations**: Framer Motion & CSS Transitions
-- **State Management**: React Context (Auth, Store, Cart)
 
-## 🌐 Environment Variables (Production)
+### Frontend
+- **React (Vite 6)**: Lightning-fast development and optimized production builds.
+- **Tailwind CSS**: Utility-first styling for a custom, responsive "CandyShop" design system.
+- **Lucide React**: Beautiful, consistent iconography.
+- **Framer Motion**: Smooth micro-animations and page transitions for a premium feel.
 
-To deploy to Vercel or any other hosting provider, ensure the following variables are configured in your dashboard:
+### Backend & AI (Roadmap)
+- **Node.js & Express**: High-performance backend infrastructure (Projected).
+- **Sentiment Analysis (RoBERTa)**: Integrated AI for customer review analysis (Projected Feature).
+- **JWT (JSON Web Tokens)**: Secure, stateless authentication for users and administrators.
 
-| Variable | Description | Recommended Value |
-| :--- | :--- | :--- |
-| `VITE_APP_NAME` | The name of the application | `Antigravity Candy` |
-| `NODE_ENV` | Production flag | `production` |
+## ✨ Key Features
 
-*(Note: Currently, the project uses integrated mock data. For future backend integration, add your API base URL here.)*
+### 🛒 Customer Storefront
+- **Dynamic Product Catalog**: Browse a wide range of candies with real-time category filtering.
+- **Interactive Shopping Cart**: Add, update, and manage your cravings with a persistent cart.
+- **Guest-to-User Checkout**: Intelligent redirect logic that preserves your shopping state during login.
+- **Personal Order History**: Track your current and past orders with detailed status views.
 
-## 📦 Installation & Setup
+### 🛡️ Administrative Portal
+- **Dashboard Overview**: Centralized view of total sales, order volume, and inventory alerts.
+- **Product Management (CRUD)**: Full control over your product list, pricing, and stock levels.
+- **Order & Banner Control**: Update shipping statuses in real-time and manage homepage promotions.
+- **Role-Based Access Control (RBAC)**: Strict security layers protecting sensitive admin zones.
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd candy-ecommerce
-   ```
+## 📦 Setup Instructions
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+Follow these steps to get the project running on your local machine:
 
-3. **Run in development mode**:
-   ```bash
-   npm run dev
-   ```
+### 1. Clone the Repository
+```bash
+git clone https://github.com/huenguyenkim/Poject_Intern.git
+cd candy-ecommerce
+```
 
-4. **Access the application**:
-   - Storefront: `http://localhost:5173`
-   - Admin Login: `admin@candy.com` / `admin123`
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Configure Environment Variables
+Create a `.env` file in the root directory and add the following:
+```env
+VITE_APP_NAME="Antigravity Candy"
+NODE_ENV="development"
+# VITE_API_URL="your_backend_api_here"
+```
+
+### 4. Run the Development Server
+```bash
+npm run dev
+```
+The application will be available at `http://localhost:5173`.
+
+### 5. Build for Production
+```bash
+npm run build
+```
+
+## 🔗 Live Demo
+Stay tuned! The live demo link will be available soon.
+[Visit Live Demo (Coming Soon)]()
+
+---
+*Developed with ❤️ as part of the Antigravity Candy Intern Project.*
