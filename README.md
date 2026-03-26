@@ -1,6 +1,6 @@
-# 🍭 Antigravity Candy - E-Commerce Platform
+# 🍭 Candy - E-Commerce Platform
 
-Welcome to the **Antigravity Candy Shop**, a premium, high-fidelity e-commerce experience designed for artisanal candy lovers. This platform combines vibrant aesthetics with robust functionality, providing a seamless journey from browsing to secure checkout.
+Welcome to the **Candy Shop**, a premium, high-fidelity e-commerce experience designed for artisanal candy lovers. This platform combines vibrant aesthetics with robust functionality, providing a seamless journey from browsing to secure checkout.
 
 ## 🌟 Introduction
 Antigravity Candy is more than just a store; it's a visual delight. Built with modern web technologies, it features a "bouncy" design language, glassmorphism UI elements, and high-performance state management. Whether you're a customer looking for the perfect treat or an admin managing a global inventory, the platform offers a polished and intuitive interface.
