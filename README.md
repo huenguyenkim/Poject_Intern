@@ -39,6 +39,17 @@ A premium, high-fidelity e-commerce experience for artisanal candies. Built with
 - **Animations**: Framer Motion & CSS Transitions
 - **State Management**: React Context (Auth, Store, Cart)
 
+## 🌐 Environment Variables (Production)
+
+To deploy to Vercel or any other hosting provider, ensure the following variables are configured in your dashboard:
+
+| Variable | Description | Recommended Value |
+| :--- | :--- | :--- |
+| `VITE_APP_NAME` | The name of the application | `Antigravity Candy` |
+| `NODE_ENV` | Production flag | `production` |
+
+*(Note: Currently, the project uses integrated mock data. For future backend integration, add your API base URL here.)*
+
 ## 📦 Installation & Setup
 
 1. **Clone the repository**:
