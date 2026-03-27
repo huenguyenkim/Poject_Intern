@@ -27,7 +27,7 @@ const StorefrontHome = () => {
             Indulge in our new artisanal gummy collection. Get up to 40% off on all fruity delights this week!
           </p>
           <Link to="/shop" className="inline-block">
-            <button className="bg-white text-primary font-bold text-sm tracking-wide px-8 py-4 rounded-full flex items-center gap-2 hover:shadow-lg hover:-translate-y-1 transition-all mx-auto md:mx-0">
+            <button className="bg-primary text-white font-bold text-sm tracking-wide px-8 py-4 rounded-full flex items-center gap-2 hover:shadow-lg hover:-translate-y-1 transition-all mx-auto md:mx-0 shadow-lg shadow-primary/20">
               SHOP COLLECTION <ArrowRight size={18} />
             </button>
           </Link>
@@ -67,7 +67,7 @@ const StorefrontHome = () => {
                 idx === 0 ? '/images/macaron-featured.png' : 
                 idx === 1 ? '/images/bestseller.png' : 
                 idx === 2 ? '/images/rainbow-swirl-pop.png' :
-                idx === 3 ? '/images/jellybeans-featured.png' :
+                idx === 3 ? '/images/magic-jelly-beans-jar.png' :
                 undefined
               }
             />
@@ -84,28 +84,13 @@ const StorefrontHome = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[500px]">
           {/* Large Left Card */}
-          <div className="lg:col-span-2 bg-surface_container_highest rounded-[32px] relative overflow-hidden flex flex-col justify-end text-white shadow-sm min-h-[400px] group">
+          <div className="lg:col-span-2 bg-surface_container_highest rounded-[32px] relative overflow-hidden shadow-sm min-h-[400px] group">
              {/* Background Image */}
              <img 
                src="/images/donuts-clean.png" 
                alt="Donut Tower" 
                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
              />
-             {/* Gradient Overlay for Text Readability */}
-             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-             
-             <div className="relative z-10 p-10 w-full md:w-3/4">
-               <span className="inline-block mb-4 py-1 px-3 rounded-full bg-white text-primary font-bold text-[10px] uppercase tracking-wider shadow-sm">
-                 FRESH RELEASE
-               </span>
-               <h3 className="text-4xl md:text-5xl font-black mb-4 tracking-tight drop-shadow-sm">The Glaze Galaxy</h3>
-               <p className="text-lg text-white/90 mb-8 max-w-md font-medium leading-relaxed">
-                 A cosmic assortment of our finest glazed donuts with limited-edition space sprinkles.
-               </p>
-               <button className="bg-white text-primary px-8 py-3 rounded-full font-bold text-sm tracking-wide hover:shadow-lg hover:-translate-y-1 transition-all w-fit">
-                 Explore Flavor
-               </button>
-             </div>
           </div>
 
           {/* Right Smaller Cards */}

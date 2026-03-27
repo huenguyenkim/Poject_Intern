@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { Heart, ShoppingCart as CartIcon } from 'lucide-react';
 
-const ProductCard = ({ id, title, price, imagePlaceholder = 'bg-surface_dim', tag, description }) => {
+const ProductCard = ({ id, title, price, imagePlaceholder = 'bg-surface_dim', tag, description, category }) => {
   const { addToCart } = useCart();
   
   const handleAdd = (e) => {
@@ -36,29 +36,28 @@ const ProductCard = ({ id, title, price, imagePlaceholder = 'bg-surface_dim', ta
         </div>
       </Link>
       
-      <div className="p-6 pt-5 flex flex-col gap-2 flex-grow bg-white">
-        <div className="flex justify-between items-start gap-2">
-          <Link to={`/shop/${id}`} className="flex-grow">
-            <h3 className="font-bold text-xl text-on_surface leading-tight hover:text-primary transition-colors line-clamp-2">{title}</h3>
-          </Link>
-          <span className="text-primary font-black text-xl whitespace-nowrap">
+      <div className="p-6 pt-2 flex flex-col flex-grow bg-white relative">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary mb-1 opacity-80">
+          {category || 'Candy'}
+        </span>
+        
+        <Link to={`/shop/${id}`} className="mb-1">
+          <h3 className="font-black text-xl text-[#2d2a4a] leading-tight hover:text-secondary transition-colors line-clamp-1">{title}</h3>
+        </Link>
+        
+        <div className="flex justify-between items-center mt-auto pt-2">
+          <span className="text-secondary font-black text-lg">
             ${typeof price === 'number' ? price.toFixed(2) : price}
           </span>
+          
+          <button 
+            onClick={handleAdd} 
+            className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all"
+            aria-label="Add to cart"
+          >
+            <CartIcon size={18} strokeWidth={3} />
+          </button>
         </div>
-        
-        {description && (
-          <p className="text-on_surface_variant text-sm line-clamp-2 font-medium leading-relaxed mb-2">
-            {description}
-          </p>
-        )}
-        
-        <button 
-          onClick={handleAdd} 
-          className="mt-auto w-full py-4 rounded-full bg-primary text-white font-bold text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-md active:scale-[0.98] mt-2 tracking-widest flex items-center justify-center gap-3 uppercase flex-shrink-0"
-        >
-          <CartIcon size={18} strokeWidth={3} />
-          <span>Add to Cart</span>
-        </button>
       </div>
     </div>
   );

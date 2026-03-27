@@ -28,7 +28,6 @@ const StorefrontLayout = () => {
               <nav className="hidden md:flex space-x-6 items-center">
                 <Link to="/" className={`font-bold transition-colors pb-1 border-b-2 ${location.pathname === '/' ? 'text-primary border-primary' : 'text-on_surface border-transparent hover:text-primary'}`}>Home</Link>
                 <Link to="/shop" className={`font-bold transition-colors pb-1 border-b-2 ${location.pathname.startsWith('/shop') ? 'text-primary border-primary' : 'text-on_surface border-transparent hover:text-primary'}`}>Shop</Link>
-                <Link to="/deals" className={`font-bold transition-colors pb-1 border-b-2 ${location.pathname === '/deals' ? 'text-primary border-primary' : 'text-on_surface border-transparent hover:text-primary'}`}>Deals</Link>
               </nav>
             </div>
 
@@ -70,47 +69,51 @@ const StorefrontLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface_container_lowest mt-auto border-t border-surface_container pt-12">
-        <div className="max-w-[1280px] mx-auto px-4 pb-12">
-          
-          {/* Newsletter Box */}
-          <div className="border-[3px] border-dashed border-primary/30 rounded-[40px] p-12 md:p-16 relative overflow-hidden bg-white max-w-5xl mx-auto text-center">
-            {/* Decorative circles */}
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 rounded-br-full -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary/5 rounded-tl-full translate-x-1/4 translate-y-1/4"></div>
-
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="mb-6">
-                {/* SVG for Gift icon to match image slightly better */}
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e040a0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto">
-                  <polyline points="20 12 20 22 4 22 4 12"></polyline>
-                  <rect x="2" y="7" width="20" height="5"></rect>
-                  <line x1="12" y1="22" x2="12" y2="7"></line>
-                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-                  <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-                </svg>
-              </div>
-              <h2 className="text-4xl font-black text-on_surface mb-4 tracking-tight">Don't miss a sweet beat!</h2>
-              <p className="text-on_surface_variant mb-8 max-w-lg text-base">
-                Join our Candy Club and get a 15% discount on your first order plus exclusive access to secret flavors.
+      <footer className="bg-surface_container_lowest mt-auto border-t border-surface_container pt-20 pb-12">
+        <div className="max-w-[1280px] mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-16">
+            {/* Branding */}
+            <div className="flex flex-col gap-6">
+              <Link to="/" className={`${(location.pathname === '/' || location.pathname.startsWith('/shop') || location.pathname === '/cart' || location.pathname === '/checkout') ? 'text-primary' : 'text-secondary'} group`}>
+                <span className="font-black text-3xl tracking-tight">CandyShop</span>
+              </Link>
+              <p className="text-on_surface_variant font-medium leading-relaxed max-w-xs">
+                Spreading joy one gummy at a time since 2024. Your daily dose of sweetness delivered.
               </p>
-              
-              <div className="flex flex-col sm:flex-row max-w-xl mx-auto items-center gap-4 w-full">
+            </div>
+ 
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-black text-[#2d2a4a] text-lg mb-6">Quick Links</h4>
+              <ul className="space-y-4">
+                <li><Link to="/shop" className="text-on_surface_variant hover:text-secondary font-bold transition-colors">Shop All</Link></li>
+              </ul>
+            </div>
+ 
+            {/* Newsletter */}
+            <div>
+              <h4 className="font-black text-[#2d2a4a] text-lg mb-6">Newsletter</h4>
+              <div className="flex bg-surface_container_high rounded-full p-1 border-2 border-surface_container_high focus-within:border-secondary transition-all">
                 <input 
                   type="email" 
-                  placeholder="Enter your email" 
-                  className="flex-grow px-6 py-4 rounded-full bg-surface_container_high text-sm font-bold text-on_surface focus:outline-none focus:ring-2 focus:ring-primary/50 w-full sm:w-auto"
+                  placeholder="Sweet emails..." 
+                  className="bg-transparent border-none outline-none px-5 py-3 text-sm font-bold text-on_surface w-full placeholder-on_surface_variant/50"
                 />
-                <button className="bg-primary text-white rounded-full px-8 py-4 font-bold text-sm tracking-wide hover:shadow-tinted-primary hover:-translate-y-0.5 transition-all w-full sm:w-auto whitespace-nowrap">
-                  JOIN THE CLUB
+                <button className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
                 </button>
               </div>
             </div>
           </div>
           
-          <p className="mt-12 text-center text-sm text-on_surface_variant font-medium">
-            © 2024 CandyShop Storefront. Stay sweet!
-          </p>
+          <div className="border-t border-surface_container_high pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-on_surface_variant text-sm font-bold opacity-60">
+              © 2024 CandyShop Storefront. Stay sweet!
+            </p>
+          </div>
         </div>
       </footer>
     </div>

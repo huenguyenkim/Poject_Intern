@@ -8,9 +8,9 @@ const ShoppingCart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, addToCart } = useCart();
 
   const upSells = [
-    { id: 'u1', title: 'Magic Cookies', price: 4.99, image: '/images/products/cookie-set.jpg', category: 'BAKERY' },
-    { id: 'u2', title: 'Pastel Pops', price: 2.50, image: '/images/products/pastel-pops.jpg', category: 'LOLLIPOPS' },
-    { id: 'u3', title: 'Jelly Gems', price: 8.00, image: 'https://images.unsplash.com/photo-1581798459219-318e76aecc7b?auto=format&fit=crop&q=80&w=400', category: 'GUMMIES' },
+    { id: 'u1', title: 'Magic Cookies', price: 4.99, image: '/images/magic-cookies.png', category: 'BAKERY' },
+    { id: 'u2', title: 'Pastel Pops', price: 2.50, image: '/images/pastel-pops.png', category: 'LOLLIPOPS' },
+    { id: 'u3', title: 'Jelly Gems', price: 8.00, image: '/images/neon-rainbow-gummies.png', category: 'GUMMIES' },
   ];
 
   if (cartItems.length === 0) {
@@ -59,7 +59,9 @@ const ShoppingCart = () => {
                   {/* Info Section */}
                   <div className="flex-grow text-center sm:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2 justify-center sm:justify-start">
-                      <h3 className="text-2xl font-black text-[#2d2a4a] tracking-tight">{item.title}</h3>
+                      <h3 className="text-2xl font-black text-[#2d2a4a] tracking-tight flex items-center gap-3">
+                        {item.title}
+                      </h3>
                       <span className="inline-block px-4 py-1.5 bg-[#fdfaff] text-[#f13a7b] rounded-full text-[10px] font-black uppercase tracking-widest border border-[#f13a7b]/10 w-fit mx-auto sm:mx-0">
                         {item.categoryTag || 'SOUR PACK'}
                       </span>

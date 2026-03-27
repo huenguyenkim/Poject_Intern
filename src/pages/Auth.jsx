@@ -107,7 +107,7 @@ const Auth = () => {
             <div className="w-full max-w-[320px] aspect-square mx-auto bg-white/20 backdrop-blur-sm rounded-[50px] p-6 shadow-2xl relative">
                <div className="w-full h-full bg-[#f14d4d] rounded-[35px] overflow-hidden shadow-inner flex items-center justify-center">
                   <img 
-                    src={isLogin ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?auto=format&fit=crop&q=80&w=600" : "https://images.unsplash.com/photo-1581798459219-318e76aecc7b?auto=format&fit=crop&q=80&w=600"} 
+                    src={isLogin ? "/images/gummy-bears-hq.png" : "https://images.unsplash.com/photo-1581798459219-318e76aecc7b?auto=format&fit=crop&q=80&w=600"} 
                     alt="Candies" 
                     className="w-full h-full object-cover mix-blend-overlay opacity-90 scale-110 active:scale-100 transition-transform duration-700"
                   />

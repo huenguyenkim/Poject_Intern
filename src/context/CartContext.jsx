@@ -6,8 +6,7 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([
-    { id: '1', title: 'Neon Rainbow Gummies', price: 12.99, quantity: 2, image: '/images/products/neon-gummies.jpg', categoryTag: 'SOUR PACK' },
-    { id: '2', title: 'Midnight Sea Salt Cocoa', price: 18.50, quantity: 1, image: '/images/products/dark-cocoa.jpg', categoryTag: 'PREMIUM' }
+    { id: '5', title: 'Neon Rainbow Gummies', price: 12.99, quantity: 2, image: '/images/neon-rainbow-gummies.png', categoryTag: 'SOUR PACK' }
   ]);
 
   const addToCart = (product) => {

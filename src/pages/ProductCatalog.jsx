@@ -150,20 +150,6 @@ const ProductCatalog = () => {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                <div className="mt-16 flex justify-center items-center gap-3">
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-surface_container text-on_surface_variant hover:bg-primary hover:text-white transition-all shadow-sm">
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white font-black shadow-md shadow-primary/20">1</button>
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-surface_container text-on_surface font-bold hover:bg-surface_container transition-all">2</button>
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-surface_container text-on_surface font-bold hover:bg-surface_container transition-all">3</button>
-                  <span className="px-2 text-on_surface_variant font-bold">...</span>
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-surface_container text-on_surface font-bold hover:bg-surface_container transition-all">8</button>
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-surface_container text-on_surface_variant hover:bg-primary hover:text-white transition-all shadow-sm">
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
               </>
             ) : (
               <div className="text-center py-32 bg-white rounded-[40px] border border-surface_container shadow-sm">

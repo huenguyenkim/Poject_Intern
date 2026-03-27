@@ -4,14 +4,96 @@ const StoreContext = createContext();
 export const useStore = () => useContext(StoreContext);
 
 const initialProducts = [
-  { id: '1', title: 'Pastel Macaron Box', price: 24.00, category: 'Baked Goods', imagePlaceholder: '/images/macaron-featured.png', tag: 'POPULAR', description: 'Assorted box of 12 delicate French macarons. Includes Lavender, Pistachio, and Rose flavors.', stock: 124 },
-  { id: '2', title: 'Golden Truffle Set', price: 32.50, category: 'Chocolate', imagePlaceholder: '/images/bestseller.png', description: 'Decadent chocolate truffles wrapped in edible 24k gold leaf.', stock: 85 },
-  { id: '3', title: 'Cotton Cloud Swirls', price: 8.99, category: 'Hard Candy', imagePlaceholder: '/images/rainbow-swirl-pop.png', tag: 'NEW', description: 'Light as air, these cotton candy bites melt instantly with a hint of nostalgic vanilla cream.', stock: 240 },
-  { id: '4', title: 'Magic Jelly Beans', price: 15.00, category: 'Gummies', imagePlaceholder: '/images/jellybeans-featured.png', description: 'Bursting with 50 gourmet flavors from real fruit juices.', stock: 512 },
-  { id: '5', title: 'Neon Rainbow Gummies', price: 12.99, category: 'Gummies', imagePlaceholder: '/images/neon-gummies.png', description: 'A vibrant cascade of neon gummy bears spilling from a crystal-clear jar. A burst of citrus and berry flavors in every translucent, squishy bite.', stock: 420 },
-  { id: '6', title: 'Zesty Sour Belts', price: 10.99, category: 'Gummies', imagePlaceholder: '/images/sour-belts-jar.png', description: 'A vibrant assortment of extra sour, extra tangy chewy belts in a classic glass jar. Perfect for tang-lovers!', stock: 310 },
-  { id: '7', title: 'Citrus Spark Hard Candy', price: 9.25, category: 'Hard Candy', imagePlaceholder: '/images/citrus-candy.png', description: 'Traditional hand-wrapped hard-boiled sweets with real fruit extracts. A vibrant mix of Lemon, Orange, and Lime flavors.', stock: 180 },
-  { id: '8', title: 'Midnight Sea Salt Cocoa', price: 15.50, category: 'Chocolate', imagePlaceholder: '/images/midnight-cocoa.png', description: 'Rich 70% dark chocolate paired with hand-harvested sea salt flakes and a decadent caramel drizzle.', stock: 92 },
+  { 
+    id: '1', 
+    title: 'Pastel Macaron Box', 
+    price: 24.00, 
+    category: 'Baked Goods', 
+    imagePlaceholder: '/images/macaron-featured.png', 
+    tag: 'POPULAR', 
+    rating: 4.8,
+    reviewCount: 156,
+    characteristics: ['Gluten Free', 'Handmade', 'Natural Colors'],
+    description: 'Assorted box of 12 delicate French macarons. Includes Lavender, Pistachio, and Rose flavors.', 
+    stock: 124 
+  },
+  { 
+    id: '2', 
+    title: 'Golden Truffle Set', 
+    price: 32.50, 
+    category: 'Chocolate', 
+    imagePlaceholder: '/images/bestseller.png', 
+    tag: 'BESTSELLER',
+    rating: 4.9,
+    reviewCount: 89,
+    characteristics: ['Premium', 'Edible Gold', 'Gift Box'],
+    description: 'Decadent chocolate truffles wrapped in edible 24k gold leaf.', 
+    stock: 85 
+  },
+  { 
+    id: '3', 
+    title: 'Cotton Cloud Swirls', 
+    price: 8.99, 
+    category: 'Hard Candy', 
+    imagePlaceholder: '/images/rainbow-swirl-pop.png', 
+    tag: 'NEW', 
+    rating: 4.5,
+    reviewCount: 42,
+    characteristics: ['Vegan', 'Nut Free', 'No Sugar'],
+    description: 'Light as air, these cotton candy bites melt instantly with a hint of nostalgic vanilla cream.', 
+    stock: 240 
+  },
+  { 
+    id: '4', 
+    title: 'Magic Jelly Beans', 
+    price: 19.00, 
+    category: 'Gummies', 
+    imagePlaceholder: '/images/magic-jelly-beans-jar.png', 
+    tag: 'NEW',
+    rating: 4.8,
+    reviewCount: 96,
+    characteristics: ['Vegan', 'Gluten Free', 'Natural Colors'],
+    description: 'A mystical assortment of beans with galaxy-inspired flavors! Each bag contains a cosmic mix of jewel-toned star, moon, and heart shapes.', 
+    stock: 120 
+  },
+  { 
+    id: '5', 
+    title: 'Neon Rainbow Gummies', 
+    price: 12.99, 
+    category: 'Gummies', 
+    imagePlaceholder: '/images/neon-rainbow-gummies.png', 
+    tag: 'BEST SELLER',
+    rating: 5.0,
+    reviewCount: 128,
+    characteristics: ['Gluten Free', 'Fat Free', 'Real Fruit'],
+    description: 'A burst of citrus and berry flavors that pop in your mouth! These Neon Rainbow Gummies are crafted with real fruit juice and a magical dusting of sour crystals for the ultimate sweet-and-tangy experience.', 
+    stock: 420 
+  },
+  { 
+    id: '6', 
+    title: 'Zesty Sour Belts', 
+    price: 10.99, 
+    category: 'Gummies', 
+    imagePlaceholder: '/images/sour-belts-jar.png', 
+    rating: 4.6,
+    reviewCount: 75,
+    characteristics: ['Extra Sour', 'Halal', 'Party Pack'],
+    description: 'A vibrant assortment of extra sour, extra tangy chewy belts in a classic glass jar. Perfect for tang-lovers!', 
+    stock: 310 
+  },
+  { 
+    id: '7', 
+    title: 'The Glaze Galaxy', 
+    price: 28.00, 
+    category: 'Baked Goods', 
+    imagePlaceholder: '/images/glaze-galaxy-donuts.png', 
+    tag: 'FRESH RELEASE',
+    rating: 4.9,
+    reviewCount: 64,
+    characteristics: ['Limited Edition', 'Space Sprinkles', 'Handcrafted'],
+    description: 'A cosmic assortment of our finest glazed donuts with limited-edition space sprinkles. Each box features 5 donuts with unique glazes: Strawberry Pink, Dark Chocolate, Mint Frost, Golden Caramel, and Blueberry Dream.', 
+    stock: 48 
+  },
 ];
 
 const initialCategories = ['Gummies', 'Chocolate', 'Hard Candy', 'Baked Goods'];
@@ -48,9 +130,11 @@ const initialBanners = [
 
 export const StoreProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem('candy_products'));
+    let saved = JSON.parse(localStorage.getItem('candy_products'));
     if (saved) {
-      // Merge initialProducts images/tags into saved products for demo purposes
+      // Ensure we don't have the Midnight Cocoa bar if it was removed from initialProducts
+      saved = saved.filter(p => p.title !== 'Midnight Sea Salt Cocoa');
+      
       return saved.map(p => {
         const initial = initialProducts.find(ip => ip.id === p.id);
         if (initial) {

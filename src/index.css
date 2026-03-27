@@ -21,4 +21,21 @@
   .bouncy-active:active {
     @apply scale-95;
   }
+
+  /* Custom Prose for Candy Theme */
+  .prose-candy {
+    @apply text-on_surface_variant leading-relaxed;
+  }
+  .prose-candy h3 {
+    @apply text-on_surface font-black uppercase tracking-[0.2em] mb-4;
+  }
+  .prose-candy p {
+    @apply mb-4;
+  }
+}
+
+@layer utilities {
+  .shadow-tinted-secondary {
+    box-shadow: 0 10px 30px -10px rgba(124, 82, 170, 0.3);
+  }
 }
