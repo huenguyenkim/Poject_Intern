@@ -42,14 +42,15 @@ const App = () => {
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="auth" element={<Auth />} />
                 <Route path="deals" element={<ProductCatalog />} />
-                <Route path="*" element={<div className="p-20 text-center"><h2 className="text-3xl font-bold mb-4">Coming Soon</h2></div>} />
-              </Route>
+                
+                {/* User Profile Routes Nested in Storefront */}
+                <Route path="profile" element={<ProtectedRoute role="user"><UserLayout /></ProtectedRoute>}>
+                  <Route index element={<div className="p-20 text-center uppercase font-black text-[#2d2a4a] tracking-[0.2em] text-sm italic">Profile Coming Soon</div>} />
+                  <Route path="orders" element={<UserOrders />} />
+                  <Route path="settings" element={<div className="p-20 text-center uppercase font-black text-[#2d2a4a] tracking-[0.2em] text-sm italic">Settings Coming Soon</div>} />
+                </Route>
 
-              {/* User Profile Routes */}
-              <Route path="/profile" element={<ProtectedRoute role="user"><UserLayout /></ProtectedRoute>}>
-                <Route index element={<div className="p-20 text-center uppercase font-black text-[#2d2a4a] tracking-[0.2em] text-sm italic">Profile Coming Soon</div>} />
-                <Route path="orders" element={<UserOrders />} />
-                <Route path="settings" element={<div className="p-20 text-center uppercase font-black text-[#2d2a4a] tracking-[0.2em] text-sm italic">Settings Coming Soon</div>} />
+                <Route path="*" element={<div className="p-20 text-center"><h2 className="text-3xl font-bold mb-4">Coming Soon</h2></div>} />
               </Route>
 
               <Route path="/admin/login" element={<AdminLogin />} />

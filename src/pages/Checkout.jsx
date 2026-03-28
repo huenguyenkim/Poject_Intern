@@ -236,7 +236,7 @@ const Checkout = () => {
 
             {/* Step 2: Payment */}
             {(step === 1 || step === 2) && (
-              <div className={`bg-white rounded-[40px] p-12 shadow-2xl shadow-purple-100/30 border border-[#ece8f1] transition-all duration-700 ${step === 1 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+              <div className={`bg-white rounded-[40px] p-12 shadow-2xl shadow-purple-100/30 border border-[#ece8f1] transition-all duration-700 ${step === 1 ? 'pointer-events-none' : 'opacity-100'}`}>
                 <div className="flex items-center gap-5 mb-10">
                   <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
                     <CreditCard size={28} strokeWidth={2.5} />
@@ -276,28 +276,102 @@ const Checkout = () => {
               </div>
             )}
 
-            {/* Step 3: Confirmation */}
+            {/* Step 3: Confirmation – Premium Full-Width */}
             {step === 3 && (
-              <div className="bg-white p-20 rounded-[40px] shadow-2xl shadow-purple-100/40 text-center relative overflow-hidden flex flex-col items-center border border-[#ece8f1] animate-in zoom-in fade-in duration-700">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-[100px] -mr-40 -mt-40"></div>
-                <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-[100px] -ml-40 -mb-40"></div>
-                
-                <div className="w-32 h-32 bg-[#10b981]/10 rounded-[32px] flex items-center justify-center mb-10 shadow-lg animate-bounce">
-                  <CheckCircle2 size={72} className="text-[#10b981]" strokeWidth={2.5} />
+              <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700">
+                {/* Hero Confirmation Banner */}
+                <div className="relative bg-gradient-to-br from-[#fff0f9] via-[#fdf4ff] to-[#f0f4ff] rounded-[40px] p-16 text-center overflow-hidden border border-[#f0e6f7] shadow-2xl shadow-pink-100/50 mb-10">
+                  {/* Background blobs */}
+                  <div className="absolute top-0 right-0 w-72 h-72 bg-primary/10 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-72 h-72 bg-secondary/10 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+
+                  {/* Floating candy decorations */}
+                  <div className="absolute top-8 left-12 text-4xl select-none animate-bounce" style={{ animationDelay: '0.1s' }}>🍭</div>
+                  <div className="absolute top-6 right-16 text-3xl select-none animate-bounce" style={{ animationDelay: '0.4s' }}>🎉</div>
+                  <div className="absolute bottom-8 left-20 text-3xl select-none animate-bounce" style={{ animationDelay: '0.6s' }}>🍬</div>
+                  <div className="absolute bottom-10 right-12 text-4xl select-none animate-bounce" style={{ animationDelay: '0.2s' }}>✨</div>
+
+                  {/* Success Icon */}
+                  <div className="relative z-10 inline-flex items-center justify-center w-32 h-32 bg-white rounded-full shadow-2xl shadow-green-100/80 mb-8 ring-8 ring-green-50">
+                    <CheckCircle2 size={64} className="text-[#10b981]" strokeWidth={2} />
+                  </div>
+
+                  <div className="relative z-10">
+                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.4em] mb-3">🎊 Sweet success!</p>
+                    <h2 className="text-6xl font-black text-[#2d2a4a] mb-5 tracking-tight leading-none">Order Confirmed!</h2>
+                    <p className="text-[#8e8a9d] font-bold text-lg max-w-md mx-auto leading-relaxed mb-2">
+                      Your sweet treats are being packed with love. Get ready for a sugary surprise!
+                    </p>
+                    <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-5 py-2.5 rounded-full text-xs font-black text-[#2d2a4a] shadow-md mt-4">
+                      <div className="w-2 h-2 rounded-full bg-[#10b981] animate-ping" />
+                      Estimated delivery: 3–5 business days
+                    </div>
+                  </div>
                 </div>
-                <h2 className="text-6xl font-black text-[#2d2a4a] mb-6 tracking-tight">Order Confirmed!</h2>
-                <p className="text-xl text-[#8e8a9d] mb-12 max-w-sm font-bold leading-relaxed">
-                  Your sweet treats are on the way. You can track your order in your profile.
-                </p>
-                <div className="flex flex-col gap-4 w-full max-w-xs">
-                  <Link to="/profile/orders" className="w-full">
-                    <button className="w-full bg-primary text-white py-5 rounded-[22px] font-black text-lg shadow-xl shadow-pink-100 hover:shadow-2xl hover:scale-105 transition-all">
+
+                {/* Order Details Card */}
+                <div className="bg-white rounded-[32px] border border-[#ece8f1] shadow-xl shadow-purple-100/30 overflow-hidden mb-8">
+                  <div className="bg-gradient-to-r from-primary to-[#f13a7b] px-10 py-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-white">
+                      <ShoppingBag size={22} strokeWidth={3} />
+                      <span className="font-black text-lg tracking-tight">Your Order</span>
+                    </div>
+                    <span className="text-white/80 font-black text-sm uppercase tracking-widest">#{Math.floor(Math.random() * 90000) + 10000}</span>
+                  </div>
+                  <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex items-start gap-4 p-5 bg-[#fdfaff] rounded-[20px]">
+                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                        <MapPin size={18} className="text-primary" strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-widest mb-1">Shipping To</p>
+                        <p className="font-black text-[#2d2a4a] text-sm">{shippingInfo.fullName}</p>
+                        <p className="font-bold text-[#8e8a9d] text-xs">{shippingInfo.address}, {shippingInfo.city}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-5 bg-[#fdfaff] rounded-[20px]">
+                      <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0">
+                        <CreditCard size={18} className="text-secondary" strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-widest mb-1">Payment</p>
+                        <p className="font-black text-[#2d2a4a] text-sm">{paymentMethod === 'COD' ? 'Cash on Delivery' : 'Credit Card'}</p>
+                        <p className="font-bold text-[#8e8a9d] text-xs">{paymentMethod === 'COD' ? 'Pay when it arrives' : 'Encrypted & secure'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-5 bg-[#fdfaff] rounded-[20px]">
+                      <div className="w-10 h-10 bg-[#10b981]/10 rounded-xl flex items-center justify-center shrink-0">
+                        <Sparkles size={18} className="text-[#10b981]" strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-widest mb-1">Candy Points</p>
+                        <p className="font-black text-[#2d2a4a] text-sm">+37 Points Earned</p>
+                        <p className="font-bold text-[#8e8a9d] text-xs">Added to your account</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email hint */}
+                <div className="bg-[#e8f5ff] border border-[#c8e6ff] rounded-[20px] px-8 py-5 flex items-center gap-4 mb-8">
+                  <Mail size={20} className="text-[#0095ff] shrink-0" strokeWidth={2.5} />
+                  <p className="text-sm font-bold text-[#0070cc]">
+                    A confirmation email has been sent to <span className="font-black underline decoration-2">{shippingInfo.email}</span>
+                  </p>
+                </div>
+
+                {/* CTAs */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link to="/profile/orders" className="flex-1">
+                    <button className="w-full bg-gradient-to-r from-primary to-[#f13a7b] text-white py-5 rounded-[22px] font-black text-lg shadow-xl shadow-pink-100 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                      <ShoppingBag size={20} strokeWidth={3} />
                       View My Orders
                     </button>
                   </Link>
-                  <Link to="/shop" className="w-full">
-                    <button className="w-full bg-white text-primary border-3 border-primary/20 py-5 rounded-[22px] font-black text-lg hover:bg-primary/5 transition-all">
-                      Back to Shop
+                  <Link to="/shop" className="flex-1">
+                    <button className="w-full bg-white text-[#2d2a4a] border-2 border-[#ece8f1] py-5 rounded-[22px] font-black text-lg hover:bg-[#fdfaff] hover:border-primary/20 transition-all flex items-center justify-center gap-3">
+                      🍬 Keep Shopping
                     </button>
                   </Link>
                 </div>
@@ -326,7 +400,7 @@ const Checkout = () => {
                     {cartItems.map(item => (
                       <div key={item.id} className="flex items-center gap-5 group">
                         <div className="w-16 h-16 bg-[#f8f7fa] rounded-[18px] overflow-hidden flex-shrink-0 border border-[#ece8f1] group-hover:scale-110 transition-transform">
-                          <img src={item.image} className="w-full h-full object-cover p-1" alt={item.title} onError={e => e.target.src = 'https://via.placeholder.com/50'} />
+                          <img src={item.image || item.imagePlaceholder} className="w-full h-full object-cover p-1" alt={item.title} onError={e => e.target.src = 'https://via.placeholder.com/50'} />
                         </div>
                         <div className="flex-grow">
                           <h4 className="font-black text-[#2d2a4a] text-[15px] leading-tight mb-1">{item.title}</h4>
@@ -343,15 +417,15 @@ const Checkout = () => {
 
                   {/* Summary Breakdown */}
                   <div className="space-y-5 mb-10 pt-8 border-t-2 border-[#f8f7fa]">
-                    <div className="flex justify-between items-center text-[#8e8a9d] font-bold text-sm">
+                    <div className="flex justify-between items-center text-[#2d2a4a] font-bold text-sm">
                       <span>Subtotal</span>
                       <span className="text-[#2d2a4a]">${cartTotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-[#8e8a9d] font-bold text-sm">
+                    <div className="flex justify-between items-center text-[#2d2a4a] font-bold text-sm">
                       <span>Shipping Fee</span>
                       <span className="text-[#00c896] uppercase font-black text-[10px] tracking-widest">Free</span>
                     </div>
-                    <div className="flex justify-between items-center text-[#8e8a9d] font-bold text-sm">
+                    <div className="flex justify-between items-center text-[#2d2a4a] font-bold text-sm">
                       <span>Sales Tax</span>
                       <span className="text-[#2d2a4a]">${(cartTotal * 0.08).toFixed(2)}</span>
                     </div>
@@ -373,7 +447,7 @@ const Checkout = () => {
                     <ArrowRight size={24} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
                   </button>
 
-                  <div className="mt-8 flex items-center justify-center gap-2 text-[#b0a9bc]">
+                  <div className="mt-8 flex items-center justify-center gap-2 text-[#2d2a4a]">
                     <Lock size={14} strokeWidth={3} />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure encrypted checkout</span>
                   </div>
@@ -391,7 +465,7 @@ const Checkout = () => {
               </div>
 
               {step === 2 && (
-                <button onClick={() => setStep(1)} className="w-full text-[#b0a9bc] hover:text-[#2d2a4a] font-black text-xs uppercase tracking-[0.2em] transition-colors flex items-center justify-center gap-2 mt-4">
+                <button onClick={() => setStep(1)} className="w-full text-[#2d2a4a] hover:text-[#f13a7b] font-black text-xs uppercase tracking-[0.2em] transition-colors flex items-center justify-center gap-2 mt-4">
                   <ArrowLeft size={14} strokeWidth={3} /> Back to Shipping
                 </button>
               )}

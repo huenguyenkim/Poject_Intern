@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { Minus, Plus, Trash2, ArrowRight, ShoppingBag, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Button from '../components/ui/Button';
@@ -49,7 +49,7 @@ const ShoppingCart = () => {
                   {/* Image Container */}
                   <div className="w-36 h-36 bg-[#f8f7fa] rounded-[32px] overflow-hidden flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">
                     <img 
-                      src={item.image || '/images/products/placeholder.jpg'} 
+                      src={item.image || item.imagePlaceholder || '/images/products/placeholder.jpg'} 
                       alt={item.title} 
                       className="w-full h-full object-cover p-2"
                       onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=Candy'}
@@ -66,7 +66,7 @@ const ShoppingCart = () => {
                         {item.categoryTag || 'SOUR PACK'}
                       </span>
                     </div>
-                    <p className="text-[#8e8a9d] font-bold text-sm mb-6">Sugar-coated artisanal delights</p>
+                    <p className="text-black font-bold text-sm mb-6">Sugar-coated artisanal delights</p>
                     
                     <div className="flex items-center justify-center sm:justify-start gap-8">
                       {/* Quantity Controls */}
@@ -89,7 +89,7 @@ const ShoppingCart = () => {
                       {/* Remove Button */}
                       <button 
                         onClick={() => removeFromCart(item.id)} 
-                        className="flex items-center gap-2 text-[#b0a9bc] hover:text-error transition-colors font-black text-sm uppercase tracking-wider group/remove"
+                        className="flex items-center gap-2 text-[#f13a7b] hover:text-[#d12a6b] transition-colors font-black text-sm uppercase tracking-wider group/remove"
                       >
                         <Trash2 size={16} className="group-hover/remove:rotate-12 transition-transform" /> 
                         <span>Remove</span>
@@ -102,7 +102,7 @@ const ShoppingCart = () => {
                     <span className="text-3xl font-black text-[#f13a7b] tracking-tighter">
                       ${(item.price * item.quantity).toFixed(2)}
                     </span>
-                    <span className="text-[#b0a9bc] font-bold text-xs mt-1 uppercase tracking-widest">Subtotal</span>
+                    <span className="text-black font-bold text-xs mt-1 uppercase tracking-widest">Subtotal</span>
                   </div>
                 </div>
               ))}
@@ -142,65 +142,76 @@ const ShoppingCart = () => {
           {/* Sticky Order Summary */}
           <div className="lg:w-[35%] w-full sticky top-32">
             <div className="bg-white rounded-[40px] p-10 shadow-2xl shadow-purple-100/50 border border-[#ece8f1] relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 text-primary"></div>
+              <div className="flex items-center gap-3 mb-10 pb-6 border-b border-[#f8f7fa]">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                  <ShoppingBag size={22} />
+                </div>
+                <h2 className="text-2xl font-black text-[#2d2a4a] tracking-tight">Order Summary</h2>
+              </div>
               
-              <h2 className="text-3xl font-black text-[#2d2a4a] mb-10 tracking-tight relative z-10">Order Summary</h2>
-              
-              <div className="space-y-6 mb-10 text-[16px] relative z-10">
-                <div className="flex justify-between items-center text-[#8e8a9d] font-bold">
+              <div className="space-y-6 mb-10 text-[16px]">
+                <div className="flex justify-between items-center text-black font-bold">
                   <span>Subtotal</span>
-                  <span className="text-[#2d2a4a]">${cartTotal.toFixed(2)}</span>
+                  <span className="text-[#2d2a4a] text-lg font-black">${cartTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center text-[#8e8a9d] font-bold">
+                <div className="flex justify-between items-center text-black font-bold">
                   <span>Shipping</span>
-                  <span className="text-[#00c896] uppercase tracking-widest text-xs font-black">Free</span>
+                  <span className="bg-pink-50 text-[#f13a7b] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#f13a7b]/10">Free</span>
                 </div>
-                <div className="flex justify-between items-center text-[#8e8a9d] font-bold">
+                <div className="flex justify-between items-center text-black font-bold pb-6">
                   <span>Sweet Tax</span>
-                  <span className="text-[#2d2a4a]">${(cartTotal * 0.08).toFixed(2)}</span>
+                  <span className="text-[#2d2a4a] text-lg font-black">${(cartTotal * 0.08).toFixed(2)}</span>
+                </div>
+
+                {/* Promo Code Integrated */}
+                <div className="pt-6 border-t border-[#f8f7fa]">
+                  <p className="text-sm font-black text-[#2d2a4a] mb-4 uppercase tracking-wider">Promo Code</p>
+                  <div className="relative group">
+                    <input 
+                      type="text" 
+                      placeholder="Enter code..." 
+                      className="w-full bg-[#f8f7fa] border border-[#ece8f1] rounded-2xl py-4 px-6 font-bold text-[#2d2a4a] placeholder-[#b0a9bc] outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                    <button className="absolute right-2 top-2 bottom-2 bg-primary text-white px-5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all shadow-md active:scale-95">
+                      Apply
+                    </button>
+                  </div>
                 </div>
               </div>
               
-              <div className="border-t-2 border-[#f8f7fa] pt-10 mb-10 relative z-10">
-                <div className="flex justify-between items-end mb-10">
-                  <span className="text-xl font-black text-[#2d2a4a] uppercase tracking-widest">Total</span>
+              <div className="mt-10 mb-10">
+                <div className="flex justify-between items-center mb-8">
+                  <span className="text-2xl font-black text-[#2d2a4a] uppercase tracking-tighter">Total</span>
                   <span className="text-5xl font-black text-[#f13a7b] tracking-tighter leading-none">
-                    ${(cartTotal + cartTotal * 0.08).toFixed(2)}
+                    ${(cartTotal + (cartTotal * 0.08)).toFixed(2)}
                   </span>
-                </div>
-
-                {/* Promo Code */}
-                <div className="relative mb-10 group">
-                  <input 
-                    type="text" 
-                    placeholder="Promo Code" 
-                    className="w-full bg-[#f8f7fa] border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-[22px] py-4.5 px-6 font-black text-[#2d2a4a] placeholder-[#b0a9bc] outline-none transition-all shadow-inner"
-                  />
-                  <button className="absolute right-2 top-1.5 bottom-1.5 bg-[#2d2a4a] text-white px-6 rounded-[18px] font-black text-xs uppercase tracking-widest hover:bg-primary transition-all shadow-lg active:scale-95">
-                    Apply
-                  </button>
                 </div>
 
                 {/* Checkout Button */}
                 <Link to="/checkout" className="block w-full">
-                  <button className="w-full bg-gradient-to-r from-primary to-[#f13a7b] text-white py-6 rounded-[22px] font-black text-xl shadow-xl shadow-pink-100 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group">
-                    Proceed to Checkout
-                    <ArrowRight size={24} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
+                  <button className="w-full bg-primary text-white py-6 rounded-[24px] font-black text-xl shadow-xl shadow-pink-100 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group">
+                    <span>Proceed to Checkout</span>
+                    <ArrowRight size={22} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </Link>
                 
-                <p className="text-[11px] text-center text-[#b0a9bc] mt-8 font-bold leading-relaxed">
-                  By clicking checkout, you agree to our Sweet Terms and delicious policies.
+                <p className="text-[10px] text-center text-black mt-8 font-black leading-relaxed uppercase tracking-wider">
+                  By clicking checkout, you agree to our Terms and Policies.
                 </p>
               </div>
 
-              {/* Secure Checkout Trust Signals */}
-              <div className="flex flex-col items-center pt-2 relative z-10">
-                <span className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-[0.2em] mb-6">Secure Checkout</span>
-                <div className="flex items-center gap-6 opacity-40 grayscale group-hover:grayscale-0 transition-all">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />
+              {/* Secure Checkout Section */}
+              <div className="pt-6 border-t border-[#f8f7fa]">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="flex items-center gap-2 text-black">
+                    <Lock size={12} strokeWidth={3} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure Checkout</span>
+                  </div>
+                  <div className="flex items-center gap-6 transition-all cursor-default">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-5" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-3" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple Pay" className="h-4" />
+                  </div>
                 </div>
               </div>
             </div>

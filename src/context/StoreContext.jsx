@@ -35,7 +35,7 @@ const initialProducts = [
     title: 'Cotton Cloud Swirls', 
     price: 8.99, 
     category: 'Hard Candy', 
-    imagePlaceholder: '/images/rainbow-swirl-pop.png', 
+    imagePlaceholder: '/images/cotton-cloud.png', 
     tag: 'NEW', 
     rating: 4.5,
     reviewCount: 42,

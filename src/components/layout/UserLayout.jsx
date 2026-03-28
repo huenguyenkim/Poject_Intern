@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   User, 
   ShoppingBag, 
@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const UserLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
 
   const navItems = [
@@ -21,11 +22,11 @@ const UserLayout = () => {
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/auth';
+    navigate('/auth');
   };
 
   return (
-    <div className="flex min-h-screen bg-[#fdfaff] font-sans">
+    <div className="flex bg-[#fdfaff] font-sans">
       {/* Sidebar */}
       <aside className="w-80 bg-white border-r border-[#ece8f1] flex flex-col hidden lg:flex">
         {/* User Profile Summary */}

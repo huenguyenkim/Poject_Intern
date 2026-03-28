@@ -2,14 +2,31 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { Heart, ShoppingCart as CartIcon } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const ProductCard = ({ id, title, price, imagePlaceholder = 'bg-surface_dim', tag, description, category }) => {
   const { addToCart } = useCart();
+  const [isWishlisted, setIsWishlisted] = React.useState(false);
   
   const handleAdd = (e) => {
     e.preventDefault();
     const numPrice = typeof price === 'string' ? parseFloat(price.replace(/[^0-9.-]+/g,"")) : price;
     addToCart({ id, title, price: numPrice, imagePlaceholder });
+    toast.success(`${title} added to cart!`, {
+      icon: '🧁',
+      style: {
+        borderRadius: '20px',
+        background: '#2d2a4a',
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: '14px',
+      },
+    });
+  };
+
+  const toggleWishlist = (e) => {
+    e.preventDefault();
+    setIsWishlisted(!isWishlisted);
   };
 
   return (
@@ -30,8 +47,12 @@ const ProductCard = ({ id, title, price, imagePlaceholder = 'bg-surface_dim', ta
            )}
 
            {/* Heart overlay */}
-           <button className="absolute top-4 right-4 z-10 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-primary hover:scale-110 transition-transform active:scale-95">
-             <Heart size={20} className="fill-current" />
+           <button 
+             onClick={toggleWishlist}
+             className={`absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 ${isWishlisted ? 'bg-primary text-white scale-110' : 'bg-white text-primary hover:scale-110'}`}
+             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+           >
+             <Heart size={20} className={isWishlisted ? "fill-current" : ""} />
            </button>
         </div>
       </Link>

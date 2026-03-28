@@ -1,27 +1,60 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import ProductCard from '../components/ui/ProductCard';
 import { Filter, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ProductCatalog = () => {
   const { products, categories: storeCategories } = useStore();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [activeCategories, setActiveCategories] = useState(['All Candies']);
-  const [price, setPrice] = useState(35);
+  const [price, setPrice] = useState(100);
   const [sortBy, setSortBy] = useState('Newest Arrivals');
+  const [showSort, setShowSort] = useState(false);
+
+  // Update searchQuery when URL param changes
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]);
+
+  // Update URL param when local searchQuery changes (optional, but good for UX)
+  const handleLocalSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    if (value) {
+      setSearchParams({ q: value }, { replace: true });
+    } else {
+      const { q, ...rest } = Object.fromEntries(searchParams);
+      setSearchParams(rest, { replace: true });
+    }
+  };
 
   const categories = ['All Candies', 'Chocolate', 'Gummies', 'Hard Candy', 'Sour Bites'];
   const specialTags = ['Vegan', 'Sugar Free', 'Gift Box'];
 
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase());
+    let result = products.filter(product => {
+      const matchSearch = (product.title || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchCategory = activeCategories.includes('All Candies') || activeCategories.includes(product.category);
-      const matchPrice = product.price <= price;
+      const matchPrice = (product.price || 0) <= price;
       return matchSearch && matchCategory && matchPrice;
     });
-  }, [searchQuery, activeCategories, price, products]);
+
+    // Sorting Logic
+    if (sortBy === 'Price: Low to High') {
+      result.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sortBy === 'Price: High to Low') {
+      result.sort((a, b) => (b.price || 0) - (a.price || 0));
+    } else if (sortBy === 'Newest Arrivals') {
+      result.sort((a, b) => b.id.localeCompare(a.id)); // Using ID as proxy for date
+    }
+
+    return result;
+  }, [searchQuery, activeCategories, price, products, sortBy]);
 
   const toggleCategory = (cat) => {
     if (cat === 'All Candies') {
@@ -58,7 +91,7 @@ const ProductCatalog = () => {
                   <h2 className="text-xl font-black text-on_surface tracking-tight uppercase">Filters</h2>
                 </div>
               </div>
-              
+
               <div className="space-y-10">
                 {/* Categories */}
                 <div>
@@ -67,11 +100,11 @@ const ProductCatalog = () => {
                     {categories.map(cat => (
                       <label key={cat} className="flex items-center gap-4 cursor-pointer group">
                         <div className="relative flex items-center justify-center">
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             checked={activeCategories.includes(cat)}
                             onChange={() => toggleCategory(cat)}
-                            className="peer appearance-none w-6 h-6 rounded-full border-2 border-surface_container checked:bg-primary checked:border-primary transition-all cursor-pointer" 
+                            className="peer appearance-none w-6 h-6 rounded-full border-2 border-surface_container checked:bg-primary checked:border-primary transition-all cursor-pointer"
                           />
                           <div className="absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
                             <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -91,13 +124,13 @@ const ProductCatalog = () => {
                 <div>
                   <h3 className="font-bold text-lg text-on_surface mb-5 tracking-tight">Price Range</h3>
                   <div className="space-y-4">
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="100" 
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
                       value={price}
                       onChange={(e) => setPrice(parseInt(e.target.value))}
-                      className="w-full h-2 bg-surface_container rounded-lg appearance-none cursor-pointer accent-primary" 
+                      className="w-full h-2 bg-surface_container rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                     <div className="flex justify-between items-center text-sm font-bold text-on_surface_variant">
                       <span>$0</span>
@@ -111,7 +144,7 @@ const ProductCatalog = () => {
                   <h3 className="font-bold text-lg text-on_surface mb-5 tracking-tight">Special</h3>
                   <div className="flex flex-wrap gap-2">
                     {specialTags.map(tag => (
-                      <button 
+                      <button
                         key={tag}
                         className="px-4 py-2 rounded-xl text-[13px] font-bold transition-all bg-[#fff0f7] text-[#ee4c9e] hover:bg-primary hover:text-white"
                       >
@@ -130,14 +163,44 @@ const ProductCatalog = () => {
               <h1 className="text-4xl font-black text-on_surface tracking-tight">
                 Sweet Treats <span className="text-primary tracking-normal ml-1">({filteredProducts.length})</span>
               </h1>
-              
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-bold text-on_surface_variant whitespace-nowrap">Sort by:</span>
-                <div className="relative group">
-                  <button className="flex items-center justify-between gap-4 px-6 py-3 bg-white border border-surface_container rounded-2xl font-bold text-sm min-w-[200px] hover:border-primary transition-colors">
-                    <span>{sortBy}</span>
-                    <ChevronDown size={18} className="text-primary" />
-                  </button>
+
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on_surface_variant/50" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search treats..."
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-surface_container rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm"
+                    value={searchQuery}
+                    onChange={handleLocalSearchChange}
+                  />
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-bold text-on_surface_variant whitespace-nowrap">Sort by:</span>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowSort(!showSort)}
+                      className="flex items-center justify-between gap-4 px-6 py-3 bg-white border border-surface_container rounded-2xl font-bold text-sm min-w-[200px] hover:border-primary transition-colors"
+                    >
+                      <span>{sortBy}</span>
+                      <ChevronDown size={18} className={`text-primary transition-transform ${showSort ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {showSort && (
+                      <div className="absolute right-0 top-full mt-2 w-full bg-white border border-surface_container rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        {['Newest Arrivals', 'Price: Low to High', 'Price: High to Low'].map(option => (
+                          <button
+                            key={option}
+                            onClick={() => { setSortBy(option); setShowSort(false); }}
+                            className={`w-full text-left px-6 py-4 text-sm font-bold transition-colors hover:bg-primary/5 ${sortBy === option ? 'text-primary' : 'text-on_surface_variant'}`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -160,8 +223,8 @@ const ProductCatalog = () => {
                 <p className="text-on_surface_variant font-semibold text-lg max-w-sm mx-auto">
                   We couldn't find any sweets matching your current filters.
                 </p>
-                <button 
-                  onClick={() => { setActiveCategories(['All Candies']); setPrice(100); }}
+                <button
+                  onClick={() => { setSearchQuery(""); setSearchParams({}, { replace: true }); setActiveCategories(['All Candies']); setPrice(100); }}
                   className="mt-8 px-10 py-4 bg-primary text-white font-black rounded-full shadow-lg hover:shadow-primary/30 transition-all hover:-translate-y-1"
                 >
                   Clear All Filters

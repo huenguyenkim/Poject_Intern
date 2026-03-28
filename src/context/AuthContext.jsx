@@ -37,7 +37,11 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: 'Mật khẩu không chính xác' };
     }
 
-    const sessionUser = { ...user, token: `fake-jwt-${Date.now()}` };
+    const token = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })) + '.' + 
+                  btoa(JSON.stringify({ id: user.id, email: user.email, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) })) + '.' + 
+                  'mock_signature';
+    
+    const sessionUser = { ...user, token };
     // Don't store password in session
     delete sessionUser.password;
     
@@ -64,11 +68,30 @@ export const AuthProvider = ({ children }) => {
     users.push(newUser);
     localStorage.setItem('candy_users', JSON.stringify(users));
 
-    const sessionUser = { ...newUser, token: `fake-jwt-${Date.now()}` };
+    const token = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })) + '.' + 
+                  btoa(JSON.stringify({ id: newUser.id, email: newUser.email, role: newUser.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) })) + '.' + 
+                  'mock_signature';
+
+    const sessionUser = { ...newUser, token };
     delete sessionUser.password;
 
     setCurrentUser(sessionUser);
     localStorage.setItem('candy_user', JSON.stringify(sessionUser));
+    return { success: true };
+  };
+
+  const socialLogin = (provider) => {
+    const socialUser = {
+      id: `social-${Date.now()}`,
+      name: `${provider} User`,
+      email: `${provider.toLowerCase()}@example.com`,
+      role: 'user',
+      token: btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })) + '.' + 
+             btoa(JSON.stringify({ id: `social-${Date.now()}`, email: `${provider.toLowerCase()}@example.com`, role: 'user', exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) })) + '.' + 
+             'mock_social_signature'
+    };
+    setCurrentUser(socialUser);
+    localStorage.setItem('candy_user', JSON.stringify(socialUser));
     return { success: true };
   };
 
@@ -80,7 +103,7 @@ export const AuthProvider = ({ children }) => {
   if (loading) return null;
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, register, logout }}>
+    <AuthContext.Provider value={{ currentUser, login, register, logout, socialLogin }}>
       {children}
     </AuthContext.Provider>
   );

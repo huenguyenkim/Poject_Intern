@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { 
   Plus, 
@@ -21,6 +21,7 @@ const ProductMgmt = () => {
   const { products, categories, addProduct, updateProduct, deleteProduct } = useStore();
   const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const formRef = useRef(null);
   
   const [formData, setFormData] = useState({
     title: '', price: '', category: categories[0] || '', description: '', imagePlaceholder: ''
@@ -75,8 +76,12 @@ const ProductMgmt = () => {
       description: product.description || '',
       imagePlaceholder: product.imagePlaceholder || ''
     });
-    // Scroll to top or form on mobile
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({ title: '', price: '', category: categories[0] || '', description: '', imagePlaceholder: '' });
   };
 
   const handleDelete = (id) => {
@@ -227,15 +232,15 @@ const ProductMgmt = () => {
         </div>
 
         {/* Quick Add Sidebar */}
-        <div className="lg:col-span-1 space-y-8">
+        <div className="lg:col-span-1 space-y-8" ref={formRef}>
           <div className="bg-white rounded-[45px] shadow-sm border border-[#ece8f1] overflow-hidden animate-in slide-in-from-right-10 duration-700">
-            <div className="bg-[#b31454] p-8 text-white relative flex items-center gap-4 group">
+            <div className={`${editingId ? 'bg-[#7c3aed]' : 'bg-[#b31454]'} p-8 text-white relative flex items-center gap-4 group`}>
                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <Plus size={20} strokeWidth={3} />
+                  {editingId ? <Edit2 size={20} strokeWidth={3} /> : <Plus size={20} strokeWidth={3} />}
                </div>
                <div>
-                  <h3 className="text-xl font-black">Quick Add</h3>
-                  <p className="text-[11px] font-bold opacity-70">Instantly update your shelf</p>
+                  <h3 className="text-xl font-black">{editingId ? 'Editing Product' : 'Quick Add'}</h3>
+                  <p className="text-[11px] font-bold opacity-70">{editingId ? 'Modify and save changes' : 'Instantly update your shelf'}</p>
                </div>
                <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-white/10 to-transparent"></div>
             </div>
@@ -309,6 +314,12 @@ const ProductMgmt = () => {
                >
                   {editingId ? 'UPDATE PRODUCT' : 'SAVE PRODUCT'}
                </button>
+
+               {editingId && (
+                 <button type="button" onClick={handleCancelEdit} className="w-full bg-[#f8f7fa] text-[#8e8a9d] hover:text-[#2d2a4a] py-4 rounded-[22px] font-black text-sm transition-all">
+                   Cancel Edit
+                 </button>
+               )}
 
                <p className="text-[9px] font-black text-[#b0a9bc] uppercase tracking-[0.15em] text-center">
                   Changes will be live instantly<br />on the main store
