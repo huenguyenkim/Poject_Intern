@@ -16,7 +16,9 @@ export default {
         surface_container: '#f8eef8',
         surface_container_high: '#f2e8f2',
         surface_container_highest: '#ece2ec',
-        on_surface: '#2e1a28',
+        surface_dim: '#fdfaff',
+        on_surface: '#2d2a4a', // Dark purple text/headings
+        on_surface_variant: '#7c52aa', // Muted purple text
         on_primary: '#ffffff',
         error: '#e53e3e',
       },

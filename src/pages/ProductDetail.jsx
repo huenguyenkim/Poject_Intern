@@ -34,7 +34,7 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="bg-[#fffaff] min-h-screen pb-20">
+    <div className="bg-surface_dim min-h-screen pb-20">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm font-medium text-on_surface_variant/60 mb-8 overflow-hidden whitespace-nowrap">
@@ -55,7 +55,7 @@ const ProductDetail = () => {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 {product.tag && (
-                  <span className="absolute top-6 left-6 z-10 font-black text-[10px] uppercase tracking-[0.2em] px-5 py-2 rounded-full bg-secondary text-white shadow-xl shadow-secondary/20">
+                  <span className="absolute top-6 left-6 z-10 font-black text-[10px] uppercase tracking-[0.2em] px-5 py-2 rounded-full bg-secondary text-on_primary shadow-xl shadow-secondary/20">
                     {product.tag}
                   </span>
                 )}
@@ -65,7 +65,7 @@ const ProductDetail = () => {
 
           {/* Right: Product Details */}
           <div className="flex-grow flex flex-col pt-4">
-            <h1 className="text-5xl md:text-6xl font-black text-[#2d2a4a] mb-6 leading-[1.1] tracking-tight">{product.title}</h1>
+            <h1 className="text-5xl md:text-6xl font-black text-on_surface mb-6 leading-[1.1] tracking-tight">{product.title}</h1>
             
             <div className="flex items-center gap-4 mb-8">
                <div className="flex text-primary items-center">
@@ -85,7 +85,7 @@ const ProductDetail = () => {
             {/* Characteristic Tags */}
             <div className="flex flex-wrap gap-3 mb-12">
                {['Gluten Free', 'Fat Free', 'Real Fruit'].map(tag => (
-                  <span key={tag} className={`px-5 py-2 rounded-full font-black text-[11px] uppercase tracking-wider border transition-colors ${tag === 'Gluten Free' ? 'bg-[#f0f9ff] text-[#0ea5e9] border-[#bae6fd]' : tag === 'Fat Free' ? 'bg-[#f0fdf4] text-[#22c55e] border-[#bbf7d0]' : 'bg-[#fff1f2] text-[#e11d48] border-[#fecdd3]'}`}>
+                  <span key={tag} className={`px-5 py-2 rounded-full font-black text-[11px] uppercase tracking-wider border transition-colors ${tag === 'Gluten Free' ? 'bg-tertiary/10 text-tertiary border-tertiary/20' : tag === 'Fat Free' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-primary/10 text-primary border-primary/20'}`}>
                     {tag}
                   </span>
                ))}
@@ -93,7 +93,7 @@ const ProductDetail = () => {
 
             {/* Quantity */}
             <div className="flex items-center gap-8 mb-12">
-               <span className="font-black text-lg text-[#2d2a4a]">Quantity</span>
+               <span className="font-black text-lg text-on_surface">Quantity</span>
                <div className="flex items-center bg-surface_container_high rounded-full p-1 border-2 border-surface_container_high">
                   <button 
                     onClick={() => setQuantity(q => Math.max(1, q - 1))} 
@@ -104,7 +104,7 @@ const ProductDetail = () => {
                   <span className="w-12 text-center font-black text-xl text-on_surface">{quantity}</span>
                   <button 
                     onClick={() => setQuantity(q => q + 1)} 
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/20 text-2xl font-black transition-all"
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on_primary shadow-lg shadow-primary/20 text-2xl font-black transition-all"
                   >
                     +
                   </button>
@@ -135,7 +135,7 @@ const ProductDetail = () => {
                      <Truck size={24} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-[#2d2a4a] leading-tight">Fast Delivery</h4>
+                    <h4 className="font-black text-sm text-on_surface leading-tight">Fast Delivery</h4>
                     <p className="text-[11px] font-bold text-on_surface_variant/60 uppercase tracking-widest mt-1">2-3 Business Days</p>
                   </div>
                </div>
@@ -144,7 +144,7 @@ const ProductDetail = () => {
                      <ShieldCheck size={24} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-[#2d2a4a] leading-tight">Sugar High Guarantee</h4>
+                    <h4 className="font-black text-sm text-on_surface leading-tight">Sugar High Guarantee</h4>
                     <p className="text-[11px] font-bold text-on_surface_variant/60 uppercase tracking-widest mt-1">100% Satisfaction</p>
                   </div>
                </div>

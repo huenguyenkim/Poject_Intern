@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import ProductCard from '../components/ui/ProductCard';
+import Button from '../components/ui/Button';
 import { Filter, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ProductCatalog = () => {
@@ -71,21 +72,39 @@ const ProductCatalog = () => {
     }
   };
 
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
   return (
-    <div className="bg-[#fffaff] min-h-screen">
-      <div className="max-w-[1280px] mx-auto px-6 py-8">
+    <div className="bg-surface_dim min-h-screen">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-4 md:py-8">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm font-medium text-on_surface_variant mb-8">
+        <nav className="flex items-center gap-2 text-[10px] md:text-sm font-black text-on_surface_variant mb-4 md:mb-8 uppercase tracking-widest">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <span className="text-on_surface_variant/40">›</span>
-          <span className="text-primary font-bold">All Sweets</span>
+          <span className="text-primary font-black">All Sweets</span>
         </nav>
 
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-8 md:gap-10">
+          {/* Mobile Filter Toggle */}
+          <div className="lg:hidden flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-surface_container">
+             <div className="flex items-center gap-2">
+                <Filter size={18} className="text-primary" />
+                <span className="font-black text-on_surface text-sm uppercase tracking-tight">Refine Search</span>
+             </div>
+             <Button 
+               onClick={() => setShowMobileFilters(!showMobileFilters)}
+               variant="surface" 
+               size="sm" 
+               className="px-6 py-2 rounded-xl text-xs font-black"
+             >
+                {showMobileFilters ? 'HIDE FILTERS' : 'SHOW FILTERS'}
+             </Button>
+          </div>
+
           {/* Sidebar Filters */}
-          <aside className="w-full lg:w-[280px] flex-shrink-0">
-            <div className="bg-white p-8 rounded-[32px] shadow-sm border border-surface_container sticky top-28">
-              <div className="flex justify-between items-center mb-8 border-b border-surface_container pb-4">
+          <aside className={`w-full lg:w-[280px] flex-shrink-0 transition-all duration-500 lg:block ${showMobileFilters ? 'block opacity-100 translate-y-0' : 'hidden lg:opacity-100 lg:translate-y-0 opacity-0 -translate-y-4'}`}>
+            <div className="bg-white p-6 md:p-8 rounded-[28px] md:rounded-[32px] shadow-sm border border-surface_container lg:sticky lg:top-28">
+              <div className="hidden lg:flex justify-between items-center mb-8 border-b border-surface_container pb-4">
                 <div className="flex items-center gap-3">
                   <Filter size={18} className="text-primary" strokeWidth={2.5} />
                   <h2 className="text-xl font-black text-on_surface tracking-tight uppercase">Filters</h2>
@@ -146,7 +165,7 @@ const ProductCatalog = () => {
                     {specialTags.map(tag => (
                       <button
                         key={tag}
-                        className="px-4 py-2 rounded-xl text-[13px] font-bold transition-all bg-[#fff0f7] text-[#ee4c9e] hover:bg-primary hover:text-white"
+                        className="px-4 py-2 rounded-xl text-[13px] font-bold transition-all bg-primary/10 text-primary hover:bg-primary hover:text-on_primary"
                       >
                         {tag}
                       </button>
@@ -159,32 +178,32 @@ const ProductCatalog = () => {
 
           {/* Main Content */}
           <main className="flex-grow">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
-              <h1 className="text-4xl font-black text-on_surface tracking-tight">
+            <div className="flex flex-col sm:flex-row sm:items-start md:items-center justify-between gap-6 mb-8 md:mb-10">
+              <h1 className="text-3xl md:text-4xl font-black text-on_surface tracking-tight">
                 Sweet Treats <span className="text-primary tracking-normal ml-1">({filteredProducts.length})</span>
               </h1>
 
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on_surface_variant/50" size={18} />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 md:gap-6">
+                <div className="relative w-full sm:w-56 md:w-64">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on_surface_variant/40" size={16} />
                   <input
                     type="text"
                     placeholder="Search treats..."
-                    className="w-full pl-10 pr-4 py-2 bg-white border border-surface_container rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-surface_container rounded-2xl focus:ring-2 focus:ring-primary/10 outline-none font-bold text-sm transition-all"
                     value={searchQuery}
                     onChange={handleLocalSearchChange}
                   />
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-bold text-on_surface_variant whitespace-nowrap">Sort by:</span>
-                  <div className="relative">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-black text-on_surface_variant whitespace-nowrap uppercase tracking-widest hidden sm:block">Sort by:</span>
+                  <div className="relative flex-1 sm:flex-none">
                     <button 
                       onClick={() => setShowSort(!showSort)}
-                      className="flex items-center justify-between gap-4 px-6 py-3 bg-white border border-surface_container rounded-2xl font-bold text-sm min-w-[200px] hover:border-primary transition-colors"
+                      className="flex items-center justify-between gap-4 px-6 py-3 w-full sm:w-auto bg-white border border-surface_container rounded-2xl font-black text-xs min-w-[180px] hover:border-primary transition-all shadow-sm"
                     >
-                      <span>{sortBy}</span>
-                      <ChevronDown size={18} className={`text-primary transition-transform ${showSort ? 'rotate-180' : ''}`} />
+                      <span className="uppercase tracking-tight">{sortBy}</span>
+                      <ChevronDown size={16} className={`text-primary transition-transform ${showSort ? 'rotate-180' : ''}`} />
                     </button>
                     
                     {showSort && (
@@ -223,12 +242,12 @@ const ProductCatalog = () => {
                 <p className="text-on_surface_variant font-semibold text-lg max-w-sm mx-auto">
                   We couldn't find any sweets matching your current filters.
                 </p>
-                <button
-                  onClick={() => { setSearchQuery(""); setSearchParams({}, { replace: true }); setActiveCategories(['All Candies']); setPrice(100); }}
-                  className="mt-8 px-10 py-4 bg-primary text-white font-black rounded-full shadow-lg hover:shadow-primary/30 transition-all hover:-translate-y-1"
-                >
-                  Clear All Filters
-                </button>
+                  <button
+                    onClick={() => { setSearchQuery(""); setSearchParams({}, { replace: true }); setActiveCategories(['All Candies']); setPrice(100); }}
+                    className="mt-8 px-10 py-4 bg-primary text-on_primary font-black rounded-full shadow-lg hover:shadow-primary/30 transition-all hover:-translate-y-1"
+                  >
+                    Clear All Filters
+                  </button>
               </div>
             )}
           </main>

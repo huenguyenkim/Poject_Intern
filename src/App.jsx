@@ -24,6 +24,7 @@ import OrderMgmt from './pages/admin/OrderMgmt';
 import BannerMgmt from './pages/admin/BannerMgmt';
 import AdminLogin from './pages/admin/AdminLogin';
 import UserLayout from './components/layout/UserLayout';
+import Placeholder from './components/ui/Placeholder';
 
 const App = () => {
   return (
@@ -45,16 +46,16 @@ const App = () => {
                 
                 {/* User Profile Routes Nested in Storefront */}
                 <Route path="profile" element={<ProtectedRoute role="user"><UserLayout /></ProtectedRoute>}>
-                  <Route index element={<div className="p-20 text-center uppercase font-black text-[#2d2a4a] tracking-[0.2em] text-sm italic">Profile Coming Soon</div>} />
+                  <Route index element={<Placeholder title="Profile" />} />
                   <Route path="orders" element={<UserOrders />} />
-                  <Route path="settings" element={<div className="p-20 text-center uppercase font-black text-[#2d2a4a] tracking-[0.2em] text-sm italic">Settings Coming Soon</div>} />
+                  <Route path="settings" element={<Placeholder title="Settings" />} />
                 </Route>
 
-                <Route path="*" element={<div className="p-20 text-center"><h2 className="text-3xl font-bold mb-4">Coming Soon</h2></div>} />
+                <Route path="*" element={<Placeholder />} />
               </Route>
 
-              <Route path="/admin/login" element={<AdminLogin />} />
               {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<ProductMgmt />} />
@@ -62,7 +63,7 @@ const App = () => {
                 <Route path="orders" element={<OrderMgmt />} />
                 <Route path="orders/:id" element={<OrderMgmt />} />
                 <Route path="banners" element={<BannerMgmt />} />
-                <Route path="*" element={<div className="p-20 text-center"><h2 className="text-3xl font-bold mb-4">Admin Section Coming Soon</h2></div>} />
+                <Route path="*" element={<Placeholder title="Admin Page" />} />
               </Route>
             </Routes>
           </Router>

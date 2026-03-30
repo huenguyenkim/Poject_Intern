@@ -4,7 +4,7 @@ import {
   Candy, 
   Mail, 
   Lock, 
-  User, 
+  User as UserIcon, 
   Eye, 
   EyeOff, 
   Check, 
@@ -13,6 +13,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true); // Default to Login as per new request
@@ -101,36 +104,36 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-20 px-4 bg-[#fdfaff]">
-      <div className="max-w-6xl w-full bg-white rounded-[40px] shadow-2xl shadow-purple-200/30 overflow-hidden flex flex-col md:flex-row border border-[#ece8f1]">
+    <div className="min-h-screen flex items-center justify-center py-20 px-4 bg-surface_dim">
+      <div className="max-w-6xl w-full bg-white rounded-[40px] shadow-2xl shadow-secondary/10 overflow-hidden flex flex-col md:flex-row border border-surface_container">
         
         {/* Left Side: Branding/Carousel */}
-        <div className="w-full md:w-5/12 bg-gradient-to-br from-[#fff0f5] via-[#f7f0ff] to-[#e6e1ff] p-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
+        <div className="w-full md:w-5/12 bg-gradient-to-br from-primary/5 via-secondary/5 to-tertiary/5 p-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-[100px]"></div>
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-secondary/10 rounded-full blur-[100px]"></div>
           
           <div className="relative z-10 w-full">
-            <h1 className="text-5xl font-black text-[#2d2a4a] tracking-tight mb-4">CandyShop</h1>
-            <p className="text-[#8e8a9d] font-bold text-lg mb-12">
+            <h1 className="text-5xl font-black text-on_surface tracking-tight mb-4">CandyShop</h1>
+            <p className="text-on_surface_variant font-bold text-lg mb-12">
               The sweetest place on the internet.<br />
               {isLogin ? 'Login to grab your treats!' : 'Join our sweet community!'}
             </p>
 
             <div className="w-full max-w-[320px] aspect-square mx-auto bg-white/20 backdrop-blur-sm rounded-[50px] p-6 shadow-2xl relative">
-               <div className="w-full h-full bg-[#fff0f5] rounded-[35px] overflow-hidden shadow-inner flex items-center justify-center relative">
+               <div className="w-full h-full bg-primary/5 rounded-[35px] overflow-hidden shadow-inner flex items-center justify-center relative">
                   <img 
                     src="/images/gummy-bears-hq.png" 
                     alt="Delicious Gummy Bears" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2d2a4a]/10 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-on_surface/10 to-transparent pointer-events-none"></div>
                </div>
             </div>
 
             {/* Carousel Dots */}
             <div className="flex items-center justify-center gap-3 mt-10">
               <div className="w-8 h-2.5 bg-primary rounded-full"></div>
-              <div className="w-5 h-2.5 bg-[#8e8a9d]/30 rounded-full"></div>
+              <div className="w-5 h-2.5 bg-on_surface_variant/30 rounded-full"></div>
               <div className="w-3 h-2.5 bg-primary/30 rounded-full"></div>
             </div>
           </div>
@@ -141,16 +144,16 @@ const Auth = () => {
           
           {/* Top Toggle */}
           <div className="flex justify-center mb-12">
-            <div className="bg-[#f8f7fa] p-1.5 rounded-[22px] flex items-center w-full max-w-[340px] shadow-sm">
+            <div className="bg-surface_dim p-1.5 rounded-[22px] flex items-center w-full max-w-[340px] shadow-sm">
               <button 
                 onClick={() => {setIsLogin(true); setErrors({});}}
-                className={`flex-1 py-3.5 px-6 rounded-[18px] font-black text-[15px] transition-all ${isLogin ? 'bg-white text-primary shadow-lg shadow-pink-100' : 'text-[#b0a9bc] hover:text-[#8e8a9d]'}`}
+                className={`flex-1 py-3.5 px-6 rounded-[18px] font-black text-[15px] transition-all ${isLogin ? 'bg-white text-primary shadow-lg shadow-primary/10' : 'text-on_surface_variant/60 hover:text-on_surface_variant'}`}
               >
                 Login
               </button>
               <button 
                 onClick={() => {setIsLogin(false); setErrors({});}}
-                className={`flex-1 py-3.5 px-6 rounded-[18px] font-black text-[15px] transition-all ${!isLogin ? 'bg-white text-primary shadow-lg shadow-pink-100' : 'text-[#b0a9bc] hover:text-[#8e8a9d]'}`}
+                className={`flex-1 py-3.5 px-6 rounded-[18px] font-black text-[15px] transition-all ${!isLogin ? 'bg-white text-primary shadow-lg shadow-primary/10' : 'text-on_surface_variant/60 hover:text-on_surface_variant'}`}
               >
                 Sign Up
               </button>
@@ -160,13 +163,14 @@ const Auth = () => {
           <div className="space-y-10">
             {/* Quick Access Section */}
             <div>
-              <p className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-[0.25em] text-center mb-6">Quick Access</p>
+              <p className="text-[10px] font-black text-on_surface_variant/60 uppercase tracking-[0.25em] text-center mb-6">Quick Access</p>
               <div className="grid grid-cols-1 gap-4">
-                <button 
+                <Button 
                   onClick={() => handleSocialLogin('Google')}
-                  className="w-full flex items-center justify-center gap-4 py-4.5 bg-white rounded-[22px] border-2 border-[#f8f7fa] hover:border-primary/20 hover:bg-[#f8f7fa] transition-all font-black text-[#2d2a4a] text-[15px] group"
+                  variant="outline"
+                  className="w-full py-4 bg-white hover:bg-surface_dim h-auto"
                 >
-                  <div className="w-5 h-5 flex items-center justify-center">
+                  <div className="w-5 h-5 flex items-center justify-center mr-4">
                     <svg viewBox="0 0 48 48" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
                       <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z" fill="#4285F4"/>
                       <path d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.115 0 5.935 1.106 8.112 2.932l6.442-6.442C34.615 4.108 29.63 2 24 2c-7.532 0-14.12 3.8-17.694 9.531Z" fill="#EA4335"/>
@@ -175,115 +179,101 @@ const Auth = () => {
                     </svg>
                   </div>
                   Continue with Google
-                </button>
-                <button 
+                </Button>
+                <Button 
                   onClick={() => handleSocialLogin('Apple')}
-                  className="w-full flex items-center justify-center gap-4 py-4.5 bg-white rounded-[22px] border-2 border-[#f8f7fa] hover:border-primary/20 hover:bg-[#f8f7fa] transition-all font-black text-[#2d2a4a] text-[15px] group"
+                  variant="outline"
+                  className="w-full py-4 bg-white hover:bg-surface_dim h-auto"
                 >
-                  <div className="w-5 h-5 flex items-center justify-center">
+                  <div className="w-5 h-5 flex items-center justify-center mr-4">
                     <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" fill="#000"/>
+                      <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" fill="currentColor"/>
                     </svg>
                   </div>
                   Continue with Apple
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="flex-grow h-[2px] bg-[#f8f7fa]"></div>
-              <span className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-[0.25em] whitespace-nowrap">Or Email</span>
-              <div className="flex-grow h-[2px] bg-[#f8f7fa]"></div>
+              <div className="flex-grow h-[2px] bg-surface_dim"></div>
+              <span className="text-[10px] font-black text-on_surface_variant/60 uppercase tracking-[0.25em] whitespace-nowrap">Or Email</span>
+              <div className="flex-grow h-[2px] bg-surface_dim"></div>
             </div>
 
             <form className="space-y-8" onSubmit={handleSubmit} noValidate>
               {!isLogin && (
-                <div className="space-y-3">
-                  <label className="text-[11px] font-black text-[#2d2a4a] uppercase tracking-[0.2em] ml-1">Full Name</label>
-                  <div className="relative group">
-                    <User size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#b0a9bc] transition-colors group-focus-within:text-primary" />
-                    <input 
-                      type="text" 
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Enter your name"
-                      className="w-full bg-[#f8f7fa] py-5.5 pl-16 pr-6 rounded-[22px] font-black text-[#2d2a4a] outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all placeholder-[#b0a9bc]"
-                    />
-                    {errors.name && <p className="text-xs font-black text-error pl-1 mt-2">{errors.name}</p>}
-                  </div>
-                </div>
+                <Input 
+                  label="Full Name"
+                  type="text" 
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter your name"
+                  icon={UserIcon}
+                  error={errors.name}
+                />
               )}
 
-              <div className="space-y-3">
-                <label className="text-[11px] font-black text-[#2d2a4a] uppercase tracking-[0.2em] ml-1">Email Address</label>
-                <div className="relative group">
-                  <Mail size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#b0a9bc] transition-colors group-focus-within:text-primary" />
-                  <input 
-                    type="email" 
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="sweet@candyshop.com"
-                    className="w-full bg-[#f8f7fa] py-5.5 pl-16 pr-6 rounded-[22px] font-black text-[#2d2a4a] outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all placeholder-[#b0a9bc]"
-                  />
-                  {errors.email && <p className="text-xs font-black text-error pl-1 mt-2">{errors.email}</p>}
-                </div>
-              </div>
+              <Input 
+                label="Email Address"
+                type="email" 
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="sweet@candyshop.com"
+                icon={Mail}
+                error={errors.email}
+              />
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between ml-1">
-                  <label className="text-[11px] font-black text-[#2d2a4a] uppercase tracking-[0.2em]">Password</label>
-                  {isLogin && <button type="button" className="text-[11px] font-black text-primary hover:underline">Forgot?</button>}
-                </div>
-                <div className="relative group">
-                  <Lock size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#b0a9bc] transition-colors group-focus-within:text-primary" />
-                  <input 
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="********"
-                    className="w-full bg-[#f8f7fa] py-5.5 pl-16 pr-6 rounded-[22px] font-black text-[#2d2a4a] outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all placeholder-[#b0a9bc]"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 text-[#b0a9bc] hover:text-primary transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                {!isLogin && <p className="text-[11px] font-bold text-[#b0a9bc] leading-relaxed ml-1">Must be at least 8 characters with one special character.</p>}
-                {errors.password && <p className="text-xs font-black text-error pl-1 mt-2">{errors.password}</p>}
+              <div className="relative">
+                <Input 
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="********"
+                  icon={Lock}
+                  error={errors.password}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-[55px] -translate-y-1/2 text-on_surface_variant/60 hover:text-primary transition-colors z-10"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                {!isLogin && <p className="text-[11px] font-bold text-on_surface_variant/60 leading-relaxed ml-1 mt-2">Must be at least 8 characters with one special character.</p>}
               </div>
 
               <div className="flex items-center gap-3 ml-1">
                 <button 
                   type="button"
                   onClick={() => isLogin ? setStayLoggedIn(!stayLoggedIn) : setAgreeTerms(!agreeTerms)}
-                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${((isLogin && stayLoggedIn) || (!isLogin && agreeTerms)) ? 'bg-primary border-primary shadow-lg shadow-pink-100' : 'bg-[#f8f7fa] border-[#ece8f1]'}`}
+                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${((isLogin && stayLoggedIn) || (!isLogin && agreeTerms)) ? 'bg-primary border-primary shadow-lg shadow-primary/10' : 'bg-surface_dim border-surface_container'}`}
                 >
-                  {((isLogin && stayLoggedIn) || (!isLogin && agreeTerms)) && <Check size={16} className="text-white" strokeWidth={3} />}
+                  {((isLogin && stayLoggedIn) || (!isLogin && agreeTerms)) && <Check size={16} className="text-on_primary" strokeWidth={3} />}
                 </button>
-                <p className="text-[13px] font-black text-[#8e8a9d]">
+                <p className="text-[13px] font-black text-on_surface_variant">
                   {isLogin ? 'Stay logged in' : (
                     <>I agree to the <span className="text-primary hover:underline cursor-pointer">Terms</span> & <span className="text-primary hover:underline cursor-pointer">Privacy</span></>
                   )}
                 </p>
               </div>
 
-              <button 
+              <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-[#f13a7b] text-white py-6 rounded-[22px] font-black text-lg shadow-xl shadow-pink-100 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group mt-4"
+                variant="primary"
+                className="w-full py-6 text-lg mt-4"
               >
                 {isLogin ? 'Sweeten My Day' : 'CREATE SWEET ACCOUNT'}
-                <ArrowRight size={22} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+                <ArrowRight size={22} strokeWidth={3} className="group-hover:translate-x-1 transition-transform ml-4" />
+              </Button>
             </form>
 
             <div className="text-center space-y-8">
-              <p className="text-[#8e8a9d] font-bold">
+              <p className="text-on_surface_variant font-bold">
                 {isLogin ? "New to the shop?" : "Already have an account?"}{' '}
                 <button 
                   onClick={() => {setIsLogin(!isLogin); setErrors({});}}
@@ -293,7 +283,7 @@ const Auth = () => {
                 </button>
               </p>
 
-              <p className="text-[10px] font-black text-[#b0a9bc] uppercase tracking-[0.2em] leading-loose max-w-[280px] mx-auto">
+              <p className="text-[10px] font-black text-on_surface_variant/60 uppercase tracking-[0.2em] leading-loose max-w-[280px] mx-auto">
                 By logging in, you agree to our<br />
                 <span className="underline decoration-1 underline-offset-2">Candy Terms</span> & <span className="underline decoration-1 underline-offset-2">Sugar Privacy</span>
               </p>

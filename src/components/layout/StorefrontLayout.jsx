@@ -11,12 +11,19 @@ const StorefrontLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  // Close menu on route change
+  React.useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
+      setIsMenuOpen(false);
     }
   };
 
@@ -80,12 +87,51 @@ const StorefrontLayout = () => {
                 <Link to={currentUser ? '/profile' : '/auth'} className="p-2 text-primary hover:text-primary/70 transition-colors bouncy-hover hidden sm:block" aria-label="User Profile">
                   <User size={24} />
                 </Link>
-                <button className="md:hidden p-2 text-primary hover:text-primary/70 transition-colors bouncy-hover" aria-label="Open menu">
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="md:hidden p-2 text-primary hover:text-primary/70 transition-colors bouncy-hover" 
+                  aria-label="Open menu"
+                >
                   <Menu size={24} />
                 </button>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Menu Drawer */}
+        <div className={`fixed inset-0 z-[60] md:hidden transition-all duration-500 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+           <div className={`absolute inset-0 bg-on_surface/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMenuOpen(false)}></div>
+           <div className={`absolute top-0 right-0 h-full w-4/5 max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+              <div className="p-8 border-b border-surface_dim flex justify-between items-center">
+                 <span className="font-black text-2xl tracking-tight text-primary">Menu</span>
+                 <button onClick={() => setIsMenuOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface_dim text-on_surface_variant">
+                    <svg size={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                 </button>
+              </div>
+              
+              <nav className="p-8 space-y-6">
+                 <Link to="/" className="block text-2xl font-black text-on_surface hover:text-primary transition-colors">Home</Link>
+                 <Link to="/shop" className="block text-2xl font-black text-on_surface hover:text-primary transition-colors">Shop</Link>
+                 <Link to="/cart" className="block text-2xl font-black text-on_surface hover:text-primary transition-colors">Cart</Link>
+                 <Link to={currentUser ? '/profile' : '/auth'} className="block text-2xl font-black text-on_surface hover:text-primary transition-colors">
+                    {currentUser ? 'My Profile' : 'Sign In'}
+                 </Link>
+              </nav>
+
+              <div className="mt-auto p-8 border-t border-surface_dim">
+                 <form onSubmit={handleSearch} className="flex items-center bg-surface_dim rounded-2xl px-5 py-4 w-full">
+                    <Search size={20} className="text-on_surface_variant mr-3" />
+                    <input 
+                      type="text" 
+                      placeholder="Search sweets..." 
+                      className="bg-transparent border-none outline-none text-base font-bold text-on_surface w-full placeholder-on_surface_variant"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                 </form>
+              </div>
+           </div>
         </div>
       </header>
 
@@ -110,7 +156,7 @@ const StorefrontLayout = () => {
  
             {/* Quick Links */}
             <div>
-              <h4 className="font-black text-[#2d2a4a] text-lg mb-6">Quick Links</h4>
+              <h4 className="font-black text-on_surface text-lg mb-6">Quick Links</h4>
               <ul className="space-y-4">
                 <li><Link to="/shop" className="text-on_surface_variant hover:text-secondary font-bold transition-colors">Shop All</Link></li>
               </ul>
@@ -118,7 +164,7 @@ const StorefrontLayout = () => {
  
             {/* Newsletter */}
             <div>
-              <h4 className="font-black text-[#2d2a4a] text-lg mb-6">Newsletter</h4>
+              <h4 className="font-black text-on_surface text-lg mb-6">Newsletter</h4>
               <form onSubmit={handleNewsletterSubmit} className="flex bg-surface_container_high rounded-full p-1 border-2 border-surface_container_high focus-within:border-secondary transition-all">
                 <input 
                   type="email" 
@@ -129,7 +175,7 @@ const StorefrontLayout = () => {
                 <button 
                   type="submit"
                   aria-label="Subscribe to newsletter"
-                  className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                  className="bg-primary text-on_primary w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -141,7 +187,7 @@ const StorefrontLayout = () => {
           </div>
           
           <div className="border-t border-surface_container_high pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-black text-sm font-black">
+            <p className="text-on_surface text-sm font-black">
               © 2024 CandyShop Storefront. Stay sweet!
             </p>
           </div>

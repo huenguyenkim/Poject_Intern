@@ -36,6 +36,6 @@
 
 @layer utilities {
   .shadow-tinted-secondary {
-    box-shadow: 0 10px 30px -10px rgba(124, 82, 170, 0.3);
+    @apply shadow-secondary/30;
   }
 }
