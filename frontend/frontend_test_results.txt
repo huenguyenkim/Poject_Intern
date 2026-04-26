@@ -1,0 +1,15 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.1.2 [39m[90mC:/Users/admin/.gemini/antigravity/scratch/candy-ecommerce/frontend[39m
+
+ [31mΓ¥»[39m src/pages/admin/CategoryMgmt.test.jsx [2m([22m[2m0 test[22m[2m)[22m
+ [32mΓ£ô[39m src/context/CartContext.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 161[2mms[22m[39m
+ [31mΓ¥»[39m src/components/ui/ProductCard.test.jsx [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 825[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m n├¬n hiß╗ân thß╗ï ─æ├║ng th├┤ng tin sß║ún phß║⌐m [33m 570[2mms[22m[39m
+     [32mΓ£ô[39m n├¬n gß╗ìi addToCart khi nhß║Ñn n├║t th├¬m v├áo giß╗Å h├áng[32m 106[2mms[22m[39m
+[31m     [31m├ù[31m n├¬n toggle trß║íng th├íi y├¬u th├¡ch khi nhß║Ñn n├║t Heart[39m[32m 142[2mms[22m[39m
+ [31mΓ¥»[39m src/pages/auth/Auth.test.jsx [2m([22m[2m5 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 3081[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m n├¬n hiß╗ân thß╗ï form login mß║╖c ─æß╗ïnh [33m 1252[2mms[22m[39m
+[31m     [31m├ù[31m n├¬n chuyß╗ân sang mode Sign Up khi nhß║Ñn button[39m[33m 369[2mms[22m[39m
+[31m     [31m├ù[31m n├¬n b├ío lß╗ùi validation nß║┐u ─æß╗â trß╗æng email/password khi login[39m[33m 1092[2mms[22m[39m
+[31m     [31m├ù[31m n├¬n gß╗ìi h├ám login khi submit form hß╗úp lß╗ç[39m[32m 75[2mms[22m[39m
+[31m     [31m├ù[31m n├¬n gß╗ìi h├ám register khi submit form sign up hß╗úp lß╗ç[39m[32m 287[2mms[22m[39m

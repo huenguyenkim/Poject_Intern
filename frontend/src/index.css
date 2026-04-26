@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-background text-on_surface;
+  }
+
+  /* High-contrast focus rings for Accessibility */
+  *:focus-visible {
+    @apply outline-none ring-4 ring-primary ring-offset-2 transition-all;
+  }
+
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer components {
+  /* Playful bouncing micro-interactions */
+  .bouncy-hover {
+    @apply transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)];
+  }
+  .bouncy-hover:hover {
+    @apply scale-[1.03];
+  }
+  .bouncy-active:active {
+    @apply scale-95;
+  }
+
+  /* Custom Prose for Candy Theme */
+  .prose-candy {
+    @apply text-on_surface_variant leading-relaxed;
+  }
+  .prose-candy h3 {
+    @apply text-on_surface font-black uppercase tracking-[0.2em] mb-4;
+  }
+  .prose-candy p {
+    @apply mb-4;
+  }
+}
+
+@layer utilities {
+  .shadow-tinted-secondary {
+    @apply shadow-secondary/30;
+  }
+}

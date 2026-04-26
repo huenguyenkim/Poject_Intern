@@ -32,9 +32,15 @@ Antigravity Candy is more than just a store; it's a visual delight. Built with m
 - **Order & Banner Control**: Update shipping statuses in real-time and manage homepage promotions.
 - **Role-Based Access Control (RBAC)**: Strict security layers protecting sensitive admin zones.
 
+## 📂 Project Structure
+
+This project is organized into two main directories:
+- `/frontend`: The React (Vite) storefront.
+- `/backend`: The Node.js (NestJS) backend infrastructure.
+
 ## 📦 Setup Instructions
 
-Follow these steps to get the project running on your local machine:
+Follow these steps to get the project running on your local machine from the **root directory**:
 
 ### 1. Clone the Repository
 ```bash
@@ -42,22 +48,21 @@ git clone https://github.com/huenguyenkim/Poject_Intern.git
 cd candy-ecommerce
 ```
 
-### 2. Install Dependencies
+### 2. Install All Dependencies
 ```bash
-npm install
+npm run install:all
 ```
 
-### 3. Configure Environment Variables
-Create a `.env` file in the root directory and add the following:
-```env
-VITE_APP_NAME="Antigravity Candy"
-NODE_ENV="development"
-# VITE_API_URL="your_backend_api_here"
+### 3. Run Development Servers
+
+To run the **frontend**:
+```bash
+npm run dev:frontend
 ```
 
-### 4. Run the Development Server
+To run the **backend**:
 ```bash
-npm run dev
+npm run dev:backend
 ```
 The application will be available at `http://localhost:5173`.
 
