@@ -1,12 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LocalizedLink from '../navigation/LocalizedLink';
 import PureBadge from '../ui/PureBadge';
-import Button from '../ui/Button';
 
 /**
  * BentoProductCard: A premium card designed for bento-grid layouts.
- * Features full-height gradient overlays, line-clamping, and safe touch targets.
  */
 const BentoProductCard = ({ 
   id, 
@@ -16,11 +15,12 @@ const BentoProductCard = ({
   imageUrl, 
   image,
   description, 
-  tag = "FRESH RELEASE", 
+  tag, 
   isLarge = false,
   onQuickView,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const displayTitle = productName || title;
   const displayImage = imageUrl || image;
   return (
@@ -47,9 +47,9 @@ const BentoProductCard = ({
       {/* Content Overlay */}
       <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-end">
         <div className="space-y-3">
-          {tag && (
+          {(tag || t('home.fresh_badge')) && (
             <PureBadge variant="tertiary" className="bg-white/20 backdrop-blur-md text-white border-transparent text-[10px] tracking-[0.15em] mb-2 font-black uppercase">
-              {tag}
+              {tag || t('home.fresh_badge')}
             </PureBadge>
           )}
 
@@ -70,7 +70,7 @@ const BentoProductCard = ({
               ${parseFloat(price).toFixed(2)}
             </span>
 
-            {/* Explore Flavor Button - White Pill with Blue Text */}
+            {/* Explore Flavor Button */}
             <div className="relative z-10">
               <button
                 onClick={(e) => {
@@ -82,7 +82,7 @@ const BentoProductCard = ({
                   isLarge ? 'text-lg h-14' : 'text-sm h-11'
                 }`}
               >
-                Explore Flavor
+                {t('home.explore_flavor')}
               </button>
             </div>
           </div>
@@ -90,7 +90,7 @@ const BentoProductCard = ({
       </div>
 
       {/* Hidden Card Link (Total Area Navigation to Detail) */}
-      <Link 
+      <LocalizedLink 
         to={`/shop/${id}`} 
         className="absolute inset-0 z-0" 
         aria-label={`View details for ${displayTitle}`}

@@ -32,7 +32,7 @@ export class TypeOrmUserRepository implements IUserRepository {
 
   async create(user: Partial<DomainUser>): Promise<DomainUser> {
     const entity = this.repository.create({
-      name: user.name,
+      fullName: user.fullName,
       email: user.email,
       password: user.password,
       role: user.role,
@@ -43,7 +43,7 @@ export class TypeOrmUserRepository implements IUserRepository {
 
   async update(id: number, user: Partial<DomainUser>): Promise<DomainUser> {
     await this.repository.update(id, {
-      name: user.name,
+      fullName: user.fullName,
       email: user.email,
       password: user.password,
       role: user.role,
@@ -59,7 +59,7 @@ export class TypeOrmUserRepository implements IUserRepository {
   private mapToDomain(entity: UserEntity): DomainUser {
     return DomainUser.create({
       id: entity.id,
-      name: entity.name,
+      fullName: entity.fullName,
       email: entity.email,
       role: entity.role,
       password: (entity as any).password, // Extract password if it was selected

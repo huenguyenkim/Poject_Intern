@@ -4,6 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import helmet from 'helmet';
 
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
@@ -20,7 +22,10 @@ async function bootstrap() {
   // 3. Bật Nén Dữ liệu (Compression)
   app.use(compression());
 
-  // 4. Bật Validation Toàn cầu (Strict Mode)
+  // 4. Bật Interceptor Toàn cầu (Sanitization)
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // 5. Bật Validation Toàn cầu (Strict Mode)
     app.useGlobalPipes(new ValidationPipe({
       whitelist: true,               // Loại bỏ các fields không có trong DTO
       forbidNonWhitelisted: true,    // Khôi phục bảo mật nghiêm ngặt

@@ -1,13 +1,17 @@
 import React from 'react';
 import { Modal } from 'antd';
-import { ShoppingBag } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
 
 /**
  * QuickViewModal: Refactored to use Ant Design Modal for accessibility and stability.
- * Uses ConfigProvider tokens for border-radius and background.
  */
 const QuickViewModal = ({ isOpen, onClose, product }) => {
+  const { t } = useTranslation();
+  const { lang } = useParams();
+  const navigate = useNavigate();
+  
   if (!product) return null;
 
   return (
@@ -17,7 +21,7 @@ const QuickViewModal = ({ isOpen, onClose, product }) => {
       footer={null}
       width={1000}
       centered
-      closeIcon={null} // We will use a custom close icon or let antd handle it with theme
+      closeIcon={null}
       styles={{
         content: {
           padding: 0,
@@ -40,7 +44,7 @@ const QuickViewModal = ({ isOpen, onClose, product }) => {
 
         {/* Info Section */}
         <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white relative">
-          {/* Custom Close Button for premium feel */}
+          {/* Close Button */}
           <button 
             onClick={onClose}
             className="absolute top-6 right-6 text-on_surface_variant hover:text-primary transition-colors p-2"
@@ -49,7 +53,7 @@ const QuickViewModal = ({ isOpen, onClose, product }) => {
           </button>
 
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4 block">
-            Quick Preview
+            {t('home.quick_preview')}
           </span>
           
           <h2 className="text-4xl md:text-5xl font-black text-on_surface leading-[1.1] mb-6 tracking-tight">
@@ -62,17 +66,17 @@ const QuickViewModal = ({ isOpen, onClose, product }) => {
             </span>
             {product.stock > 0 ? (
               <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black">
-                IN STOCK: {product.stock}
+                {t('catalog.in_stock')}: {product.stock}
               </div>
             ) : (
               <div className="px-3 py-1 bg-error/10 text-error rounded-full text-xs font-black">
-                SOLD OUT
+                {t('catalog.sold_out')}
               </div>
             )}
           </div>
 
           <p className="text-on_surface_variant leading-relaxed text-lg mb-10 line-clamp-4">
-            {product.description || 'Premium handcrafted confection for your sweet tooth.'}
+            {product.description || t('catalog.premium_desc', { category: product.category || 'confection' })}
           </p>
 
           <div className="space-y-4">
@@ -80,13 +84,14 @@ const QuickViewModal = ({ isOpen, onClose, product }) => {
               variant="primary" 
               className="w-full h-16 rounded-full text-lg font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-3"
               onClick={() => {
-                window.location.href = `/shop/${product.id}`;
+                onClose();
+                navigate(`/${lang}/shop/${product.id}`);
               }}
             >
-              Go to Detail Page
+              {t('home.go_to_detail')}
             </Button>
             <p className="text-center text-xs text-on_surface_variant/60 font-medium italic">
-              Experience the full premium details in our dedicated lab.
+              {t('home.modal_experience_tip')}
             </p>
           </div>
         </div>

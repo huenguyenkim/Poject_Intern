@@ -9,6 +9,9 @@ import {
 } from '../core/application/usecases/ProductUseCases';
 import { Product } from '../core/domain/entities/Product';
 
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+
 @Controller('products')
 export class ProductsController {
   constructor(
@@ -33,14 +36,14 @@ export class ProductsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() data: Partial<Product>): Promise<Product> {
-    return this.createProductUseCase.execute(data);
+  create(@Body() createProductDto: CreateProductDto): Promise<Product> {
+    return this.createProductUseCase.execute(createProductDto as any);
   }
 
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number, 
-    @Body() data: Partial<Product>,
+    @Body() updateProductDto: UpdateProductDto,
     @Request() req,
     @Ip() ip: string,
     @Headers('user-agent') ua: string,
@@ -48,7 +51,7 @@ export class ProductsController {
     const userId = req.user ? req.user.id : 0;
     // Capture real IP from headers if proxied (x-forwarded-for)
     const realIp = req.headers['x-forwarded-for'] || ip;
-    return this.updateProductUseCase.execute(id, data, { userId, ip: realIp, ua });
+    return this.updateProductUseCase.execute(id, updateProductDto as any, { userId, ip: realIp, ua });
   }
 
   @Delete(':id')

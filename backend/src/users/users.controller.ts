@@ -5,6 +5,9 @@ import { JwtAuthGuard, RolesGuard } from '../infrastructure/auth/jwt-auth.guard'
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/constants/user-role.enum';
 
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -24,22 +27,22 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() data: Partial<User>) {
-    return this.usersService.create(data);
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   update(
     @Param('id', ParseIntPipe) id: number, 
-    @Body() data: Partial<User>,
+    @Body() updateUserDto: UpdateUserDto,
     @Request() req,
     @Ip() ip: string,
     @Headers('user-agent') ua: string,
   ) {
     const userId = req.user ? req.user.id : 0;
     const realIp = req.headers['x-forwarded-for'] || ip;
-    return this.usersService.update(id, data, { userId, ip: realIp, ua });
+    return this.usersService.update(id, updateUserDto, { userId, ip: realIp, ua });
   }
 
   @Delete(':id')

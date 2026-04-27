@@ -7,6 +7,8 @@ import { store } from './store/store'
 import './index.css'
 import App from './App.jsx'
 
+import { HelmetProvider } from 'react-helmet-async'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -18,34 +20,36 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: '#FF76B8',
-              borderRadius: 24,
-              fontFamily: "'Outfit', sans-serif",
-              colorBgContainer: '#ffffff',
-            },
-            components: {
-              Button: {
-                fontWeight: 900,
-                controlHeight: 48,
+    <HelmetProvider>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: '#FF76B8',
+                borderRadius: 24,
+                fontFamily: "'Outfit', sans-serif",
+                colorBgContainer: '#ffffff',
               },
-              Input: {
-                controlHeight: 52,
-                borderRadius: 20,
-              },
-              Card: {
-                borderRadiusLG: 32,
+              components: {
+                Button: {
+                  fontWeight: 900,
+                  controlHeight: 48,
+                },
+                Input: {
+                  controlHeight: 52,
+                  borderRadius: 20,
+                },
+                Card: {
+                  borderRadiusLG: 32,
+                }
               }
-            }
-          }}
-        >
-          <App />
-        </ConfigProvider>
-      </QueryClientProvider>
-    </Provider>
+            }}
+          >
+            <App />
+          </ConfigProvider>
+        </QueryClientProvider>
+      </Provider>
+    </HelmetProvider>
   </StrictMode>,
 )

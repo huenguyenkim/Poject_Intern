@@ -3,6 +3,9 @@ import { RegisterUseCase, LoginUseCase, GetMeUseCase } from '../../core/applicat
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserRole } from '../../common/constants/user-role.enum';
 
+import { CreateUserDto } from '../../users/dto/create-user.dto';
+import { LoginDto } from './dto/login.dto';
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -12,14 +15,14 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(@Body() body: any) {
-    return this.registerUseCase.execute(body);
+  async register(@Body() createUserDto: CreateUserDto) {
+    return this.registerUseCase.execute(createUserDto);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() body: any) {
-    return this.loginUseCase.execute(body.email, body.password);
+  async login(@Body() loginDto: LoginDto) {
+    return this.loginUseCase.execute(loginDto.email, loginDto.password);
   }
 
   @UseGuards(JwtAuthGuard)

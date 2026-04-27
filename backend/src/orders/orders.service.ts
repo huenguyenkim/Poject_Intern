@@ -191,7 +191,8 @@ export class OrdersService {
         // PESSIMISTIC LOCKING: SELECT ... FOR UPDATE
         // Tránh Race condition khi nhiều người cùng mua một lúc
         const product = await queryRunner.manager.findOne(Product, {
-          where: { id: item.productId }
+          where: { id: item.productId },
+          lock: { mode: 'pessimistic_write' }
         });
 
         if (!product) {

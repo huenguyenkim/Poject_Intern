@@ -31,7 +31,7 @@ export class SeedService implements OnModuleInit {
     if (!existingAdmin) {
       const hashedPassword = await this.hashingService.hash('admin123');
       await this.userRepository.create({
-        name: 'System Admin',
+        fullName: 'System Admin',
         email: adminEmail,
         password: hashedPassword,
         role: UserRole.ADMIN,
@@ -41,8 +41,8 @@ export class SeedService implements OnModuleInit {
 
     // Seed Test Customers
     const testUsers = [
-      { name: 'Liam Sweet', email: 'sweet@example.com', password: 'password123' },
-      { name: 'Emma Sugar', email: 'sugar@example.com', password: 'password123' },
+      { fullName: 'Liam Sweet', email: 'sweet@example.com', password: 'password123' },
+      { fullName: 'Emma Sugar', email: 'sugar@example.com', password: 'password123' },
     ];
 
     for (const u of testUsers) {
@@ -51,12 +51,12 @@ export class SeedService implements OnModuleInit {
         if (!existing) {
           const hashedPassword = await this.hashingService.hash(u.password);
           await this.userRepository.create({
-            name: u.name,
+            fullName: u.fullName,
             email: u.email,
             password: hashedPassword,
             role: UserRole.CUSTOMER,
           });
-          console.log(`👤 Customer created: ${u.name}`);
+          console.log(`👤 Customer created: ${u.fullName}`);
         }
       } catch (e) {
         console.warn(`⚠️ Could not seed user ${u.email}: ${e.message}`);

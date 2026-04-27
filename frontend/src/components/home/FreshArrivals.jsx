@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import BentoProductCard from './BentoProductCard';
 import QuickViewModal from './QuickViewModal';
 import apiClient from '../../api/apiClient';
 
 /**
  * FreshArrivals: Premium Bento Grid section for latest products.
- * Implements high-aesthetics layout with forensic logging support.
  */
 const FreshArrivals = ({ newProducts = [] }) => {
+  const { t } = useTranslation();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -26,7 +27,6 @@ const FreshArrivals = ({ newProducts = [] }) => {
         tableName: 'products',
         userId: 0 // Anonymous or Guest
       });
-      console.log(`[Analytics] Logged Quick View for product: ${product.id}`);
     } catch (err) {
       console.warn('[Analytics] Failed to log Quick View:', err.message);
     }
@@ -35,10 +35,10 @@ const FreshArrivals = ({ newProducts = [] }) => {
   return (
     <section className="py-24 bg-surface_container_lowest overflow-hidden">
       <div className="container-custom">
-        {/* Section Header with Premium Gradient Line */}
+        {/* Section Header */}
         <div className="flex items-center gap-6 mb-16 px-4">
           <h2 className="text-4xl md:text-5xl font-black text-on_surface tracking-tight whitespace-nowrap">
-            Fresh Out the Oven
+            {t('home.fresh_title')}
           </h2>
           <div className="flex-1 h-[6px] bg-candy-pink rounded-full opacity-100 mt-2"></div>
         </div>

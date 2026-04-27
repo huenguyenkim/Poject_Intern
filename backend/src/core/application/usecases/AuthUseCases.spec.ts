@@ -32,7 +32,7 @@ describe('AuthUseCases', () => {
 
   describe('RegisterUseCase', () => {
     it('nên đăng ký tài khoản thành công', async () => {
-      const data = { name: 'Test User', email: 'test@example.com', password: 'password' };
+      const data = { fullName: 'Test User', email: 'test@example.com', password: 'password' };
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockHashingService.hash.mockResolvedValue('hashed_password');
       mockUserRepository.create.mockResolvedValue({ id: 1, ...data, password: 'hashed_password', role: UserRole.CUSTOMER });
@@ -50,7 +50,7 @@ describe('AuthUseCases', () => {
     });
 
     it('nên báo lỗi nếu email đã tồn tại', async () => {
-      const data = { name: 'Test User', email: 'test@example.com', password: 'password' };
+      const data = { fullName: 'Test User', email: 'test@example.com', password: 'password' };
       mockUserRepository.findByEmail.mockResolvedValue({ id: 1, email: data.email });
 
       await expect(registerUseCase.execute(data)).rejects.toThrow(ConflictException);
@@ -89,7 +89,7 @@ describe('AuthUseCases', () => {
 
   describe('GetMeUseCase', () => {
     it('nên lấy thông tin người dùng hiện tại', async () => {
-      const user = { id: 1, name: 'Test User' };
+      const user = { id: 1, fullName: 'Test User' };
       mockUserRepository.findById.mockResolvedValue(user);
 
       const result = await getMeUseCase.execute(1);

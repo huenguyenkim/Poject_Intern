@@ -22,53 +22,62 @@ import { showSuccessToast, showErrorToast } from '../../utils/toastUtils';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
+import { sanitizeData } from '../../utils/validationUtils';
 
 const CategoryMgmt = () => {
   const dispatch = useDispatch();
   const { categories, products, status } = useSelector((state) => state.catalog);
   
   const [isAdding, setIsAdding] = useState(false);
-  const [newCat, setNewCat] = useState({ name: '', description: '', image: '' });
+  const [newCat, setNewCat] = useState({ categoryName: '', description: '', image: '' });
   const [editingCat, setEditingCat] = useState(null);
-  const [editValue, setEditValue] = useState({ name: '', description: '', image: '' });
+  const [editValue, setEditValue] = useState({ categoryName: '', description: '', image: '' });
 
   const isAddingCategory = status === 'loading' && !editingCat && isAdding;
   const isUpdatingCategory = status === 'loading' && editingCat;
 
   const handleAdd = async (e) => {
     if (e) e.preventDefault();
-    if (!newCat.name.trim()) return showErrorToast('Category name cannot be empty');
-    if (categories.find(c => c.name.toLowerCase() === newCat.name.trim().toLowerCase())) {
+    
+    // SANITIZATION
+    const sanitized = sanitizeData(newCat);
+    
+    if (!sanitized.categoryName) return showErrorToast('Category name cannot be empty');
+    
+    if (categories.find(c => (c.categoryName || c.name).toLowerCase() === sanitized.categoryName.toLowerCase())) {
       return showErrorToast('Category already exists');
     }
     
     try {
-      await dispatch(addCategoryThunk(newCat)).unwrap();
+      await dispatch(addCategoryThunk(sanitized)).unwrap();
       showSuccessToast('Category created! 📁');
-      setNewCat({ name: '', description: '', image: '' });
+      setNewCat({ categoryName: '', description: '', image: '' });
       setIsAdding(false);
     } catch (err) {
-      showErrorToast(err || 'Failed to add category');
+      showErrorToast(err?.response?.data?.message || err || 'Failed to add category');
     }
   };
 
   const handleEdit = (cat) => {
     setEditingCat(cat.id);
     setEditValue({ 
-      name: cat.name, 
+      categoryName: cat.categoryName || cat.name, 
       description: cat.description || '', 
       image: cat.image || '' 
     });
   };
 
   const saveEdit = async (id) => {
-    if (!editValue.name.trim()) return showErrorToast('Category name cannot be empty');
+    // SANITIZATION
+    const sanitized = sanitizeData(editValue);
+    
+    if (!sanitized.categoryName) return showErrorToast('Category name cannot be empty');
     try {
-      await dispatch(updateCategoryThunk({ id, data: editValue })).unwrap();
+      await dispatch(updateCategoryThunk({ id, data: sanitized })).unwrap();
       showSuccessToast('Category updated!');
       setEditingCat(null);
     } catch (err) {
-      showErrorToast(err || 'Failed to update category');
+      showErrorToast(err?.response?.data?.message || err || 'Failed to update category');
     }
   };
 
@@ -119,7 +128,7 @@ const CategoryMgmt = () => {
               <Card key={cat.id} className="p-0 border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-[480px] rounded-[32px] group relative">
                 <div className="h-48 overflow-hidden relative bg-surface_dim">
                   {cat.image ? (
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s] ease-out" />
+                    <img src={cat.image} alt={cat.categoryName || cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s] ease-out" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-on_surface_variant/20">
                       <ImageIcon size={48} />
@@ -135,8 +144,8 @@ const CategoryMgmt = () => {
                         <label className="text-[10px] font-black uppercase tracking-widest text-on_surface_variant pl-1">Category Name</label>
                         <AntInput 
                           className="!rounded-2xl !font-bold !bg-surface_dim !border-none !h-[52px]"
-                          value={editValue.name}
-                          onChange={(e) => setEditValue({...editValue, name: e.target.value})}
+                          value={editValue.categoryName}
+                          onChange={(e) => setEditValue({...editValue, categoryName: e.target.value})}
                         />
                       </div>
                       <div className="space-y-2">
@@ -157,7 +166,7 @@ const CategoryMgmt = () => {
                   ) : (
                     <>
                       <div className="flex items-start justify-between mb-4">
-                         <h3 className="text-2xl font-black text-on_surface leading-tight tracking-tight pr-2 uppercase">{cat.name}</h3>
+                         <h3 className="text-2xl font-black text-on_surface leading-tight tracking-tight pr-2 uppercase">{cat.categoryName || cat.name}</h3>
                          <Badge variant="surface" className="flex flex-col text-[10px] font-black px-3 py-1.5 rounded-xl text-center leading-[1] shrink-0 uppercase tracking-tighter">
                            <span>{cat.productCount || count}</span>
                            <span className="text-[8px] opacity-40">SKUs</span>
@@ -174,10 +183,10 @@ const CategoryMgmt = () => {
                          <Popconfirm
                            title="Delete category"
                            description={`Are you sure you want to remove "${cat.name}"?`}
-                           onConfirm={() => handleDelete(cat.id)}
-                           okText="Yes, delete"
-                           cancelText="Cancel"
-                         >
+                          onConfirm={() => handleDelete(cat.id)}
+                          okText="Yes, delete"
+                          cancelText="Cancel"
+                        >
                             <Button variant="ghost" className="!w-14 !h-14 !min-w-0 !p-0 !bg-error/5 text-error hover:!bg-error/10 !rounded-2xl flex items-center justify-center">
                                <Trash2 size={20} strokeWidth={2.5}/>
                             </Button>
@@ -203,8 +212,8 @@ const CategoryMgmt = () => {
                   <AntInput 
                     className="!rounded-2xl !font-bold !bg-white !shadow-sm !border-none !h-[56px]"
                     placeholder="Category Name" 
-                    value={newCat.name} 
-                    onChange={e=>setNewCat({...newCat, name: e.target.value})} 
+                    value={newCat.categoryName} 
+                    onChange={e=>setNewCat({...newCat, categoryName: e.target.value})} 
                     required
                   />
                   <AntInput 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { 
   User, 
   ShoppingBag, 
@@ -9,27 +9,31 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { logout } from '../../store/authSlice';
+import LocalizedLink from '../navigation/LocalizedLink';
 
 /**
  * UserLayout: Sidebar layout for profile, orders, and settings.
  * Refined to match the provided "After" design exactly.
  */
 const UserLayout = () => {
+  const { t } = useTranslation();
+  const { lang } = useParams();
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
   const { user: currentUser } = useSelector((state) => state.auth);
 
   const navItems = [
-    { name: 'Profile', path: '/profile', icon: User },
-    { name: 'My Orders', path: '/profile/orders', icon: ShoppingBag },
-    { name: 'Settings', path: '/profile/settings', icon: Settings },
+    { name: t('header.profile'), path: '/profile', icon: User },
+    { name: t('header.my_orders'), path: '/profile/orders', icon: ShoppingBag },
+    { name: t('settings.title'), path: '/profile/settings', icon: Settings },
   ];
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/auth');
+    navigate(`/${lang}/auth`);
   };
 
   return (
@@ -52,18 +56,21 @@ const UserLayout = () => {
             {currentUser?.name || "Alex Smith"}
           </h2>
           <p className="text-[10px] font-black text-on_surface_variant opacity-50 uppercase tracking-widest mt-1">
-            {currentUser?.role === 'admin' ? 'Premium Admin' : 'Sweet Tooth Member'}
+            {currentUser?.role === 'admin' ? t('profile.admin_role', 'Premium Admin') : t('profile.member_role', 'Sweet Tooth Member')}
           </p>
         </div>
         
         {/* Navigation Section */}
         <nav className="flex-1 px-8 py-6 space-y-3">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            // Note: LocalizedLink will handle prefixing the path for the 'to' prop, 
+            // but for isActive check we still need to consider the full path.
+            const localizedPath = `/${lang}${item.path}`;
+            const isActive = location.pathname === localizedPath;
             const Icon = item.icon;
             return (
-              <Link 
-                key={item.name}
+              <LocalizedLink 
+                key={item.path}
                 to={item.path} 
                 className={`flex items-center gap-4 px-6 py-4 rounded-[22px] font-black text-sm transition-all duration-300 ${
                   isActive 
@@ -73,7 +80,7 @@ const UserLayout = () => {
               >
                 <Icon size={20} strokeWidth={isActive ? 3 : 2} />
                 <span>{item.name}</span>
-              </Link>
+              </LocalizedLink>
             );
           })}
         </nav>
@@ -82,7 +89,7 @@ const UserLayout = () => {
         <div className="p-8 pb-10 space-y-2">
           <button className="w-full flex items-center gap-4 px-6 py-3 rounded-xl font-bold text-on_surface_variant/60 hover:text-on_surface transition-all text-sm group">
             <HelpCircle size={20} />
-            <span>Help Center</span>
+            <span>{t('header.help', 'Help Center')}</span>
           </button>
           
           <button 
@@ -90,16 +97,16 @@ const UserLayout = () => {
             className="w-full flex items-center gap-4 px-6 py-3 rounded-xl font-bold text-on_surface_variant/60 hover:text-on_surface transition-all text-sm group"
           >
             <LogOut size={20} />
-            <span>Logout</span>
+            <span>{t('header.logout')}</span>
           </button>
 
-          {/* Moved Back to Shop to a more subtle button or removed if it clutters */}
+          {/* Back to Shop */}
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate(`/${lang}`)}
             className="w-full mt-6 bg-primary text-white font-black py-4 px-6 rounded-[22px] flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:scale-105 transition-all text-sm"
           >
             <ArrowLeft size={18} strokeWidth={3} />
-            Back to Shop
+            {t('header.back_to_shop', 'Back to Shop')}
           </button>
         </div>
       </aside>

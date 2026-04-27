@@ -1,33 +1,30 @@
 import React from 'react';
 import { ArrowRight, PackageOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LocalizedLink from '../navigation/LocalizedLink';
 
 /**
  * Component HomeCategories hiển thị danh sách các danh mục nổi bật trên trang chủ.
- * Do backend chưa hỗ trợ hình ảnh/icon cho danh mục, component sẽ sử dụng icon mặc định.
- * 
- * @param {Object} props - Các thuộc tính của component.
- * @param {Array<Object>} props.categories - Danh sách các danh mục cần hiển thị.
- * @returns {JSX.Element} Component HomeCategories đã được định dạng.
  */
 const HomeCategories = ({ categories = [] }) => {
+  const { t } = useTranslation();
   if (!categories || categories.length === 0) return null;
 
   return (
     <section className="mb-24">
       <div className="flex justify-between items-end mb-12">
         <div>
-          <h2 className="text-4xl font-black text-on_surface mb-2 tracking-tight">Shop by Category</h2>
-          <p className="text-on_surface_variant text-lg font-medium">Explore our delicious collections</p>
+          <h2 className="text-4xl font-black text-on_surface mb-2 tracking-tight">{t('home.categories_title')}</h2>
+          <p className="text-on_surface_variant text-lg font-medium">{t('home.categories_subtitle')}</p>
         </div>
-        <Link to="/shop" className="hidden sm:flex items-center gap-2 text-primary font-bold hover:text-primary/70 focus:outline-none transition-colors group text-sm">
-          All Categories <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-        </Link>
+        <LocalizedLink to="/shop" className="hidden sm:flex items-center gap-2 text-primary font-bold hover:text-primary/70 focus:outline-none transition-colors group text-sm">
+          {t('home.all_categories')} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+        </LocalizedLink>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {categories.slice(0, 5).map((cat) => (
-          <Link 
+          <LocalizedLink 
             key={cat.id} 
             to={`/shop?category=${cat.id}`}
             className="bg-white border border-surface_container hover:border-primary/50 rounded-[32px] p-2 flex flex-col items-center gap-4 group transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 h-[220px] overflow-hidden"
@@ -48,11 +45,11 @@ const HomeCategories = ({ categories = [] }) => {
             <h3 className="font-black text-center text-xs uppercase tracking-[0.2em] text-on_surface group-hover:text-primary transition-colors line-clamp-2 px-2">
               {cat.name}
             </h3>
-          </Link>
+          </LocalizedLink>
         ))}
 
-        {/* The 6th empty slot filler: View All card matching the aesthetic */}
-        <Link 
+        {/* View All card */}
+        <LocalizedLink 
           to="/shop"
           className="bg-primary border border-primary/20 hover:border-primary/50 rounded-[32px] p-2 flex flex-col items-center gap-4 group transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-2 h-[220px] overflow-hidden"
         >
@@ -60,9 +57,9 @@ const HomeCategories = ({ categories = [] }) => {
             <ArrowRight size={32} className="group-hover:translate-x-2 transition-transform duration-500" strokeWidth={3} />
           </div>
           <h3 className="font-black text-center text-xs uppercase tracking-[0.2em] text-white transition-colors px-2">
-            View All
+            {t('home.view_all')}
           </h3>
-        </Link>
+        </LocalizedLink>
       </div>
     </section>
   );

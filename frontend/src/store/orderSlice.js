@@ -129,9 +129,18 @@ export const orderSlice = createSlice({
       })
       
       // Create
+      .addCase(createOrderThunk.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
       .addCase(createOrderThunk.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         state.items.unshift(action.payload);
         state.meta.total += 1;
+      })
+      .addCase(createOrderThunk.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       })
       
       // Update Status

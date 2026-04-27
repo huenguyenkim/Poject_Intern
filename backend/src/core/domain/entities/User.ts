@@ -6,7 +6,7 @@ import { UserRole } from '../../../common/constants/user-role.enum';
 export class User {
   constructor(
     public readonly id: number,
-    public readonly name: string,
+    public readonly fullName: string,
     public readonly email: string,
     public readonly role: UserRole,
     public readonly password?: string, // Password is optional when returning from logic
@@ -18,7 +18,7 @@ export class User {
    */
   static create(data: {
     id: number;
-    name: string;
+    fullName: string;
     email: string;
     role: UserRole;
     password?: string;
@@ -26,7 +26,7 @@ export class User {
   }): User {
     return new User(
       data.id,
-      data.name,
+      data.fullName,
       data.email,
       data.role,
       data.password,

@@ -29,7 +29,7 @@ export class RegisterUseCase {
     private readonly hashingService: IHashingService,
   ) {}
 
-  async execute(data: { name: string; email: string; password: string }): Promise<User> {
+  async execute(data: { fullName: string; email: string; password: string }): Promise<User> {
     const existing = await this.userRepository.findByEmail(data.email);
     if (existing) {
       throw new ConflictException('Email already registered');

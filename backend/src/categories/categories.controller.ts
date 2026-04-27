@@ -3,6 +3,9 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CategoriesService } from './categories.service';
 import { Category } from './entities/category.entity';
 
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+
 @Controller('categories')
 @UseInterceptors(CacheInterceptor)
 export class CategoriesController {
@@ -20,13 +23,13 @@ export class CategoriesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() data: Partial<Category>) {
-    return this.categoriesService.create(data);
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoriesService.create(createCategoryDto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: Partial<Category>) {
-    return this.categoriesService.update(+id, data);
+  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.categoriesService.update(+id, updateCategoryDto);
   }
 
   @Delete(':id')

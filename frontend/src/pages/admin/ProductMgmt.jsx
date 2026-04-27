@@ -37,6 +37,8 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 
+import { mapBackendErrors, sanitizeData } from '../../utils/validationUtils';
+
 const ProductMgmt = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
@@ -69,7 +71,7 @@ const ProductMgmt = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.productName || p.title || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [products, searchQuery]);
 
@@ -81,13 +83,13 @@ const ProductMgmt = () => {
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center border border-surface_container bg-white shadow-sm">
             {record.image ? (
-              <img src={record.image} alt={record.title} className="w-full h-full object-cover" />
+              <img src={record.image} alt={record.productName || record.title} className="w-full h-full object-cover" />
             ) : (
               <ImageIcon size={20} className="text-on_surface_variant" />
             )}
           </div>
           <div>
-            <p className="font-black text-on_surface text-[15px] leading-tight uppercase">{record.title}</p>
+            <p className="font-black text-on_surface text-[15px] leading-tight uppercase">{record.productName || record.title}</p>
             <p className="text-[10px] font-bold text-on_surface_variant/60 mt-1 uppercase tracking-tight">ID: {record.id}</p>
           </div>
         </div>
@@ -153,13 +155,16 @@ const ProductMgmt = () => {
   ];
 
   const onFinish = async (values) => {
+    // SANITIZATION: Client-side trimming
+    const sanitized = sanitizeData(values);
+    
     const data = {
-      title: values.title,
-      price: parseFloat(values.price) || 0,
-      categoryId: parseInt(values.categoryId),
-      description: values.description,
-      image: values.image,
-      stock: parseInt(values.stock) || 0
+      productName: sanitized.productName,
+      price: parseFloat(sanitized.price),
+      categoryId: parseInt(sanitized.categoryId),
+      description: sanitized.description,
+      image: sanitized.image,
+      stock: parseInt(sanitized.stock)
     };
     
     try {
@@ -173,7 +178,19 @@ const ProductMgmt = () => {
       }
       form.resetFields();
     } catch (err) {
-      showErrorToast(err || 'Operation failed');
+      if (err?.response?.status === 400) {
+        // ERROR MAPPING: Translate Backend 400s to AntD Form Errors
+        const messages = err?.response?.data?.message;
+        if (Array.isArray(messages)) {
+          const fields = messages.map(msg => {
+            const field = ['productName', 'price', 'stock', 'image', 'description'].find(f => msg.toLowerCase().includes(f.toLowerCase()));
+            return field ? { name: field, errors: [msg] } : null;
+          }).filter(Boolean);
+          form.setFields(fields);
+        }
+      } else {
+        showErrorToast(err?.response?.data?.message || err || 'Operation failed');
+      }
     }
   };
 
@@ -189,7 +206,7 @@ const ProductMgmt = () => {
   const handleEdit = (product) => {
     setEditingId(product.id);
     form.setFieldsValue({
-      title: product.title,
+      productName: product.productName || product.title,
       price: product.price,
       categoryId: String(product.categoryId),
       description: product.description || '',
@@ -275,7 +292,7 @@ const ProductMgmt = () => {
               requiredMark={false}
             >
               <Form.Item 
-                name="title" 
+                name="productName" 
                 label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface px-1">Product Title</span>}
                 rules={[{ required: true, message: 'Please enter product title' }]}
               >
@@ -286,14 +303,20 @@ const ProductMgmt = () => {
                 <Form.Item 
                   name="price" 
                   label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface px-1">Price ($)</span>}
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: 'Price is required' },
+                    { type: 'number', min: 0.01, message: 'Price must be positive' }
+                  ]}
                 >
                   <InputNumber className="w-full candy-input" min={0} step={0.01} precision={2} />
                 </Form.Item>
                 <Form.Item 
                   name="stock" 
                   label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface px-1">Stock</span>}
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: 'Stock is required' },
+                    { type: 'number', min: 0, message: 'Stock cannot be negative' }
+                  ]}
                 >
                   <InputNumber className="w-full candy-input" min={0} />
                 </Form.Item>
