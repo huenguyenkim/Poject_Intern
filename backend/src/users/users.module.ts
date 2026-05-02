@@ -4,17 +4,23 @@ import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { AuditModule } from '../audit/audit.module';
-import { AuthModule } from '../infrastructure/auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { IHashingService } from '../core/application/usecases/AuthUseCases';
+import { BcryptService } from '../infrastructure/auth/bcrypt.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     AuditModule,
-    AuthModule,
     NotificationsModule,
   ],
-  providers: [UsersService],
+  providers: [
+    UsersService,
+    {
+      provide: IHashingService,
+      useClass: BcryptService,
+    },
+  ],
   controllers: [UsersController],
   exports: [UsersService],
 })
