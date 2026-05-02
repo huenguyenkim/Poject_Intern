@@ -67,7 +67,7 @@ const LanguageGuard = ({ children }) => {
   if (!lang || !SUPPORTED_LANGS.includes(lang)) {
     const detectedLang = i18n.language?.split('-')[0] || 'vi';
     const fallbackLang = SUPPORTED_LANGS.includes(detectedLang) ? detectedLang : 'vi';
-    
+
     // Redirect to the same path but with language prefix
     const newPath = `/${fallbackLang}${location.pathname}${location.search}`;
     return <Navigate to={newPath} replace />;
@@ -85,7 +85,8 @@ const AppLoading = () => (
       </div>
     </div>
     <h2 className="text-2xl font-black text-primary uppercase tracking-widest">Sweetening...</h2>
-    <style dangerouslySetInnerHTML={{ __html: `
+    <style dangerouslySetInnerHTML={{
+      __html: `
       @keyframes loading {
         0% { transform: translateX(-100%); }
         100% { transform: translateX(200%); }
@@ -96,7 +97,7 @@ const AppLoading = () => (
 
 const AppContent = () => {
   const { message, notification, modal } = AntApp.useApp();
-  
+
   useLayoutEffect(() => {
     setAntdInstances({ message, notification, modal });
   }, [message, notification, modal]);
@@ -233,5 +234,20 @@ const App = () => {
     </ConfigProvider>
   );
 }
+const express = require('express');
+const cors = require('cors');
+const app = express();
 
+// Cấu hình CORS
+const corsOptions = {
+  origin: 'https://poject-intern-6s6zqbe1d-huenguyenkims-projects.vercel.app', // Cho phép Frontend Vercel gọi API
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // Thêm dòng này nếu API của bạn có dùng Cookie hoặc Session
+};
+
+app.use(cors(corsOptions));
+
+// (Các middleware khác như express.json() và routes của bạn ở bên dưới)
+app.use(express.json());
+// app.use('/api', authRoutes);...
 export default App;
