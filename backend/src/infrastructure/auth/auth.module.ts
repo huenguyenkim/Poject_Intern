@@ -15,7 +15,7 @@ import { RememberToken } from './entities/remember-token.entity';
     TypeOrmModule.forFeature([UserEntity, RememberToken]),
     JwtModule.register({
       global: true,
-      secret: 'candy_secret_key_2024', // Nên dùng environment variable
+      secret: process.env.JWT_SECRET || 'candy_secret_key_2024',
       signOptions: { expiresIn: '1d' },
     }),
   ],
