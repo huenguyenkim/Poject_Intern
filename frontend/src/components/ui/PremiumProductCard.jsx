@@ -57,7 +57,7 @@ const PremiumProductCard = ({
       </LocalizedLink>
 
       <div className="p-6 pt-5 flex flex-col flex-grow">
-        <h3 className="font-black text-xl text-on_surface mb-1 line-clamp-1 hover:text-primary transition-colors cursor-pointer">
+        <h3 className="font-black text-xl text-on_surface mb-1 line-clamp-1 hover:text-primary transition-colors cursor-pointer relative z-10">
           <LocalizedLink to={`/shop/${id}`}>{displayTitle}</LocalizedLink>
         </h3>
         

@@ -12,12 +12,24 @@ import {
  */
 export const fetchOrdersThunk = createAsyncThunk(
   'orders/fetchAll',
-  async ({ page, limit } = { page: 1, limit: 10 }, { rejectWithValue }) => {
+  async ({ page, limit, filters } = { page: 1, limit: 10, filters: {} }, { rejectWithValue }) => {
     try {
-      const response = await getOrdersUseCase.execute(page, limit);
+      const response = await getOrdersUseCase.execute(page, limit, filters);
       return response;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch orders');
+    }
+  }
+);
+
+export const fetchOrderMetricsThunk = createAsyncThunk(
+  'orders/fetchMetrics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { getOrderMetricsUseCase } = await import('../core/application/use-cases/manageOrder');
+      return await getOrderMetricsUseCase.execute();
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message || 'Failed to fetch metrics');
     }
   }
 );
@@ -81,6 +93,12 @@ export const orderSlice = createSlice({
       totalPages: 0
     },
     status: 'idle',
+    metrics: {
+      totalOrders: 0,
+      revenue: 0,
+      pendingOrders: 0,
+      cancellationRate: 0
+    },
     error: null
   },
   reducers: {
@@ -149,6 +167,9 @@ export const orderSlice = createSlice({
         if (index !== -1) {
           state.items[index] = action.payload;
         }
+      })
+      .addCase(fetchOrderMetricsThunk.fulfilled, (state, action) => {
+        state.metrics = action.payload;
       });
   }
 });

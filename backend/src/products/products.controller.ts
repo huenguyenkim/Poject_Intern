@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus, UseInterceptors, ParseIntPipe, Request, Headers, Ip } from '@nestjs/common';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { ProductsService } from './products.service';
 import { 
   GetProductsUseCase, 
   GetProductByIdUseCase, 
@@ -20,7 +21,13 @@ export class ProductsController {
     private readonly createProductUseCase: CreateProductUseCase,
     private readonly updateProductUseCase: UpdateProductUseCase,
     private readonly deleteProductUseCase: DeleteProductUseCase,
+    private readonly productsService: ProductsService,
   ) {}
+
+  @Get(':id/recommendations')
+  getRecommendations(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getRecommendations(id);
+  }
 
   @UseInterceptors(CacheInterceptor)
   @Get()

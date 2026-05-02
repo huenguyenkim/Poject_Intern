@@ -19,6 +19,24 @@ export class User {
   @Column({ type: 'simple-enum', enum: UserRole, default: UserRole.CUSTOMER })
   role: UserRole;
 
+  @Column({ default: 'BASIC' }) // BASIC, PREMIUM, VIP
+  tier: string;
+
+  @Column({ default: 0 })
+  loyaltyPoints: number;
+
+  @Column({ type: 'text', nullable: true })
+  resetPasswordTokenHash: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  resetPasswordExpiresAt: Date | null;
+
+  @Column({ default: 1 })
+  tokenVersion: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  lastPasswordChangeAt: Date | null;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 

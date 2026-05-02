@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus, UseInterceptors, Query, ParseBoolPipe } from '@nestjs/common';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CategoriesService } from './categories.service';
-import { Category } from './entities/category.entity';
-
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -12,8 +10,13 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  findAll() {
-    return this.categoriesService.findAll();
+  findAll(@Query('tree', new ParseBoolPipe({ optional: true })) tree?: boolean) {
+    return this.categoriesService.findAll(tree);
+  }
+
+  @Get('overview')
+  getOverview() {
+    return this.categoriesService.getOverview();
   }
 
   @Get(':id')
@@ -34,7 +37,10 @@ export class CategoriesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(+id);
+  remove(
+    @Param('id') id: string,
+    @Query('force', new ParseBoolPipe({ optional: true })) force?: boolean
+  ) {
+    return this.categoriesService.remove(+id, force);
   }
 }

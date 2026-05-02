@@ -32,6 +32,12 @@ export class Order {
   @Column({ type: 'simple-enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 
+  @Column({ name: 'coupon_code', nullable: true })
+  couponCode: string;
+
+  @Column('decimal', { precision: 10, scale: 2, name: 'discount_amount', default: 0 })
+  discountAmount: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

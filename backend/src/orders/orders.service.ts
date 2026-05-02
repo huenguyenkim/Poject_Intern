@@ -1,29 +1,66 @@
-import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { DataSource, LessThan } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Product } from '../products/entities/product.entity';
 import { User } from '../users/entities/user.entity';
 import { OrderStatus } from '../common/constants/order-status.enum';
+import { PaymentMethod } from '../common/constants/payment-method.enum';
 import { InventoryLog } from '../inventory/entities/inventory-log.entity';
 import { CacheHelperService } from '../common/cache-helper.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { Coupon } from './entities/coupon.entity';
 
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
-export class OrdersService {
+export class OrdersService implements OnModuleInit {
   constructor(
     private dataSource: DataSource,
     private cacheHelper: CacheHelperService,
-  ) {}
+    private notificationsService: NotificationsService,
+  ) { }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ data: Order[], meta: any }> {
-    const [data, total] = await this.dataSource.manager.findAndCount(Order, {
-      relations: ['user', 'orderItems', 'orderItems.product'],
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip: (page - 1) * limit,
-    });
+  onModuleInit() {
+    // Tự động quét đơn hàng hết hạn mỗi 10 phút
+    setInterval(() => {
+      this.cleanupExpiredOrders().catch(err => console.error('Cleanup failed', err));
+    }, 10 * 60 * 1000);
+  }
+
+  async findAll(
+    page: number = 1, 
+    limit: number = 10, 
+    filters: { status?: OrderStatus; query?: string; startDate?: string; endDate?: string } = {}
+  ): Promise<{ data: Order[], meta: any }> {
+    const queryBuilder = this.dataSource.manager.createQueryBuilder(Order, 'order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.orderItems', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'product')
+      .orderBy('order.createdAt', 'DESC');
+
+    if (filters.status) {
+      queryBuilder.andWhere('order.status = :status', { status: filters.status });
+    }
+
+    if (filters.query) {
+      queryBuilder.andWhere(
+        '(order.receiverName LIKE :q OR order.phone LIKE :q OR CAST(order.id AS TEXT) LIKE :q)',
+        { q: `%${filters.query}%` }
+      );
+    }
+
+    if (filters.startDate && filters.endDate) {
+      queryBuilder.andWhere('order.createdAt BETWEEN :start AND :end', { 
+        start: new Date(filters.startDate), 
+        end: new Date(filters.endDate) 
+      });
+    }
+
+    const [data, total] = await queryBuilder
+      .take(limit)
+      .skip((page - 1) * limit)
+      .getManyAndCount();
 
     return {
       data,
@@ -33,6 +70,42 @@ export class OrdersService {
         limit,
         totalPages: Math.ceil(total / limit)
       }
+    };
+  }
+
+  async getMetrics(): Promise<{
+    totalOrders: number;
+    revenue: number;
+    pendingOrders: number;
+    cancellationRate: number;
+  }> {
+    const totalOrders = await this.dataSource.manager.count(Order);
+    
+    // Revenue from COMPLETED or PAID orders
+    const revenueResult = await this.dataSource.manager.createQueryBuilder(Order, 'order')
+      .select('SUM(order.totalAmount)', 'total')
+      .where('order.status IN (:...statuses)', { 
+        statuses: [OrderStatus.COMPLETED, OrderStatus.PAID, OrderStatus.CONFIRMED] // Adjusted for available statuses
+      })
+      .getRawOne();
+    
+    const pendingOrders = await this.dataSource.manager.count(Order, { 
+      where: { status: OrderStatus.PENDING } 
+    });
+
+    const cancelledOrders = await this.dataSource.manager.count(Order, { 
+      where: { status: OrderStatus.CANCELLED } 
+    });
+
+    const cancellationRate = totalOrders > 0 
+      ? Math.round((cancelledOrders / totalOrders) * 100) 
+      : 0;
+
+    return {
+      totalOrders,
+      revenue: parseFloat(revenueResult?.total || '0'),
+      pendingOrders,
+      cancellationRate
     };
   }
 
@@ -75,8 +148,8 @@ export class OrdersService {
   }
 
   async updateStatus(
-    id: number, 
-    status: OrderStatus, 
+    id: number,
+    status: OrderStatus,
     metadata: { userId?: number; ip?: string; ua?: string } = {}
   ): Promise<Order> {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -86,7 +159,7 @@ export class OrdersService {
     try {
       const order = await queryRunner.manager.findOne(Order, {
         where: { id },
-        relations: ['orderItems', 'orderItems.product']
+        relations: ['user', 'orderItems', 'orderItems.product']
       });
 
       if (!order) {
@@ -96,30 +169,23 @@ export class OrdersService {
       const oldStatus = order.status;
 
       // Logic Hoàn Kho có điều kiện (Selective Return)
-      // Chỉ hoàn kho nếu đơn hàng đang ở trạng thái PENDING hoặc CONFIRMED (Processing)
       if (status === OrderStatus.CANCELLED && oldStatus !== OrderStatus.CANCELLED) {
         const allowedStatusesForRefund = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
-        
+
         if (allowedStatusesForRefund.includes(oldStatus)) {
-          // SORT BY ID to prevent Deadlocks during multiple product updates
           const sortedItems = [...order.orderItems].sort((a, b) => a.product.id - b.product.id);
-          
+
           for (const item of sortedItems) {
-            // PESSIMISTIC LOCKING to prevent race conditions during refund
             const product = await queryRunner.manager.findOne(Product, {
               where: { id: item.product.id },
               lock: { mode: 'pessimistic_write' }
             });
-            
-            if (!product) {
-              console.warn(`⚠️ Skipping refund for missing product ID ${item.product.id}`);
-              continue;
-            }
-            
+
+            if (!product) continue;
+
             product.stock += item.quantity;
             await queryRunner.manager.save(product);
 
-            // LOG INVENTORY CHANGE
             const invLog = queryRunner.manager.create(InventoryLog, {
               productId: product.id,
               orderId: order.id,
@@ -137,8 +203,16 @@ export class OrdersService {
       const savedOrder = await queryRunner.manager.save(order);
 
       await queryRunner.commitTransaction();
-      
-      // SELECTIVE CACHE INVALIDATION
+
+      // [THÊM] Thông báo cho User khi trạng thái thay đổi
+      await this.notificationsService.createNotification({
+        recipientId: order.user.id,
+        title: 'Cập nhật trạng thái đơn hàng! 📦',
+        content: `Đơn hàng #${order.id} của bạn đã chuyển sang trạng thái: ${status}`,
+        type: 'ORDER',
+        relatedId: order.id.toString()
+      });
+
       await this.cacheHelper.invalidatePattern('/products');
       await this.cacheHelper.invalidatePattern('/orders');
 
@@ -153,114 +227,220 @@ export class OrdersService {
   }
 
   async createOrder(
-    createOrderDto: CreateOrderDto, 
-    metadata: { ip?: string; ua?: string } = {}
+    createOrderDto: CreateOrderDto,
+    metadata: { userId: number; ip?: string; ua?: string } = { userId: 0 }
   ): Promise<Order> {
-    const { userId, receiverName, phone, address, cartItems } = createOrderDto;
-    
-    // 1. PRE-TRANSACTION LOGIC (Comparison/Sorting) to minimize Lock time
-    // SORT BY PRODUCT ID Ascending to prevent DEADLOCKS
-    const sortedCartItems = [...cartItems].sort((a, b) => a.productId - b.productId);
+    const { userId, receiverName, phone, address, cartItems, couponCode, paymentMethod } = createOrderDto;
+
+    // 1. Anti-Double-Click Protection (Server-side Lock)
+    const lockKey = `order_lock_${userId}`;
+    const isLocked = await this.cacheHelper.get(lockKey);
+    if (isLocked) {
+      throw new BadRequestException('Your order is being processed. Please wait a few seconds.');
+    }
+    await this.cacheHelper.set(lockKey, 'locked', 10); // Lock for 10 seconds
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      let totalAmount = 0;
-      const orderItemsToSave: OrderItem[] = [];
-
+      // 2. Fetch User & Validate
       const user = await queryRunner.manager.findOne(User, { where: { id: userId } });
-      if (!user) {
-        throw new BadRequestException('User not found');
-      }
+      if (!user) throw new BadRequestException('User not found');
 
-      const newOrder = queryRunner.manager.create(Order, {
-        user,
-        receiverName,
-        phone,
-        address,
-        paymentMethod: createOrderDto.paymentMethod,
-        status: OrderStatus.PENDING,
-        totalAmount: 0,
-      });
-
-      const savedOrder = await queryRunner.manager.save(newOrder);
+      // 3. Pricing Engine: Server-side re-calculation
+      let subtotal = 0;
+      const orderItemsToSave: OrderItem[] = [];
+      const sortedCartItems = [...cartItems].sort((a, b) => a.productId - b.productId);
 
       for (const item of sortedCartItems) {
-        // PESSIMISTIC LOCKING: SELECT ... FOR UPDATE
-        // Tránh Race condition khi nhiều người cùng mua một lúc
         const product = await queryRunner.manager.findOne(Product, {
           where: { id: item.productId },
           lock: { mode: 'pessimistic_write' }
         });
 
-        if (!product) {
-          throw new BadRequestException(`Product with id ${item.productId} not found`);
-        }
-
-        // SERVICE-LEVEL VALIDATION (TRƯỚC KHI DB NÉM LỖI 500)
+        if (!product) throw new BadRequestException(`Product #${item.productId} not found`);
         if (product.stock < item.quantity) {
-          throw new BadRequestException(`Sản phẩm ${product.productName} không đủ tồn kho. Hiện còn: ${product.stock}`);
+          throw new BadRequestException(`Product ${product.productName} is out of stock.`);
         }
 
-        // TRỪ KHO
+        // Deduct inventory
         product.stock -= item.quantity;
         await queryRunner.manager.save(product);
 
-        // LOG INVENTORY CHANGE (ATOMIC)
-        const invLog = queryRunner.manager.create(InventoryLog, {
-          productId: product.id,
-          orderId: savedOrder.id,
-          actionType: 'DEDUCTION',
-          quantityChange: -item.quantity,
-          reason: `Order ${savedOrder.id} created`,
-          userId: userId,
-        });
-        await queryRunner.manager.save(invLog);
-
-        const unitPrice = Number(product.price);
-        totalAmount += unitPrice * item.quantity;
+        // Calculate line item price (Server-side price fetch)
+        const currentPrice = Number(product.salePrice || product.price);
+        subtotal += currentPrice * item.quantity;
 
         const orderItem = queryRunner.manager.create(OrderItem, {
-          order: savedOrder,
           product,
           quantity: item.quantity,
-          unitPrice: unitPrice,
+          unitPrice: currentPrice,
         });
-
         orderItemsToSave.push(orderItem);
+
+        // Log inventory change
+        await queryRunner.manager.save(InventoryLog, {
+          productId: product.id,
+          actionType: 'DEDUCTION',
+          quantityChange: -item.quantity,
+          reason: `Order Creation`,
+          userId: userId,
+        });
       }
 
+      // 4. Coupon Logic
+      let discountAmount = 0;
+      let appliedCoupon: Coupon = null;
+      if (couponCode) {
+        const coupon = await queryRunner.manager.findOne(Coupon, { 
+          where: { code: couponCode, isActive: true } 
+        });
+
+        if (coupon) {
+          // Check expiry
+          if (coupon.expiryDate && coupon.expiryDate < new Date()) {
+             throw new BadRequestException('Coupon has expired');
+          }
+          // Check usage
+          if (coupon.maxUsage && coupon.usageCount >= coupon.maxUsage) {
+             throw new BadRequestException('Coupon usage limit reached');
+          }
+          // Check min order
+          if (coupon.minOrderValue && subtotal < Number(coupon.minOrderValue)) {
+             throw new BadRequestException(`Order value must be at least $${coupon.minOrderValue} for this coupon`);
+          }
+
+          if (coupon.discountType === 'percent') {
+            discountAmount = subtotal * (Number(coupon.discountValue) / 100);
+          } else {
+            discountAmount = Number(coupon.discountValue);
+          }
+
+          appliedCoupon = coupon;
+          coupon.usageCount += 1;
+          await queryRunner.manager.save(coupon);
+        }
+      }
+
+      // 5. Final Calculation
+      const taxRate = 0.08; // 8% VAT
+      const shippingFee = subtotal > 50 ? 0 : 5.99;
+      const taxAmount = (subtotal - discountAmount) * taxRate;
+      const finalTotal = subtotal - discountAmount + taxAmount + shippingFee;
+
+      // 6. Payment State Machine: Initial state
+      let initialStatus = OrderStatus.PENDING;
+      if (paymentMethod === PaymentMethod.COD) {
+        initialStatus = OrderStatus.CONFIRMED; // COD orders are confirmed automatically if stock is available
+      }
+
+      const order = queryRunner.manager.create(Order, {
+        user,
+        receiverName,
+        phone,
+        address,
+        paymentMethod,
+        status: initialStatus,
+        totalAmount: Math.round(finalTotal * 100) / 100,
+        couponCode: couponCode || null,
+        discountAmount: Math.round(discountAmount * 100) / 100,
+      });
+
+      const savedOrder = await queryRunner.manager.save(order);
+
+      // Attach items
+      for (const item of orderItemsToSave) {
+        item.order = savedOrder;
+      }
       await queryRunner.manager.save(orderItemsToSave);
 
-      // --- TÍNH TOÁN TÀI CHÍNH (ROUNDING PRECISION) ---
-      const subtotal = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
-      const tax = Math.round(((subtotal * 0.08) + Number.EPSILON) * 100) / 100;
-      const shippingFee = subtotal > 50 ? 0 : 5.99;
-      
-      const finalTotal = Math.round(((subtotal + tax + shippingFee) + Number.EPSILON) * 100) / 100;
-      
-      savedOrder.totalAmount = finalTotal;
-      await queryRunner.manager.save(savedOrder);
-
-      // COMMIT TRANSACTION
       await queryRunner.commitTransaction();
 
-      // SELECTIVE CACHE INVALIDATION (POST-TRANSACTION)
+      // 7. Background Notifications (Queue simulation)
+      setImmediate(async () => {
+        try {
+          await this.notificationsService.createNotification({
+            recipientId: userId,
+            title: 'Order Created! 🍭',
+            content: `Your order #${savedOrder.id} has been placed. Status: ${initialStatus}`,
+            type: 'ORDER',
+            relatedId: savedOrder.id.toString()
+          });
+          await this.notificationsService.notifyAdmins('New Order! 🚀', `Order #${savedOrder.id} from User #${userId}`);
+        } catch (e) {
+          console.error('Async notification failed', e);
+        }
+      });
+
       await this.cacheHelper.invalidatePattern('/products');
       await this.cacheHelper.invalidatePattern('/orders');
 
       return savedOrder;
     } catch (error) {
-      console.error('❌ [OrdersService] Error creating order:', error);
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
-      }
-      if (error instanceof BadRequestException) throw error;
-      throw new InternalServerErrorException(error.message);
+      if (queryRunner.isTransactionActive) await queryRunner.rollbackTransaction();
+      throw error;
     } finally {
       await queryRunner.release();
+      await this.cacheHelper.del(lockKey); // Unlock immediately after processing
     }
+  }
+
+  /**
+   * Logic IPN: Confirm payment from Gateway
+   */
+  async handlePaymentIPN(orderId: number, transactionId: string): Promise<void> {
+    const order = await this.dataSource.manager.findOne(Order, { where: { id: orderId } });
+    if (order && order.status === OrderStatus.PENDING) {
+      order.status = OrderStatus.PAID;
+      // order.transactionId = transactionId; // If we add this field
+      await this.dataSource.manager.save(order);
+      
+      // Notify user
+      await this.notificationsService.createNotification({
+        recipientId: order.user.id,
+        title: 'Payment Successful! 💰',
+        content: `Your payment for order #${order.id} was confirmed.`,
+        type: 'ORDER',
+        relatedId: order.id.toString()
+      });
+    }
+  }
+
+  /**
+   * Logic Expiry: Cleanup pending orders after timeout (e.g., 30 mins)
+   */
+  async cleanupExpiredOrders(): Promise<number> {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const expiredOrders = await this.dataSource.manager.find(Order, {
+      where: {
+        status: OrderStatus.PENDING,
+        createdAt: LessThan(thirtyMinutesAgo),
+      },
+      relations: ['orderItems', 'orderItems.product']
+    });
+
+    for (const order of expiredOrders) {
+      await this.updateStatus(order.id, OrderStatus.CANCELLED, { reason: 'Payment Timeout' } as any);
+    }
+
+    return expiredOrders.length;
+  }
+
+  async getPurchasedProductIds(userId: number): Promise<number[]> {
+    const orders = await this.dataSource.manager.find(Order, {
+      where: { user: { id: userId } },
+      relations: ['orderItems', 'orderItems.product'],
+    });
+
+    const productIds = new Set<number>();
+    orders.forEach(order => {
+      order.orderItems.forEach(item => {
+        if (item.product) productIds.add(item.product.id);
+      });
+    });
+
+    return Array.from(productIds);
   }
 }

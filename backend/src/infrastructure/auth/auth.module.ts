@@ -8,10 +8,11 @@ import { TypeOrmUserRepository } from '../persistence/repositories/TypeOrmUserRe
 import { BcryptService } from './bcrypt.service';
 import { JwtTokenService } from './jwt.service';
 import { User as UserEntity } from '../../users/entities/user.entity';
+import { RememberToken } from './entities/remember-token.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserEntity, RememberToken]),
     JwtModule.register({
       global: true,
       secret: 'candy_secret_key_2024', // Nên dùng environment variable

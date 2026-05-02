@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsUrl } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -7,5 +7,21 @@ export class CreateCategoryDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
+
+  @IsNumber()
+  @IsOptional()
+  sortOrder?: number;
+
+  @IsNumber()
+  @IsOptional()
+  parentId?: number;
 }

@@ -7,6 +7,7 @@ import { UserRole } from '../common/constants/user-role.enum';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -58,5 +59,12 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   restore(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.restore(id);
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Request() req, @Body() dto: ChangePasswordDto) {
+    return this.usersService.changePassword(req.user.id, dto);
   }
 }

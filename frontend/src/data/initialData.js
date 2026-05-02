@@ -143,7 +143,7 @@ export const initialOrders = [
 ];
 
 export const initialBanners = [
-  { id: 'b1', title: 'Sweet Summer Carnival 2024', tag: 'ACTIVE', link: '/collections/summer-carnival', endDate: 'Aug 31, 2024', image: '/images/summer_carnival_banner.png' },
+  { id: 'b1', title: 'Sweet Summer Carnival 2024', tag: 'ACTIVE', link: '/shop', endDate: 'Aug 31, 2024', image: '/images/summer_carnival_banner.png' },
   { id: 'b2', title: 'Neon Sour Sprinkles', tag: 'ACTIVE', link: '/products/neon-sour', image: '/images/neon_sour_banner.png' },
   { id: 'b3', title: 'Gourmet Gift Sets', tag: 'DRAFT', link: '/pages/gift-guide', image: '/images/gourmet_gift_banner.png' },
   { id: 'b4', title: 'Bulk Party Favors', tag: 'ACTIVE', link: '/bulk-orders', image: '/images/bulk_party_banner.png' },

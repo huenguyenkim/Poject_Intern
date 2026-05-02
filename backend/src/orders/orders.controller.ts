@@ -15,14 +15,34 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(CacheInterceptor)
-  async findAll(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
-    return this.ordersService.findAll(+page, +limit);
+  async findAll(
+    @Query('page') page: number = 1, 
+    @Query('limit') limit: number = 10,
+    @Query('status') status?: OrderStatus,
+    @Query('query') query?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.ordersService.findAll(+page, +limit, { status, query, startDate, endDate });
+  }
+
+  @Get('metrics')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getMetrics() {
+    return this.ordersService.getMetrics();
   }
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
   async getMyOrders(@Request() req, @Query('page') page: number = 1, @Query('limit') limit: number = 10) {
     return this.ordersService.findByUser(req.user.id, +page, +limit);
+  }
+
+  @Get('purchased-products')
+  @UseGuards(JwtAuthGuard)
+  async getPurchasedProducts(@Request() req) {
+    return this.ordersService.getPurchasedProductIds(req.user.id);
   }
 
   @Get(':id')
@@ -44,7 +64,24 @@ export class OrdersController {
   ) {
     console.log('📦 Create Order Body:', JSON.stringify(createOrderDto, null, 2));
     const realIp = req.headers['x-forwarded-for'] || ip;
-    return this.ordersService.createOrder(createOrderDto, { ip: realIp, ua });
+    return this.ordersService.createOrder(createOrderDto, { userId: req.user.id, ip: realIp, ua });
+  }
+
+  @Post('ipn')
+  @HttpCode(HttpStatus.OK)
+  async handleIPN(
+    @Body('orderId', ParseIntPipe) orderId: number,
+    @Body('transactionId') transactionId: string
+  ) {
+    return this.ordersService.handlePaymentIPN(orderId, transactionId);
+  }
+
+  @Post('cleanup')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async cleanupOrders() {
+    const count = await this.ordersService.cleanupExpiredOrders();
+    return { success: true, cancelledCount: count };
   }
 
   @Patch(':id/status')

@@ -34,7 +34,16 @@ class ErrorBoundary extends React.Component {
           <Result
             status="error"
             title="Oops! Something went sideways."
-            subTitle="Our candy machines had a little hiccup, but don't worry, your orders are safe!"
+            subTitle={
+              <div className="flex flex-col gap-2">
+                <p>Our candy machines had a little hiccup, but don't worry, your orders are safe!</p>
+                {this.state.error && (
+                  <div className="mt-4 p-4 bg-error/10 text-error rounded-xl text-left font-mono text-xs overflow-auto max-w-lg">
+                    {this.state.error.toString()}
+                  </div>
+                )}
+              </div>
+            }
             extra={[
               <Button 
                 type="primary" 

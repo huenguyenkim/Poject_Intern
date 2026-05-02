@@ -37,7 +37,7 @@ const ShoppingCart = () => {
     dispatch(clearValidationAlerts());
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.quantity) || 1)), 0);
   const tax = subtotal * 0.08;
   const shipping = subtotal > 50 ? 0 : 5.99;
   const total = subtotal + tax + shipping;
@@ -134,7 +134,7 @@ const ShoppingCart = () => {
                         <div className="flex flex-col justify-center">
                           <Link to={`/${lang}/shop/${item.id}`} className={`font-black text-xl md:text-lg text-on_surface hover:text-primary transition-colors mb-1 line-clamp-2 ${item.isUnavailable || item.isOutOfStock ? 'opacity-40 grayscale' : ''}`}>{item.title}</Link>
                           <div className="flex flex-wrap items-center gap-3">
-                            <span className={`font-black text-lg md:text-base ${item.priceChanged ? 'text-primary' : 'text-secondary'}`}>${item.price.toFixed(2)}</span>
+                            <span className={`font-black text-lg md:text-base ${item.priceChanged ? 'text-primary' : 'text-secondary'}`}>${(Number(item.price) || 0).toFixed(2)}</span>
                             {item.priceChanged && <Badge variant="surface" className="!bg-primary/10 !text-primary !border-none !text-[9px] !font-black !px-2 !py-0.5 uppercase">{t('cart.price_updated', 'Price Updated')}</Badge>}
                             {item.isOutOfStock && <Badge variant="surface" className="!bg-error/10 !text-error !border-none !text-[9px] !font-black !px-2 !py-0.5 uppercase">{t('orders.out_of_stock', 'Out of Stock')}</Badge>}
                             {item.isUnavailable && <Badge variant="surface" className="!bg-on_surface/10 !text-on_surface_variant !border-none !text-[9px] !font-black !px-2 !py-0.5 uppercase">{t('orders.unavailable', 'Unavailable')}</Badge>}
@@ -153,7 +153,7 @@ const ShoppingCart = () => {
                       <div className="col-span-3 w-full flex justify-between md:justify-end items-center mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-surface_container">
                         <span className="md:hidden font-black text-on_surface_variant uppercase text-xs tracking-widest">{t('common.total', 'Total')}:</span>
                         <div className="flex items-center gap-4">
-                          <span className="font-black text-2xl md:text-xl text-on_surface">${(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="font-black text-2xl md:text-xl text-on_surface">${((Number(item.price) || 0) * (Number(item.quantity) || 1)).toFixed(2)}</span>
                           <button onClick={() => handleRemoveItem(item.id)} className="text-on_surface_variant hover:text-error transition-colors hidden md:block p-2 hover:bg-error/10 rounded-full"><Trash2 size={20} /></button>
                         </div>
                       </div>

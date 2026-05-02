@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { loginUserThunk, initializeAuthThunk, registerUserThunk } from './authThunks';
+import { loginUserThunk, initializeAuthThunk, registerUserThunk, logoutUserThunk } from './authThunks';
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -68,6 +68,17 @@ export const authSlice = createSlice({
       .addCase(registerUserThunk.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      .addCase(logoutUserThunk.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+        state.status = 'idle';
+        state.error = null;
+      })
+      .addCase(logoutUserThunk.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.status = 'idle';
       });
   }
 });

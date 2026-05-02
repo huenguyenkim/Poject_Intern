@@ -10,13 +10,13 @@ import {
   Lock, 
   Eye, 
   EyeOff, 
-  Check, 
   ArrowRight,
+  Check,
   Store,
   ShieldCheck,
   Zap,
 } from 'lucide-react';
-import { loginUserThunk } from '../../store/authThunks';
+import { loginUserThunk, logoutUserThunk, requestPasswordResetThunk, resetPasswordThunk } from '../../store/authThunks';
 import { showSuccessToast, showErrorToast } from '../../utils/toastUtils';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -34,6 +34,11 @@ const loginSchema = z.object({
  */
 const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(null);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [recoveryMessage, setRecoveryMessage] = useState('');
   const dispatch = useDispatch();
   const { user: currentUser, status } = useSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -52,6 +57,14 @@ const AdminLogin = () => {
     },
   });
 
+  React.useEffect(() => {
+    const token = new URLSearchParams(location.search).get('resetToken');
+    if (token) {
+      setResetToken(token);
+      setRecoveryMode('reset');
+    }
+  }, [location.search]);
+
   // Redirect if already logged in as admin
   if (currentUser && currentUser.role === 'admin') {
     return <Navigate to="/admin" replace />;
@@ -59,15 +72,50 @@ const AdminLogin = () => {
 
   const onSubmit = async (data) => {
     try {
-      await dispatch(loginUserThunk({ 
+      const result = await dispatch(loginUserThunk({ 
         email: data.email, 
-        password: data.password 
+        password: data.password,
+        rememberMe: data.rememberMe,
       })).unwrap();
       
+      // Role filtering: Only allow admin or staff roles
+      if (result.user.role !== 'admin' && result.user.role !== 'staff') {
+        // Log out immediately if role is not allowed
+        await dispatch(logoutUserThunk());
+        showErrorToast('Unauthorized: Only administrators can enter this portal.');
+        return;
+      }
+
       showSuccessToast('Admin Portal Access Granted 🔑');
       navigate('/admin', { replace: true });
     } catch (err) {
       showErrorToast(err || 'Invalid Admin Credentials');
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    try {
+      const result = await dispatch(requestPasswordResetThunk(resetEmail)).unwrap();
+      setRecoveryMessage(result.resetLink ? `Dev reset link: ${result.resetLink}` : result.message);
+      if (result.token) {
+        setResetToken(result.token);
+        setRecoveryMode('reset');
+      }
+      showSuccessToast('Password reset request sent');
+    } catch (err) {
+      showErrorToast(err || 'Password reset request failed');
+    }
+  };
+
+  const resetPassword = async () => {
+    try {
+      const result = await dispatch(resetPasswordThunk({ token: resetToken, newPassword })).unwrap();
+      setRecoveryMessage(result.message);
+      setRecoveryMode(null);
+      setNewPassword('');
+      showSuccessToast('Password reset successfully');
+    } catch (err) {
+      showErrorToast(err || 'Password reset failed');
     }
   };
 
@@ -128,27 +176,74 @@ const AdminLogin = () => {
               </button>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative">
-                  <input 
-                    type="checkbox" 
+                <span className="relative grid h-6 w-6 place-items-center rounded-lg border-2 border-surface_container bg-white transition-colors group-hover:border-primary">
+                  <input
+                    type="checkbox"
                     {...register('rememberMe')}
-                    className="sr-only"
+                    className="peer absolute inset-0 cursor-pointer opacity-0"
                   />
-                  <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${errors.rememberMe ? 'border-error' : 'border-surface_container'} group-hover:border-primary`}>
-                    <div className="w-3 h-3 bg-primary rounded-sm opacity-0 transform scale-50 transition-all checked:opacity-100 checked:scale-100"></div>
-                  </div>
-                  {/* Custom Check Icon */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Check size={14} strokeWidth={4} className="text-white opacity-0 transition-opacity" />
-                  </div>
-                </div>
-                <span className="text-sm font-bold text-on_surface_variant group-hover:text-on_surface transition-colors">Remember this portal</span>
+                  <Check size={14} strokeWidth={4} className="text-primary opacity-0 transition-opacity peer-checked:opacity-100" />
+                </span>
+                <span className="text-sm font-bold text-on_surface_variant group-hover:text-on_surface transition-colors">Remember me</span>
               </label>
-              
-              <button type="button" className="text-sm font-black text-primary hover:underline underline-offset-4">Need Help?</button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRecoveryMode(recoveryMode === 'forgot' ? null : 'forgot');
+                  setRecoveryMessage('');
+                }}
+                className="text-sm font-black text-primary hover:underline underline-offset-4"
+              >
+                Forgot Password?
+              </button>
             </div>
+
+            {recoveryMode && (
+              <div className="space-y-4 rounded-[20px] border border-surface_container bg-white/70 p-5 shadow-sm">
+                {recoveryMode === 'forgot' ? (
+                  <>
+                    <Input
+                      label="Recovery Email"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(event) => setResetEmail(event.target.value)}
+                      placeholder="admin@candy.com"
+                      icon={Mail}
+                    />
+                    <Button type="button" variant="outline" className="w-full" onClick={requestPasswordReset}>
+                      Send Reset Link
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      label="Reset Token"
+                      value={resetToken}
+                      onChange={(event) => setResetToken(event.target.value)}
+                      placeholder="Paste reset token"
+                      icon={ShieldCheck}
+                    />
+                    <Input
+                      label="New Password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      placeholder="At least 8 characters"
+                      icon={Lock}
+                    />
+                    <Button type="button" variant="outline" className="w-full" onClick={resetPassword}>
+                      Reset Password
+                    </Button>
+                  </>
+                )}
+                {recoveryMessage && (
+                  <p className="break-words text-xs font-bold text-on_surface_variant">{recoveryMessage}</p>
+                )}
+              </div>
+            )}
 
             <Button 
               type="submit" 

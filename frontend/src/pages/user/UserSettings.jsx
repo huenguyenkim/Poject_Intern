@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { 
-  Shield, Bell, Lock, Globe, UserX, ChevronRight, Eye, Mail, Smartphone, Share2, Check
+  Shield, Bell, Lock, Globe, UserX, ChevronRight, Eye, Mail, Smartphone, Share2, Check, Save
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { showSuccessToast } from '../../utils/toastUtils';
@@ -8,17 +9,54 @@ import PageTransition from '../../components/layout/PageTransition';
 
 const UserSettings = () => {
   const { t } = useTranslation();
-  const [twoFactor, setTwoFactor] = useState(true);
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(false);
-  const [smsUpdates, setSmsUpdates] = useState(false);
+  
+  // State for password fields
+  const [passwordInfo, setPasswordInfo] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
-  const handleToggle = (setter, label) => {
-    setter(prev => {
-      const newValue = !prev;
-      showSuccessToast(`${label} ${newValue ? t('settings.enabled', 'enabled') : t('settings.disabled', 'disabled')}! ✨`);
-      return newValue;
-    });
+  const handleChangePassword = async () => {
+    // 1. Client-side validation
+    if (!passwordInfo.currentPassword || !passwordInfo.newPassword || !passwordInfo.confirmPassword) {
+      showSuccessToast(t('profile.password_missing', 'Please fill all password fields.'));
+      return;
+    }
+    
+    // Check password strength (client side)
+    const strongPasswordRegex = /((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/;
+    if (passwordInfo.newPassword.length < 8 || !strongPasswordRegex.test(passwordInfo.newPassword)) {
+      showSuccessToast(t('profile.password_weak', 'Password must be 8+ chars with uppercase, lowercase and a number/symbol.'));
+      return;
+    }
+
+    if (passwordInfo.newPassword !== passwordInfo.confirmPassword) {
+      showSuccessToast(t('profile.password_mismatch', 'New passwords do not match.'));
+      return;
+    }
+
+    try {
+      const response = await axios.post('/api/users/change-password', {
+        currentPassword: passwordInfo.currentPassword,
+        newPassword: passwordInfo.newPassword,
+        confirmPassword: passwordInfo.confirmPassword
+      });
+
+      if (response.data.success) {
+        showSuccessToast(t('profile.password_updated', 'Security key updated! Please log in again.'));
+        setPasswordInfo({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        
+        // Log out immediately to enforce session invalidation
+        setTimeout(() => {
+          localStorage.removeItem('token');
+          window.location.href = '/vi/auth/login';
+        }, 1500);
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Update failed';
+      showSuccessToast(`Error: ${message}`);
+    }
   };
 
   return (
@@ -29,136 +67,64 @@ const UserSettings = () => {
         </div>
 
         <div className="space-y-8">
-          {/* Account & Security */}
           <div className="bg-white rounded-[45px] p-10 lg:p-14 shadow-sm border border-surface_container/20">
             <div className="flex items-center gap-4 mb-12">
               <div className="w-12 h-12 rounded-full bg-[#fff0f5] text-[#d81b60] flex items-center justify-center border border-pink-100">
                 <Shield size={24} strokeWidth={2.5} />
               </div>
-              <h2 className="text-2xl font-black text-on_surface tracking-tight uppercase">{t('settings.security', 'Account & Security')}</h2>
+              <h2 className="text-2xl font-black text-on_surface tracking-tight uppercase">{t('profile.security_settings', 'Security Settings')}</h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-              <div className="space-y-10">
-                <div className="space-y-4">
-                  <label className="text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] ml-1">{t('settings.change_password', 'Change Password')}</label>
-                  <div className="relative group">
-                    <input type="text" disabled value={t('settings.password_placeholder', 'Update your security key')} className="w-full bg-[#fcf9fc] border border-surface_container/30 rounded-[22px] px-8 py-5 text-sm font-bold text-on_surface/40 cursor-pointer group-hover:bg-[#f5f0f6] transition-all outline-none" />
-                    <ChevronRight size={20} className="absolute right-8 top-1/2 -translate-y-1/2 text-primary group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-
-                <div className="bg-[#fff0f8]/40 rounded-[35px] p-8 flex items-center justify-between border border-primary/5">
-                  <div>
-                    <h4 className="font-black text-on_surface text-lg mb-1">{t('settings.two_factor', 'Two-Factor Authentication')}</h4>
-                    <p className="text-sm font-bold text-on_surface_variant opacity-60 leading-relaxed max-w-[280px]">{t('settings.two_factor_desc', 'Add an extra layer of candy-coated protection')}</p>
-                  </div>
-                  <div className={`w-16 h-9 rounded-full relative cursor-pointer transition-all duration-500 shadow-inner ${twoFactor ? 'bg-primary' : 'bg-surface_container'}`} onClick={() => handleToggle(setTwoFactor, t('settings.two_factor'))}>
-                    <div className={`absolute top-1 w-7 h-7 rounded-full bg-white shadow-lg transition-all duration-500 transform ${twoFactor ? 'translate-x-8' : 'translate-x-1'}`} />
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="space-y-4">
+                <label className="text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] ml-1">{t('profile.current_password', 'Current Password')}</label>
+                <input 
+                  type="password" 
+                  value={passwordInfo.currentPassword} 
+                  onChange={(e) => setPasswordInfo({ ...passwordInfo, currentPassword: e.target.value })} 
+                  className="w-full bg-[#fbf9fc] border border-surface_container/30 rounded-[22px] px-8 py-5 text-sm text-on_surface outline-none focus:ring-4 focus:ring-primary/5 transition-all" 
+                  placeholder={t('profile.current_password_placeholder', 'Enter current password')} 
+                />
               </div>
 
               <div className="space-y-4">
-                <label className="text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] ml-1">{t('settings.social', 'Social Connections')}</label>
-                <div className="space-y-4">
-                  <div className="bg-[#fcf9fc] border border-surface_container/30 rounded-[25px] px-8 py-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm">
-                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                      </div>
-                      <span className="font-bold text-sm text-on_surface opacity-80 tracking-tight">Google Account</span>
-                    </div>
-                    <div className="bg-green-50 px-4 py-1.5 rounded-full border border-green-100">
-                      <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">{t('settings.connected', 'Connected')}</span>
-                    </div>
-                  </div>
-                  <div className="bg-[#fcf9fc] border border-surface_container/30 rounded-[25px] px-8 py-5 flex items-center justify-between group cursor-pointer hover:bg-[#f5f0f6] transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm text-[#1877F2]">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                      </div>
-                      <span className="font-bold text-sm text-on_surface opacity-80 tracking-tight">Facebook Account</span>
-                    </div>
-                    <span className="text-[10px] font-black text-primary uppercase tracking-widest group-hover:scale-105 transition-transform">{t('settings.connect', 'Connect')}</span>
-                  </div>
-                </div>
+                <label className="text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] ml-1">{t('profile.new_password', 'New Password')}</label>
+                <input 
+                  type="password" 
+                  value={passwordInfo.newPassword} 
+                  onChange={(e) => setPasswordInfo({ ...passwordInfo, newPassword: e.target.value })} 
+                  className="w-full bg-[#fbf9fc] border border-surface_container/30 rounded-[22px] px-8 py-5 text-sm text-on_surface outline-none focus:ring-4 focus:ring-primary/5 transition-all" 
+                  placeholder={t('profile.new_password_placeholder', '8+ chars, Uppercase & Symbols')} 
+                />
               </div>
-            </div>
-          </div>
 
-          {/* Notifications Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-[45px] p-10 lg:p-14 shadow-sm border border-surface_container/20">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-full bg-[#f0f4ff] text-[#4d79ff] flex items-center justify-center">
-                  <Bell size={24} strokeWidth={2.5} />
-                </div>
-                <h2 className="text-2xl font-black text-on_surface tracking-tight uppercase">{t('settings.notifications', 'Notifications')}</h2>
+              <div className="space-y-4">
+                <label className="text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] ml-1">{t('profile.confirm_password', 'Confirm New Password')}</label>
+                <input 
+                  type="password" 
+                  value={passwordInfo.confirmPassword} 
+                  onChange={(e) => setPasswordInfo({ ...passwordInfo, confirmPassword: e.target.value })} 
+                  className="w-full bg-[#fbf9fc] border border-surface_container/30 rounded-[22px] px-8 py-5 text-sm text-on_surface outline-none focus:ring-4 focus:ring-primary/5 transition-all" 
+                  placeholder={t('profile.confirm_password_placeholder', 'Confirm new password')} 
+                />
               </div>
-              <div className="space-y-8">
-                {[
-                  { label: t('settings.email_alerts', 'Email Alerts'), sub: t('settings.email_alerts_desc', 'Weekly candy drops & offers'), state: emailAlerts, setter: setEmailAlerts },
-                  { label: t('settings.push_notifs', 'Push Notifications'), sub: t('settings.push_notifs_desc', 'Order status & shipping info'), state: pushNotifs, setter: setPushNotifs },
-                  { label: t('settings.sms_updates', 'SMS Updates'), sub: t('settings.sms_updates_desc', 'Flash sale alerts'), state: smsUpdates, setter: setSmsUpdates },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between cursor-pointer group" onClick={() => handleToggle(item.setter, item.label)}>
-                    <div className="space-y-0.5">
-                      <h5 className="font-black text-on_surface text-lg leading-tight uppercase">{item.label}</h5>
-                      <p className="text-[12px] font-bold text-on_surface_variant opacity-50">{item.sub}</p>
-                    </div>
-                    <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all ${item.state ? 'bg-primary border-primary shadow-lg' : 'bg-surface_dim border-surface_container/40 group-hover:border-primary/40'}`}>
-                      {item.state && <Check size={16} className="text-white" strokeWidth={4} />}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="bg-white rounded-[45px] p-10 lg:p-14 shadow-sm border border-surface_container/20">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-full bg-[#e0f7fa] text-[#00acc1] flex items-center justify-center">
-                  <Eye size={24} strokeWidth={2.5} />
-                </div>
-                <h2 className="text-2xl font-black text-on_surface tracking-tight uppercase">{t('settings.privacy', 'Privacy')}</h2>
+              <div className="flex items-end">
+                <button 
+                  type="button" 
+                  onClick={handleChangePassword} 
+                  className="w-full bg-primary text-white font-black py-5 px-8 rounded-[22px] hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 uppercase tracking-widest text-sm"
+                >
+                  {t('profile.update_password', 'Update Password')}
+                </button>
               </div>
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <label className="text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] ml-1">{t('settings.visibility', 'Profile Visibility')}</label>
-                  <div className="relative group">
-                    <select className="w-full bg-[#fcf9fc] border border-surface_container/30 rounded-[22px] px-8 py-5 text-sm font-bold text-on_surface outline-none appearance-none cursor-pointer focus:ring-4 focus:ring-primary/5 transition-all">
-                      <option>{t('settings.visible_public', 'Public-Everyone can see your candy favorites')}</option>
-                      <option>{t('settings.visible_private', 'Private-Only you can see your list')}</option>
-                      <option>{t('settings.visible_friends', 'Friends Only-Share with your sweet group')}</option>
-                    </select>
-                    <ChevronRight size={20} className="absolute right-8 top-1/2 -translate-y-1/2 rotate-90 text-on_surface_variant/40 pointer-events-none" />
-                  </div>
-                </div>
-                <div className="flex items-start gap-5 pt-2 group cursor-pointer">
-                  <div className="w-7 h-7 rounded-xl border-2 border-surface_container/40 bg-surface_dim shrink-0 flex items-center justify-center group-hover:border-primary/40 transition-colors" />
-                  <p className="text-[13px] font-bold text-on_surface_variant opacity-60 leading-relaxed uppercase tracking-tight">
-                    {t('settings.personalize_allow', 'Allow CandyShop to personalize my experience based on browsing activity.')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-[#fff0f3]/50 border-2 border-dashed border-primary/20 rounded-[45px] p-10 lg:p-14 flex flex-col md:flex-row items-center justify-between gap-10">
-            <div className="flex items-center gap-8">
-              <div className="w-20 h-20 rounded-[30px] bg-white flex items-center justify-center text-[#d32f2f] shadow-sm border border-red-50">
-                <UserX size={38} strokeWidth={2.5} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-2xl font-black text-on_surface tracking-tight uppercase">{t('settings.deactivate', 'Deactivate Account')}</h3>
-                <p className="text-sm font-bold text-on_surface_variant opacity-60 max-w-md leading-relaxed">
-                  {t('settings.deactivate_desc', 'Taking a break? This will temporarily hide your profile and candy reviews from other members.')}
+              <div className="col-span-1 md:col-span-2 mt-4 p-6 bg-primary/5 rounded-[25px] border border-primary/10">
+                <p className="text-[12px] font-bold text-primary/70 leading-relaxed uppercase tracking-tight">
+                  ⚠️ {t('profile.security_notice', 'Updating your password will sign you out of all other devices for your security.')}
                 </p>
               </div>
             </div>
-            <button className="bg-primary text-white font-black py-5 px-12 rounded-[25px] hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 whitespace-nowrap text-lg transform hover:scale-105 active:scale-95 uppercase tracking-widest">
-              {t('settings.deactivate_btn', 'Deactivate Account')}
-            </button>
           </div>
         </div>
 

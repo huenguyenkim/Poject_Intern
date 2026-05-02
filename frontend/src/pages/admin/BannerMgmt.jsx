@@ -115,14 +115,6 @@ const BannerMgmt = () => {
               <p className="text-on_surface_variant font-bold text-lg max-w-xl">Design and schedule pulse-pounding promotional banners.</p>
             </div>
           </div>
-          <Button 
-            variant="primary"
-            className="h-[72px] px-10 rounded-[28px] shadow-2xl flex items-center gap-3"
-            onClick={() => handleOpenModal()}
-          >
-            <Plus size={24} strokeWidth={3}/>
-            <span className="text-base font-black uppercase tracking-widest">Create Banner</span>
-          </Button>
         </div>
 
         {/* Global Performance Quick Stats */}

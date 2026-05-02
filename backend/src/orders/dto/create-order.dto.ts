@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsNotEmpty, IsArray, ValidateNested, ArrayMinSize, Min, IsEnum } from 'class-validator';
+import { IsInt, IsString, IsNotEmpty, IsArray, ValidateNested, ArrayMinSize, Min, IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaymentMethod } from '../../common/constants/payment-method.enum';
 
@@ -34,6 +34,10 @@ export class CreateOrderDto {
   @IsEnum(PaymentMethod)
   @IsNotEmpty()
   paymentMethod: PaymentMethod;
+
+  @IsString()
+  @IsOptional()
+  couponCode?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

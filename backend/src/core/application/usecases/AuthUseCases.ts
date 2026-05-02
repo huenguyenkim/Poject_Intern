@@ -71,7 +71,7 @@ export class LoginUseCase {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, role: user.role };
+    const payload = { sub: user.id, role: user.role, version: user.tokenVersion || 1 };
     const token = this.tokenService.generate(payload);
 
     return {

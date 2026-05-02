@@ -7,12 +7,26 @@ import apiClient from '../../api/apiClient';
  * Returns PLAIN OBJECTS for Redux Toolkit compatibility.
  */
 export class OrderRepository {
-  async getOrders(page = 1, limit = 10) {
-    const { data } = await apiClient.get('/orders', { params: { page, limit } });
+  async getOrders(page = 1, limit = 10, filters = {}) {
+    const { data } = await apiClient.get('/orders', { 
+      params: { 
+        page, 
+        limit,
+        status: filters.status !== 'All Orders' ? filters.status : undefined,
+        query: filters.query,
+        startDate: filters.startDate,
+        endDate: filters.endDate
+      } 
+    });
     return {
       data: data.data.map(item => this._mapOrder(item)),
       meta: data.meta
     };
+  }
+
+  async getOrderMetrics() {
+    const { data } = await apiClient.get('/orders/metrics');
+    return data;
   }
 
   async getMyOrders(page = 1, limit = 10) {

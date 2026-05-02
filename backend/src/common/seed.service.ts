@@ -87,7 +87,7 @@ export class SeedService implements OnModuleInit {
     const createdCategories: Category[] = [];
 
     for (const data of categoryData) {
-      const cat = await this.categoriesService.create(data);
+      const cat = await this.categoriesService.create(data) as any;
       createdCategories.push(cat);
     }
 

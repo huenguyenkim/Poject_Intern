@@ -7,8 +7,20 @@ export class GetOrders {
   constructor(repository) {
     this.repository = repository;
   }
-  async execute(page = 1, limit = 10) {
-    return this.repository.getOrders(page, limit);
+  async execute(page = 1, limit = 10, filters = {}) {
+    return this.repository.getOrders(page, limit, filters);
+  }
+}
+
+/**
+ * Get Order Metrics Use Case
+ */
+export class GetOrderMetrics {
+  constructor(repository) {
+    this.repository = repository;
+  }
+  async execute() {
+    return this.repository.getOrderMetrics();
   }
 }
 
@@ -61,6 +73,7 @@ export class GetOrderById {
 }
 
 export const getOrdersUseCase = new GetOrders(orderRepository);
+export const getOrderMetricsUseCase = new GetOrderMetrics(orderRepository);
 export const getMyOrdersUseCase = new GetMyOrders(orderRepository);
 export const createOrderUseCase = new CreateOrder(orderRepository);
 export const updateOrderStatusUseCase = new UpdateOrderStatus(orderRepository);

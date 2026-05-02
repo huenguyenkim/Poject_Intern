@@ -12,7 +12,7 @@ export const loginUserThunk = createAsyncThunk(
       const response = await apiClient.post('/auth/login', credentials);
       const { user, accessToken } = response.data;
       
-      // Persist token
+      // Persist short-lived access token. Long-lived remember sessions stay in HttpOnly cookies.
       localStorage.setItem('candy_token', accessToken);
       
       // Return plain serializable objects only
@@ -33,7 +33,16 @@ export const initializeAuthThunk = createAsyncThunk(
   'auth/initialize',
   async (_, { rejectWithValue }) => {
     const token = localStorage.getItem('candy_token');
-    if (!token) return rejectWithValue('No token found');
+    if (!token) {
+      try {
+        const response = await apiClient.post('/auth/remember');
+        const { user, accessToken } = response.data;
+        localStorage.setItem('candy_token', accessToken);
+        return { user: JSON.parse(JSON.stringify(user)), token: accessToken };
+      } catch {
+        return rejectWithValue('No token found');
+      }
+    }
 
     try {
       const response = await apiClient.get('/auth/me');
@@ -41,6 +50,44 @@ export const initializeAuthThunk = createAsyncThunk(
     } catch (err) {
       localStorage.removeItem('candy_token');
       return rejectWithValue('Session expired');
+    }
+  }
+);
+
+export const requestPasswordResetThunk = createAsyncThunk(
+  'auth/requestPasswordReset',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/auth/password/forgot', { email });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Password reset request failed');
+    }
+  }
+);
+
+export const resetPasswordThunk = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ token, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/auth/password/reset', { token, newPassword });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Password reset failed');
+    }
+  }
+);
+
+export const logoutUserThunk = createAsyncThunk(
+  'auth/logoutUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      await apiClient.post('/auth/logout');
+      return true;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Logout failed');
+    } finally {
+      localStorage.removeItem('candy_token');
     }
   }
 );

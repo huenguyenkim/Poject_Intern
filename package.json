@@ -7,5 +7,8 @@
     "install:all": "npm install --prefix frontend && npm install --prefix backend",
     "build:all": "npm run build --prefix frontend && npm run build --prefix backend",
     "lint:all": "npm run lint --prefix frontend && npm run lint --prefix backend"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
   }
 }

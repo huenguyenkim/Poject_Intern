@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
+import { CategoriesModule } from '../categories/categories.module';
 import { 
   GetProductsUseCase, 
   GetProductByIdUseCase, 
@@ -20,6 +21,7 @@ import { CommonModule } from '../common/common.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Product]),
+    forwardRef(() => CategoriesModule),
     AuditModule,
     InventoryModule,
     CommonModule,

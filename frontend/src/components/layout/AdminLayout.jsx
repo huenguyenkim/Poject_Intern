@@ -1,18 +1,13 @@
 import React from 'react';
-import { Layout, Menu, Button, Avatar, Badge, Dropdown } from 'antd';
+import { Layout, Menu } from 'antd';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../store/authSlice';
 import { 
   Candy, 
   LayoutDashboard, 
   Package, 
   Grid, 
   ShoppingBag, 
-  ImagePlus, 
-  Bell, 
-  LogOut, 
-  Plus
+  ImagePlus
 } from 'lucide-react';
 import TopUtilityBar from './TopUtilityBar';
 
@@ -21,6 +16,7 @@ const { Header, Sider, Content } = Layout;
 // Static navigation configuration
 const ADMIN_NAV_ITEMS = [
   { key: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+  { key: '/admin/tasks', label: 'Tasks', icon: <Grid size={18} /> },
   { key: '/admin/products', label: 'Products', icon: <Package size={18} /> },
   { key: '/admin/categories', label: 'Categories', icon: <Grid size={18} /> },
   { key: '/admin/orders', label: 'Orders', icon: <ShoppingBag size={18} /> },
@@ -35,13 +31,6 @@ const ADMIN_NAV_ITEMS = [
 const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-
-  const handleLogout = React.useCallback(() => {
-    dispatch(logout());
-    navigate('/admin/login');
-  }, [dispatch, navigate]);
 
   return (
     <Layout className="min-h-screen bg-surface_dim">
@@ -75,35 +64,6 @@ const AdminLayout = () => {
           style={{ fontVariant: 'normal' }}
         />
 
-        {/* Sidebar Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 space-y-6 border-t border-surface_container bg-white">
-          <Button 
-            type="primary" 
-            block 
-            icon={<Plus size={18} />}
-            className="h-14 rounded-2xl font-black text-[15px] flex items-center justify-center gap-2 "
-            onClick={() => navigate('/admin/products?action=add')}
-          >
-            Add Product
-          </Button>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar 
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Admin'}`}
-                className="border-2 border-primary/20 shadow-sm"
-                size={40}
-              />
-              <div className="min-w-0">
-                <p className="text-sm font-black text-on_surface leading-none truncate">{user?.name || 'Admin User'}</p>
-                <p className="text-[10px] font-bold text-on_surface_variant mt-1 uppercase tracking-wider">Administrator</p>
-              </div>
-            </div>
-            <button onClick={handleLogout} className="p-2 text-on_surface_variant hover:text-primary transition-colors">
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
       </Sider>
 
       {/* Main Layout */}

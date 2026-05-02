@@ -92,7 +92,7 @@ const BentoProductCard = ({
       {/* Hidden Card Link (Total Area Navigation to Detail) */}
       <LocalizedLink 
         to={`/shop/${id}`} 
-        className="absolute inset-0 z-0" 
+        className="absolute inset-0 z-[5]" 
         aria-label={`View details for ${displayTitle}`}
       />
     </motion.div>

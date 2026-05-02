@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { usePurchasedProducts } from '../../hooks/useOrders';
 import ProductCard from '../../components/ui/ProductCard';
 import Button from '../../components/ui/Button';
 import { Filter, ChevronDown, Search, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
@@ -14,10 +15,15 @@ const ProductCatalog = () => {
   const { t } = useTranslation();
   const { lang } = useParams();
   const { products, categories: storeCategories, status } = useSelector((state) => state.catalog);
+  const { items: cartItems } = useSelector((state) => state.cart);
+  const { user } = useSelector((state) => state.auth);
+  
+  const { data: purchasedIds } = usePurchasedProducts(!!user);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const urlCategory = searchParams.get('category');
-  const [activeCategories, setActiveCategories] = useState(urlCategory ? [urlCategory] : [t('catalog.all_candies', 'All Candies')]);
+  const [activeCategories, setActiveCategories] = useState(urlCategory ? [urlCategory] : ['ALL']);
   const [activeBrands, setActiveBrands] = useState([]);
   const [minRating, setMinRating] = useState(0);
   const [price, setPrice] = useState(100);
@@ -76,7 +82,7 @@ const ProductCatalog = () => {
       
       const productCatName = product.categoryName || product.category;
       const productCatId = String(product.categoryId);
-      const matchCategory = activeCategories.includes(t('catalog.all_candies', 'All Candies')) || 
+      const matchCategory = activeCategories.includes('ALL') || 
                             activeCategories.includes(productCatName) || 
                             activeCategories.includes(productCatId);
                             
@@ -104,19 +110,21 @@ const ProductCatalog = () => {
     currentPage * itemsPerPage
   );
 
-  const toggleCategory = (cat) => {
+  const toggleCategory = (cat, catName) => {
     setCurrentPage(1);
     const allLabel = t('catalog.all_candies', 'All Candies');
-    if (cat === allLabel) {
-      setActiveCategories([allLabel]);
+    const catKey = cat === allLabel ? 'ALL' : catName;
+
+    if (catKey === 'ALL') {
+      setActiveCategories(['ALL']);
     } else {
       setActiveCategories(prev => {
-        const withoutAll = prev.filter(c => c !== allLabel);
-        if (prev.includes(cat)) {
-          const next = withoutAll.filter(c => c !== cat);
-          return next.length === 0 ? [allLabel] : next;
+        const withoutAll = prev.filter(c => c !== 'ALL');
+        if (prev.includes(catKey)) {
+          const next = withoutAll.filter(c => c !== catKey);
+          return next.length === 0 ? ['ALL'] : next;
         }
-        return [...withoutAll, cat];
+        return [...withoutAll, catKey];
       });
     }
   };
@@ -124,7 +132,7 @@ const ProductCatalog = () => {
   const clearFilters = () => {
     setSearchQuery(""); 
     setSearchParams({}, { replace: true }); 
-    setActiveCategories([t('catalog.all_candies', 'All Candies')]); 
+    setActiveCategories(['ALL']); 
     setActiveBrands([]);
     setMinRating(0);
     setPrice(100);
@@ -171,14 +179,23 @@ const ProductCatalog = () => {
                   <div>
                     <h3 className="font-bold text-lg text-on_surface mb-5 tracking-tight">{t('catalog.categories', 'Categories')}</h3>
                     <div className="space-y-4 max-h-[240px] overflow-y-auto custom-scrollbar pr-2">
-                      {categories.map(cat => (
-                        <label key={cat} className="flex items-center gap-4 cursor-pointer group">
-                          <input type="checkbox" checked={activeCategories.includes(cat)} onChange={() => toggleCategory(cat)} className="appearance-none w-6 h-6 rounded-full border-2 border-surface_container checked:bg-primary checked:border-primary transition-all cursor-pointer" />
-                          <span className={`transition-colors font-semibold text-[15px] ${activeCategories.includes(cat) ? 'text-primary' : 'text-on_surface_variant group-hover:text-on_surface'}`}>
-                            {cat}
-                          </span>
-                        </label>
-                      ))}
+                      <label className="flex items-center gap-4 cursor-pointer group">
+                        <input type="checkbox" checked={activeCategories.includes('ALL')} onChange={() => toggleCategory(t('catalog.all_candies', 'All Candies'), 'ALL')} className="appearance-none w-6 h-6 rounded-full border-2 border-surface_container checked:bg-primary checked:border-primary transition-all cursor-pointer" />
+                        <span className={`transition-colors font-semibold text-[15px] ${activeCategories.includes('ALL') ? 'text-primary' : 'text-on_surface_variant group-hover:text-on_surface'}`}>
+                          {t('catalog.all_candies', 'All Candies')}
+                        </span>
+                      </label>
+                      {storeCategories.map(cat => {
+                        const catKey = cat.name || cat.categoryName;
+                        return (
+                          <label key={cat.id} className="flex items-center gap-4 cursor-pointer group">
+                            <input type="checkbox" checked={activeCategories.includes(catKey)} onChange={() => toggleCategory(cat.name || cat.categoryName, catKey)} className="appearance-none w-6 h-6 rounded-full border-2 border-surface_container checked:bg-primary checked:border-primary transition-all cursor-pointer" />
+                            <span className={`transition-colors font-semibold text-[15px] ${activeCategories.includes(catKey) ? 'text-primary' : 'text-on_surface_variant group-hover:text-on_surface'}`}>
+                              {cat.name || cat.categoryName}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -233,9 +250,19 @@ const ProductCatalog = () => {
 
               {paginatedProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                  {paginatedProducts.map(product => (
-                    <ProductCard key={product.id} {...product} title={product.title || product.productName} />
-                  ))}
+                  {paginatedProducts.map(product => {
+                    const isPurchased = purchasedIds?.some(pid => String(pid) === String(product.id));
+                    const isInCart = cartItems.some(item => String(item.id) === String(product.id));
+                    return (
+                      <ProductCard 
+                        key={product.id} 
+                        {...product} 
+                        title={product.title || product.productName} 
+                        isPurchased={isPurchased}
+                        isInCart={isInCart}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-32 bg-white rounded-[40px] border border-surface_container shadow-sm">

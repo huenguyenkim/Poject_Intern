@@ -1,4 +1,4 @@
-import React, { Suspense, useLayoutEffect } from 'react';
+import React, { Suspense, useLayoutEffect, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfigProvider, App as AntApp, theme as antTheme } from 'antd';
@@ -12,6 +12,7 @@ import { validateCartItems } from './store/cartSlice';
 
 // Global Instances Store (Ant Design APIs)
 import { setAntdInstances } from './utils/AntdGlobal';
+import { SocketProvider } from './context/SocketContext';
 
 // Layouts & HOCs
 import StorefrontLayout from './components/layout/StorefrontLayout';
@@ -23,7 +24,9 @@ import ErrorBoundary from './components/layout/ErrorBoundary';
 // Pages
 import StorefrontHome from './pages/storefront/StorefrontHome';
 import ProductCatalog from './pages/storefront/ProductCatalog';
-import ProductDetail from './pages/storefront/ProductDetail';
+const ProductDetail = lazy(() => import('./pages/storefront/ProductDetail'));
+const BlogList = lazy(() => import('./pages/storefront/BlogList'));
+const BlogDetail = lazy(() => import('./pages/storefront/BlogDetail'));
 import ShoppingCart from './pages/storefront/ShoppingCart';
 import Checkout from './pages/storefront/Checkout';
 import Auth from './pages/auth/Auth';
@@ -38,8 +41,12 @@ import BannerMgmt from './pages/admin/BannerMgmt';
 
 import UserProfile from './pages/user/UserProfile';
 import UserOrders from './pages/user/UserOrders';
+import CustomerSurvey from './pages/user/CustomerSurvey';
 import UserSettings from './pages/user/UserSettings';
 import Placeholder from './components/ui/Placeholder';
+import TaskDashboard from './pages/admin/TaskDashboard';
+import StaffLayout from './components/layout/StaffLayout';
+import MyTasks from './pages/staff/MyTasks';
 
 const SUPPORTED_LANGS = ['vi', 'en'];
 
@@ -107,6 +114,8 @@ const AppContent = () => {
               <Route index element={<StorefrontHome />} />
               <Route path="shop" element={<ProductCatalog />} />
               <Route path="shop/:id" element={<ProductDetail />} />
+              <Route path="blog" element={<BlogList />} />
+              <Route path="blog/:id" element={<BlogDetail />} />
               <Route path="cart" element={<ShoppingCart />} />
               <Route path="checkout" element={<Checkout />} />
               <Route path="auth" element={<Auth />} />
@@ -116,6 +125,7 @@ const AppContent = () => {
               <Route path="profile" element={<ProtectedRoute role="customer"><UserLayout /></ProtectedRoute>}>
                 <Route index element={<UserProfile />} />
                 <Route path="orders" element={<UserOrders />} />
+                <Route path="survey" element={<CustomerSurvey />} />
                 <Route path="settings" element={<UserSettings />} />
               </Route>
               <Route path="*" element={<Placeholder />} />
@@ -125,12 +135,20 @@ const AppContent = () => {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
               <Route index element={<AdminDashboard />} />
+              <Route path="tasks" element={<TaskDashboard />} />
               <Route path="products" element={<ProductMgmt />} />
               <Route path="categories" element={<CategoryMgmt />} />
               <Route path="orders" element={<OrderMgmt />} />
               <Route path="orders/:id" element={<OrderMgmt />} />
               <Route path="banners" element={<BannerMgmt />} />
               <Route path="*" element={<Placeholder title="Admin Page" />} />
+            </Route>
+
+            {/* Staff Routes (Mobile Optimized) */}
+            <Route path="/staff" element={<ProtectedRoute role="staff"><StaffLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="tasks" replace />} />
+              <Route path="tasks" element={<MyTasks />} />
+              <Route path="*" element={<Placeholder title="Staff Page" />} />
             </Route>
 
             {/* Final fallback */}
@@ -141,6 +159,7 @@ const AppContent = () => {
     </Router>
   );
 };
+
 
 const App = () => {
   const dispatch = useDispatch();
@@ -162,6 +181,26 @@ const App = () => {
       dispatch(validateCartItems(products));
     }
   }, [catalogStatus, products, dispatch]);
+
+  React.useEffect(() => {
+    const trackVisit = async () => {
+      const hasVisited = sessionStorage.getItem('hasVisitedSession');
+      if (!hasVisited) {
+        try {
+          const sessionId = `session-${Math.random().toString(36).substring(2, 15)}`;
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/visit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+          sessionStorage.setItem('hasVisitedSession', 'true');
+        } catch (error) {
+          console.error('Failed to track visit', error);
+        }
+      }
+    };
+    trackVisit();
+  }, []);
 
   if (initializing) return <AppLoading />;
 
@@ -187,7 +226,9 @@ const App = () => {
       }}
     >
       <AntApp>
-        <AppContent />
+        <SocketProvider>
+          <AppContent />
+        </SocketProvider>
       </AntApp>
     </ConfigProvider>
   );

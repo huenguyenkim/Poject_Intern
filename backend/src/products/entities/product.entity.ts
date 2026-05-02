@@ -32,6 +32,9 @@ export class Product {
   @Column({ default: 0 })
   stock: number;
 
+  @Column('decimal', { name: 'sale_price', precision: 10, scale: 2, nullable: true })
+  salePrice: number;
+
   @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
   orderItems: OrderItem[];
 }

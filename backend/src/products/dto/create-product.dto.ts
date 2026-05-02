@@ -24,4 +24,9 @@ export class CreateProductDto {
   @IsNumber()
   @IsNotEmpty({ message: 'Category ID is required' })
   categoryId: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  salePrice?: number;
 }

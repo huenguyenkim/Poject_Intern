@@ -131,9 +131,9 @@ export const updateCategoryThunk = createAsyncThunk(
 
 export const deleteCategoryThunk = createAsyncThunk(
   'catalog/deleteCategory',
-  async (id, { rejectWithValue }) => {
+  async ({ id, force = false }, { rejectWithValue }) => {
     try {
-      await deleteCategoryUseCase.execute(id);
+      await deleteCategoryUseCase.execute(id, force);
       return id;
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to delete category');

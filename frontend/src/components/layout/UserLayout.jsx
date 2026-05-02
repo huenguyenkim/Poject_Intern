@@ -43,20 +43,11 @@ const UserLayout = () => {
         
         {/* User Profile Summary at Top (Dynamic) */}
         <div className="p-10 pb-6 flex flex-col items-center text-center">
-          <div className="relative mb-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-[#FFF0F8] shadow-md">
-              <img 
-                src={currentUser?.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop"} 
-                alt="User" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
           <h2 className="text-xl font-black text-on_surface tracking-tight leading-tight">
-            {currentUser?.name || "Alex Smith"}
+            {currentUser?.name || ''}
           </h2>
           <p className="text-[10px] font-black text-on_surface_variant opacity-50 uppercase tracking-widest mt-1">
-            {currentUser?.role === 'admin' ? t('profile.admin_role', 'Premium Admin') : t('profile.member_role', 'Sweet Tooth Member')}
+              {currentUser?.role === 'admin' ? t('profile.admin_role', 'Premium Admin') : ''}
           </p>
         </div>
         
@@ -87,10 +78,7 @@ const UserLayout = () => {
 
         {/* Sidebar Footer Section */}
         <div className="p-8 pb-10 space-y-2">
-          <button className="w-full flex items-center gap-4 px-6 py-3 rounded-xl font-bold text-on_surface_variant/60 hover:text-on_surface transition-all text-sm group">
-            <HelpCircle size={20} />
-            <span>{t('header.help', 'Help Center')}</span>
-          </button>
+
           
           <button 
             onClick={handleLogout}
@@ -100,14 +88,7 @@ const UserLayout = () => {
             <span>{t('header.logout')}</span>
           </button>
 
-          {/* Back to Shop */}
-          <button 
-            onClick={() => navigate(`/${lang}`)}
-            className="w-full mt-6 bg-primary text-white font-black py-4 px-6 rounded-[22px] flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:scale-105 transition-all text-sm"
-          >
-            <ArrowLeft size={18} strokeWidth={3} />
-            {t('header.back_to_shop', 'Back to Shop')}
-          </button>
+
         </div>
       </aside>
 

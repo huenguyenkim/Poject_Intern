@@ -2,10 +2,18 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../common/constants/user-role.enum';
+import { isTokenBlacklisted } from './token-blacklist.store';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -13,11 +21,28 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
+    if (isTokenBlacklisted(token)) {
+      throw new UnauthorizedException();
+    }
     try {
       const payload = await this.jwtService.verifyAsync(token);
-      request['user'] = { id: payload.sub, email: payload.email, role: payload.role };
-    } catch {
-      throw new UnauthorizedException();
+      
+      // Security: Kiểm tra tokenVersion để hủy session cũ
+      if (payload.version) {
+        const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+        if (!user || user.tokenVersion !== payload.version) {
+           throw new UnauthorizedException('Session expired due to security changes');
+        }
+      }
+
+      request['user'] = { 
+        id: payload.sub, 
+        email: payload.email, 
+        role: payload.role,
+        version: payload.version 
+      };
+    } catch (e) {
+      throw new UnauthorizedException(e.message || 'Unauthorized');
     }
     return true;
   }

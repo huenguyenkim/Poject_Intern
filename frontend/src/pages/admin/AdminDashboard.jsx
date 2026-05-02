@@ -1,88 +1,58 @@
 import React from 'react';
 import { 
   TrendingUp, Package, ShoppingBag, 
-  Calendar, ChevronDown,
-  HelpCircle
+  Calendar, ChevronDown, HelpCircle, Activity
 } from 'lucide-react';
 import { 
   Statistic, 
   Progress, 
   Tooltip,
-  Space
+  Spin,
+  Select
 } from 'antd';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchCatalogThunk } from '../../store/catalogSlice';
-import { fetchOrdersThunk } from '../../store/orderSlice';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { saveAs } from 'file-saver';
+
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
-
-// Static data for charts and stats
-const WEEKLY_ORDERS_MOCK = [
-  { day: 'Mon', h: 45 },
-  { day: 'Tue', h: 85 },
-  { day: 'Wed', h: 55 },
-  { day: 'Thu', h: 95 },
-  { day: 'Fri', h: 65 },
-  { day: 'Sat', h: 75 },
-  { day: 'Sun', h: 40 },
-];
+import LockedFeature from '../../components/ui/LockedFeature';
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 /**
  * AdminDashboard: Premium dashboard providing real-time business insights.
- * Optimized for performance and clean architecture.
+ * Powered by React Query and Recharts.
  */
 const AdminDashboard = () => {
-  const dispatch = useDispatch();
-  
-  // Selectors
-  const { products, status: catalogStatus } = useSelector((state) => state.catalog);
-  const { items: orders, status: orderStatus } = useSelector((state) => state.orders);
+  const [days, setDays] = React.useState(180);
+  const { kpis, chart, topProducts, bundles = [], isLoading } = useAnalytics(days);
 
-  // Initialization
-  React.useEffect(() => {
-    if (catalogStatus === 'idle') dispatch(fetchCatalogThunk());
-    if (orderStatus === 'idle') dispatch(fetchOrdersThunk());
-  }, [catalogStatus, orderStatus, dispatch]);
+  const exportToCSV = () => {
+    if (!chart) return;
+    const header = "Date,Revenue\n";
+    const csv = chart.map(row => `${row.date},${row.revenue}`).join("\n");
+    const blob = new Blob([header + csv], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `revenue_report_${days}d.csv`);
+  };
 
-  // Derived Data (Memoized for performance)
+  // Derived Data for Top KPIs
   const stats = React.useMemo(() => {
-    const totalSalesValue = orders.reduce((sum, o) => sum + (o.total || o.subtotal || 0), 0) || 24592;
-    const newOrdersCount = orders.filter(o => 
-      ['pending', 'processing'].includes((o.status || '').toLowerCase())
-    ).length || 184;
-    const totalProductsCount = products.length || 1204;
-
     return [
-      { label: 'TOTAL SALES', value: totalSalesValue, prefix: '$', change: '+12%', icon: TrendingUp, color: '!bg-primary' },
-      { label: 'NEW ORDERS', value: newOrdersCount, prefix: '', change: '+8%', icon: ShoppingBag, color: '!bg-secondary' },
-      { label: 'TOTAL PRODUCTS', value: totalProductsCount, prefix: '', change: '24 new', icon: Package, color: '!bg-[#2D2D2D]' },
+      { label: 'TOTAL REVENUE', value: kpis?.totalRevenue || 0, prefix: '$', suffix: '', change: '+12%', icon: TrendingUp, color: '!bg-primary' },
+      { label: 'CONVERSION RATE', value: kpis?.conversionRate || 0, prefix: '', suffix: '%', change: '+8%', icon: ShoppingBag, color: '!bg-secondary' },
+      { label: 'TOTAL VISITS', value: kpis?.totalVisits || 0, prefix: '', suffix: '', change: '+24%', icon: Activity, color: '!bg-[#2D2D2D]' },
     ];
-  }, [orders, products]);
+  }, [kpis]);
 
-  const recentOrders = React.useMemo(() => {
-    if (orders.length > 0) {
-      return [...orders]
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 4)
-        .map(o => ({
-          id: o.id.toString(),
-          name: (o.items && o.items[0]?.title) || 'Direct Order',
-          status: (o.status || 'PENDING').toUpperCase(),
-          variant: o.status?.toLowerCase() === 'completed' ? 'outline' : o.status?.toLowerCase() === 'shipping' ? 'primary' : 'secondary',
-          img: o.items && o.items[0]?.image || '/images/rainbow-swirl-pop.png'
-        }));
-    }
-    // Fallback Mock Data
-    return [
-      { id: '9021', name: 'Swirly Pop Ju...', status: 'PENDING', variant: 'secondary', img: '/images/rainbow-swirl-pop.png' },
-      { id: '9020', name: 'Gummy Gala...', status: 'SHIPPING', variant: 'primary', img: '/images/neon-rainbow-gummies.png' },
-      { id: '9019', name: 'Midnight T...', status: 'COMPLETED', variant: 'outline', img: '/images/chocolate_cat.png' },
-      { id: '9018', name: 'Cloud Nine...', status: 'COMPLETED', variant: 'outline', img: '/images/cotton-cloud.png' },
-    ];
-  }, [orders]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface/[0.02]">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface/[0.02] flex flex-col items-center">
@@ -94,7 +64,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-on_surface_variant/60">
               <span>Admin</span>
               <span className="w-1 h-1 rounded-full bg-primary/40"></span>
-              <span className="text-primary font-black uppercase tracking-[0.2em]">Dashboard Overview</span>
+              <span className="text-primary font-black uppercase tracking-[0.2em]">Analytics Dashboard</span>
             </div>
             <div className="space-y-1">
               <h1 className="text-6xl font-black text-on_surface tracking-tight leading-none uppercase">Sweet Insights</h1>
@@ -102,15 +72,26 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Card className="flex items-center gap-5 px-6 py-0 min-h-[72px] justify-between cursor-pointer group/date border-none bg-white shadow-xl hover:shadow-2xl transition-all rounded-[28px]">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-primary/5 rounded-xl group-hover/date:bg-primary/10 transition-colors">
-                  <Calendar size={20} className="text-primary" />
-                </div>
-                <span className="text-sm font-black text-on_surface leading-none">Oct 24 - Oct 31</span>
-              </div>
-              <ChevronDown size={14} className="text-on_surface_variant ml-2" />
-            </Card>
+            <Select 
+              value={days} 
+              onChange={setDays}
+              className="min-w-[160px] h-[72px]"
+              variant="borderless"
+              popupClassName="rounded-2xl"
+              style={{ background: 'white', borderRadius: '28px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}
+            >
+              <Select.Option value={7}>Last 7 Days</Select.Option>
+              <Select.Option value={30}>Last 30 Days</Select.Option>
+              <Select.Option value={90}>Last 3 Months</Select.Option>
+              <Select.Option value={180}>Last 6 Months</Select.Option>
+            </Select>
+            <Button 
+              onClick={exportToCSV}
+              variant="primary" 
+              className="h-[72px] px-8 rounded-[28px] font-black uppercase tracking-widest text-[11px]"
+            >
+              EXPORT DATA
+            </Button>
           </div>
         </div>
 
@@ -131,6 +112,7 @@ const AdminDashboard = () => {
                       title={<span className="text-[11px] font-black opacity-60 uppercase tracking-[0.2em] text-white">{stat.label}</span>}
                       value={stat.value}
                       prefix={stat.prefix}
+                      suffix={stat.suffix}
                       valueStyle={{ fontWeight: 900, color: '#fff', fontSize: '48px' }}
                       formatter={(val) => val.toLocaleString()}
                     />
@@ -151,141 +133,190 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Weekly Orders Chart */}
-          <Card className="lg:col-span-2 p-10 border-surface_container">
-            <div className="flex items-center justify-between mb-12 border-b border-surface_container pb-4">
-              <h3 className="text-2xl font-black text-on_surface tracking-tight">Weekly Orders</h3>
+          {/* Revenue Chart */}
+          <Card className="lg:col-span-2 p-10 border-surface_container flex flex-col">
+            <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
+              <h3 className="text-2xl font-black text-on_surface tracking-tight">Revenue Trends</h3>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-primary"></div>
-                  <span className="text-xs font-black text-on_surface_variant uppercase tracking-wider">Orders</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-surface_dim"></div>
-                  <span className="text-xs font-black text-on_surface_variant uppercase tracking-wider">Target</span>
+                  <span className="text-xs font-black text-on_surface_variant uppercase tracking-wider">Revenue</span>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-end justify-between h-[280px] gap-6 px-4">
-              {WEEKLY_ORDERS_MOCK.map((item, idx) => (
-                <div key={item.day} className="flex-1 flex flex-col items-center group h-full">
-                  <div className="w-full relative flex-1 flex flex-col justify-end bg-surface_dim rounded-full overflow-hidden border border-surface_container">
-                    <motion.div 
-                      initial={{ height: 0 }}
-                      whileInView={{ height: `${item.h}%` }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1.2, delay: idx * 0.1, ease: [0.23, 1, 0.32, 1] }}
-                      className="w-full shadow-lg shadow-primary/10 bg-gradient-to-t from-primary/80 to-primary"
+            <div className="flex-1 min-h-[280px]">
+              {chart && chart.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#FF76B8" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#FF76B8" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 700 }}
+                      dy={10}
                     />
-                  </div>
-                  <span className="mt-6 text-[11px] font-black text-on_surface_variant uppercase tracking-widest group-hover:text-primary transition-colors">{item.day}</span>
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 700 }}
+                      tickFormatter={(value) => `$${value}`}
+                      dx={-10}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }}
+                      formatter={(value) => [`$${value}`, 'Revenue']}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#FF76B8" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-on_surface_variant font-bold">
+                  Chưa đủ dữ liệu biểu đồ
                 </div>
-              ))}
+              )}
             </div>
           </Card>
 
-          {/* Recent Orders Side List */}
+          {/* Top Products */}
           <Card className="p-10 border-surface_container flex flex-col">
-            <div className="flex items-center justify-between mb-10 border-b border-surface_container pb-4">
-              <h3 className="text-2xl font-black text-on_surface tracking-tight">Recent Orders</h3>
-              <Link to="/admin/orders">
+            <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
+              <h3 className="text-2xl font-black text-on_surface tracking-tight">Top Products</h3>
+              <Link to="/admin/products">
                 <Button variant="ghost" size="sm" className="p-0 text-primary uppercase tracking-widest text-[11px]">VIEW ALL</Button>
               </Link>
             </div>
             
             <div className="space-y-6 flex-1">
-              {recentOrders.map(order => (
-                <div key={order.id} className="flex items-center justify-between group cursor-pointer hover:translate-x-1 transition-transform">
+              {topProducts?.map((product, idx) => (
+                <div key={product.id} className="flex items-center justify-between group cursor-pointer hover:translate-x-1 transition-transform">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-surface_dim border border-surface_container p-1 group-hover:border-primary/30 transition-colors shadow-sm">
-                      <img src={order.img} alt={order.name} className="w-full h-full object-cover rounded-xl" />
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-surface_dim border border-surface_container p-1 group-hover:border-primary/30 transition-colors shadow-sm relative">
+                      <div className="absolute -top-1 -left-1 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-black z-10 border-2 border-white">
+                        #{idx + 1}
+                      </div>
+                      <img src={product.imageUrl || '/images/rainbow-swirl-pop.png'} alt={product.name} className="w-full h-full object-cover rounded-xl" />
                     </div>
                     <div>
-                      <h4 className="font-black text-on_surface text-sm group-hover:text-primary transition-colors">{order.name}</h4>
-                      <p className="text-[11px] font-bold text-on_surface_variant mt-0.5 uppercase tracking-wide">ORDER #{order.id}</p>
+                      <h4 className="font-black text-on_surface text-sm group-hover:text-primary transition-colors max-w-[140px] truncate" title={product.name}>
+                        {product.name}
+                      </h4>
+                      <p className="text-[11px] font-bold text-on_surface_variant mt-0.5 uppercase tracking-wide">ID: {product.id.toString().slice(0, 8)}</p>
                     </div>
                   </div>
-                  <Badge variant={order.variant} className="text-[9px] px-2.5 py-1">
-                    {order.status}
+                  <Badge variant="primary" className="text-[10px] px-2.5 py-1 font-black">
+                    {product.totalSold} sold
                   </Badge>
                 </div>
               ))}
+              {(!topProducts || topProducts.length === 0) && (
+                <div className="text-center text-on_surface_variant text-sm font-bold mt-10">
+                  Chưa có dữ liệu sản phẩm
+                </div>
+              )}
             </div>
           </Card>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Inventory Alert Card */}
-          <Card className="p-0 shadow-2xl shadow-primary/20 relative overflow-hidden group border-none min-h-[320px]">
-            <div className="absolute inset-0">
-               <img 
-                 src="/images/neon_sour_banner.png" 
-                 alt="Inventory Alert" 
-                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" 
-               />
-               <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/85 to-primary/60"></div>
-            </div>
+          {/* Smart AI Forecast */}
+          <LockedFeature requiredTier="PREMIUM" featureName="Dự báo doanh thu AI">
+            <Card className="p-0 shadow-2xl shadow-secondary/20 relative overflow-hidden group border-none min-h-[320px]">
+              <div className="absolute inset-0">
+                <img 
+                  src="/images/candy_machine_banner.png" 
+                  alt="AI Forecast" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/85 to-secondary/60"></div>
+              </div>
 
-            <div className="relative z-10 h-full p-10 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-on_primary mb-6">
-                  <Package size={24} strokeWidth={3} />
+              <div className="relative z-10 h-full p-10 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-on_primary mb-6">
+                    <Activity size={24} strokeWidth={3} className="text-white" />
+                  </div>
+                  <h3 className="text-[11px] font-black text-white/70 uppercase tracking-[0.2em]">Smart AI Forecast</h3>
+                  <h2 className="text-4xl font-black text-white leading-tight tracking-tight">
+                    Next Month: ${kpis?.predictedRevenue?.toLocaleString() || '---'}
+                  </h2>
+                  <p className="text-white/90 font-bold leading-relaxed pr-6 text-sm">
+                    Based on your growing trend, we predict a steady surge in sales.
+                  </p>
                 </div>
-                <h3 className="text-4xl font-black text-on_primary leading-tight tracking-tight">Inventory Alert!</h3>
-                <p className="text-on_primary/90 font-bold leading-relaxed pr-6 text-lg">
-                  4 items are running low. Restock now to keep the joy flowing.
-                </p>
+                
+                <div className="mt-8 flex items-center gap-3 bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                  <div className={`w-3 h-3 rounded-full bg-yellow-400 animate-pulse`}></div>
+                  <span className="text-xs font-black text-white uppercase tracking-widest">
+                    Confidence: 94%
+                  </span>
+                </div>
+              </div>
+            </Card>
+          </LockedFeature>
+
+          {/* Behavior Analysis - Frequently Bought Together */}
+          <LockedFeature requiredTier="PREMIUM" featureName="Phân tích giỏ hàng (Market Basket)">
+            <Card className="lg:col-span-2 p-10 border-surface_container relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-secondary/10 rounded-xl">
+                    <Package size={20} className="text-secondary" />
+                  </div>
+                  <h3 className="text-2xl font-black text-on_surface tracking-tight">Frequently Bought Together</h3>
+                </div>
+                <Badge variant="surface" className="bg-secondary/5 text-secondary border-none px-3 py-1 font-black">MARKETING INSIGHTS</Badge>
               </div>
               
-              <Link to="/admin/products">
-                <Button 
-                   variant="surface" 
-                   className="mt-8 py-6 w-full bg-white text-primary hover:bg-on_primary hover:text-primary transition-all font-black text-lg rounded-2xl shadow-xl border-none"
-                >
-                   REVIEW STOCK
-                </Button>
-              </Link>
-            </div>
-          </Card>
-
-          {/* Top Selling Category */}
-          <Card className="lg:col-span-2 p-10 border-surface_container">
-            <div className="flex items-center justify-between mb-10 border-b border-surface_container pb-4">
-              <h3 className="text-2xl font-black text-on_surface tracking-tight">Supply Category Stats</h3>
-              <Tooltip title="Insights based on last 30 days of inventory movement.">
-                <HelpCircle size={24} className="text-on_surface_variant hover:text-primary cursor-pointer transition-colors" />
-              </Tooltip>
-            </div>
-            
-            <div className="space-y-10">
-              <div className="space-y-4">
-                <div className="flex justify-between items-end">
-                  <span className="text-sm font-black text-on_surface uppercase tracking-widest">Sour Candies</span>
-                  <Badge variant="primary">72% of total</Badge>
-                </div>
-                <Progress percent={72} strokeColor="#FF76B8" strokeWidth={16} showInfo={false} />
+              <div className="grid md:grid-cols-3 gap-6 relative z-10">
+                {bundles?.map((bundle, idx) => (
+                  <motion.div 
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-surface_dim p-6 rounded-[24px] border border-surface_container hover:border-secondary/30 transition-all group/bundle"
+                  >
+                    <div className="flex flex-col h-full justify-between">
+                      <div>
+                        <div className="text-[10px] font-black text-on_surface_variant uppercase tracking-widest mb-3 opacity-60">TOP BUNDLE #{idx + 1}</div>
+                        <h4 className="font-bold text-on_surface text-sm leading-relaxed mb-4 group-hover/bundle:text-secondary transition-colors">
+                          {bundle.bundle}
+                        </h4>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-on_surface_variant">Found in {bundle.count} orders</span>
+                        <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                          <Activity size={14} />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+                {(!bundles || bundles.length === 0) && (
+                  <div className="col-span-3 text-center py-10 text-on_surface_variant font-bold">
+                    Dữ liệu đang được phân tích... Hãy tạo thêm đơn hàng đa sản phẩm để xem gợi ý.
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-10 pt-2">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end">
-                    <span className="text-xs font-black text-on_surface_variant uppercase">Chocolates</span>
-                    <span className="text-xs font-black text-on_surface">18%</span>
-                  </div>
-                  <Progress percent={18} strokeColor="#8E44AD" strokeWidth={12} showInfo={false} />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end">
-                    <span className="text-xs font-black text-on_surface_variant uppercase">Hard Candy</span>
-                    <span className="text-xs font-black text-on_surface">10%</span>
-                  </div>
-                  <Progress percent={10} strokeColor="#2ECC71" strokeWidth={12} showInfo={false} />
-                </div>
+              <div className="mt-8 p-4 bg-primary/5 rounded-2xl flex items-center justify-between">
+                <p className="text-xs font-bold text-on_surface_variant leading-relaxed max-w-md">
+                  💡 <strong>Gợi ý:</strong> Tạo combo giảm giá cho các cặp sản phẩm trên để tăng giá trị trung bình đơn hàng (AOV).
+                </p>
+                <Link to="/admin/banners">
+                  <Button variant="ghost" size="sm" className="text-primary font-black text-[10px] uppercase tracking-widest">TẠO CHIẾN DỊCH</Button>
+                </Link>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </LockedFeature>
         </div>
       </div>
     </div>

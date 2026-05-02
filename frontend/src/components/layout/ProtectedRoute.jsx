@@ -12,8 +12,8 @@ const ProtectedRoute = ({ children, role }) => {
   const isAuthenticated = !!user && !!token;
 
   if (!isAuthenticated) {
-    // Not logged in, redirect to auth/admin-login with return url
-    const loginPath = role === 'admin' ? '/admin/login' : '/auth';
+    // Not logged in, redirect to appropriate login page
+    const loginPath = (role === 'admin' || role === 'staff') ? '/admin/login' : '/auth';
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 

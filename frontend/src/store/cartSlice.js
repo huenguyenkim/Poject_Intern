@@ -95,7 +95,7 @@ export const cartSlice = createSlice({
         }
 
         // 2. Check Price Sync (Silent update with flag)
-        const currentPrice = parseFloat(catalogItem.price);
+        const currentPrice = parseFloat(catalogItem.price) || 0;
         if (item.price !== currentPrice) {
           updatedItem.price = currentPrice;
           updatedItem.priceChanged = true;

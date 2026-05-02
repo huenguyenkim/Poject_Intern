@@ -29,7 +29,7 @@ async function seedManyOrders() {
       receiverName: 'Liam Sweet',
       phone: '0987654321',
       address: `Sugar Road #${i}, Sweet City`,
-      status: i % 2 === 0 ? OrderStatus.COMPLETED : OrderStatus.SHIPPING,
+      status: i % 2 === 0 ? OrderStatus.DELIVERED : OrderStatus.CANCELLED,
       totalAmount: Math.random() * 100 + 20,
     });
 

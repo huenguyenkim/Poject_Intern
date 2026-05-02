@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { showSuccessToast } from '../../utils/toastUtils';
 import Clock from '../misc/Clock';
 import LocalizedLink from '../navigation/LocalizedLink';
+import NotificationBell from '../ui/NotificationBell';
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
@@ -15,10 +16,8 @@ const LanguageSwitcher = () => {
   const changeLanguage = (newLang) => {
     if (newLang === i18n.language) return;
     
-    // Construct new path: replace current /:lang prefix with new one
-    // We assume the URL format is /:lang/...
     const pathParts = location.pathname.split('/').filter(Boolean);
-    pathParts[0] = newLang; // Replace the first part (lang)
+    pathParts[0] = newLang; 
     const newPath = '/' + pathParts.join('/') + (location.search || '');
     
     i18n.changeLanguage(newLang);
@@ -72,14 +71,7 @@ const StorefrontLayout = () => {
     }
   };
 
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    const emailInput = e.currentTarget.querySelector('input');
-    if (emailInput.value) {
-      showSuccessToast(t('newsletter.success', 'Thanks for subscribing to our sweetness! 🍭'));
-      emailInput.value = '';
-    }
-  };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
@@ -123,6 +115,8 @@ const StorefrontLayout = () => {
               </form>
 
               <div className="flex items-center space-x-4">
+                {currentUser && <NotificationBell />}
+
                 <LocalizedLink to="/cart" className="p-2 text-primary hover:text-primary/70 transition-colors relative bouncy-hover block" aria-label="Shopping Cart">
                   <ShoppingCart size={28} />
                   {cartCount > 0 && (
@@ -192,7 +186,7 @@ const StorefrontLayout = () => {
       {/* Footer */}
       <footer className="bg-surface_container_lowest mt-auto border-t border-surface_container pt-20 pb-12">
         <div className="max-w-[1280px] mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
             {/* Branding */}
             <div className="flex flex-col gap-6">
               <LocalizedLink to="/" className="text-primary group">
@@ -212,28 +206,7 @@ const StorefrontLayout = () => {
               </ul>
             </div>
  
-            {/* Newsletter */}
-            <div>
-              <h4 className="font-black text-on_surface text-lg mb-6">{t('footer.newsletter_title', 'Newsletter')}</h4>
-              <form onSubmit={handleNewsletterSubmit} className="flex bg-surface_container_high rounded-full p-1 border-2 border-surface_container_high focus-within:border-secondary transition-all">
-                <input 
-                  type="email" 
-                  placeholder={t('footer.newsletter_placeholder', 'Sweet emails...')} 
-                  className="bg-transparent border-none outline-none px-5 py-3 text-sm font-bold text-on_surface w-full placeholder-on_surface_variant/50"
-                  required
-                />
-                <button 
-                  type="submit"
-                  aria-label={t('footer.subscribe', 'Subscribe')}
-                  className="bg-primary text-on_primary w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                </button>
-              </form>
-            </div>
+
           </div>
           
           <div className="border-t border-surface_container_high pt-8 flex flex-col md:flex-row justify-between items-center gap-4">

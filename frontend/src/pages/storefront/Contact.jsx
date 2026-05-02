@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { showSuccessToast } from '../../utils/toastUtils';
 import PageTransition from '../../components/layout/PageTransition';
@@ -7,11 +7,7 @@ import PageTransition from '../../components/layout/PageTransition';
 const Contact = () => {
   const { t } = useTranslation();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    showSuccessToast(t('contact.send_success', 'Your message has been sent to our sweet team! 🍬'));
-    e.currentTarget.reset();
-  };
+
 
   return (
     <PageTransition>
@@ -30,57 +26,7 @@ const Contact = () => {
 
         {/* Main Content */}
         <div className="max-w-[1280px] mx-auto px-6 -mt-16 pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-2xl shadow-primary/5">
-              <h2 className="text-3xl font-black text-on_surface mb-8 uppercase tracking-tight">{t('contact.send_message', 'Send a Message')}</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] mb-2 ml-1">{t('contact.name', 'Your Name')}</label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder={t('contact.name_placeholder', 'Candy Lover')}
-                      className="w-full bg-surface_container_high rounded-2xl px-6 py-4 text-on_surface font-bold outline-none focus:ring-4 focus:ring-primary/20 transition-all border-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] mb-2 ml-1">{t('profile.email', 'Email Address')}</label>
-                    <input 
-                      type="email" 
-                      required
-                      placeholder="hello@sweet.com"
-                      className="w-full bg-surface_container_high rounded-2xl px-6 py-4 text-on_surface font-bold outline-none focus:ring-4 focus:ring-primary/20 transition-all border-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] mb-2 ml-1">{t('contact.subject', 'Subject')}</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder={t('contact.subject_placeholder', 'Inquiry about...')}
-                    className="w-full bg-surface_container_high rounded-2xl px-6 py-4 text-on_surface font-bold outline-none focus:ring-4 focus:ring-primary/20 transition-all border-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-black text-on_surface_variant uppercase tracking-[0.2em] mb-2 ml-1">{t('contact.message', 'Message')}</label>
-                  <textarea 
-                    required
-                    rows="5"
-                    placeholder={t('contact.message_placeholder', 'Type your sweet message here...')}
-                    className="w-full bg-surface_container_high rounded-3xl px-6 py-4 text-on_surface font-bold outline-none focus:ring-4 focus:ring-primary/20 transition-all border-none resize-none"
-                  ></textarea>
-                </div>
-                <button 
-                  type="submit"
-                  className="w-full bg-secondary text-on_secondary py-5 rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest"
-                >
-                  {t('contact.send_btn', 'Send Message')} <Send size={22} strokeWidth={3} />
-                </button>
-              </form>
-            </div>
+          <div className="max-w-3xl mx-auto">
 
             {/* Contact Info */}
             <div className="flex flex-col gap-8">
