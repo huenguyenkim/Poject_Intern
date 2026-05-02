@@ -40,6 +40,7 @@ import { SurveysModule } from './surveys/surveys.module';
 import { SearchModule } from './search/search.module';
 import { Blog } from './blogs/entities/blog.entity';
 import { Notification } from './notifications/entities/notification.entity';
+
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -52,14 +53,18 @@ import { Notification } from './notifications/entities/notification.entity';
       max: 100,
     }),
     ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 Phút
-      limit: 100,  // Max 100 requests per IP per minute
+      ttl: 60000,
+      limit: 100,
     }]),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'candy_ecommerce.db',
-      entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification], // <-- [CẬP NHẬT DÒNG NÀY]
-      synchronize: true, // Chỉ dùng trong môi trường phát triển
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: process.env.DATABASE_URL ? 'postgres' : 'sqlite',
+        url: process.env.DATABASE_URL,
+        database: process.env.DATABASE_URL ? undefined : 'candy_ecommerce.db',
+        entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification],
+        synchronize: process.env.NODE_ENV !== 'production',
+        ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+      }),
     }),
     OrdersModule,
     CategoriesModule,
