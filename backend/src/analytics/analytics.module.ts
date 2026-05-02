@@ -5,10 +5,12 @@ import { Order } from '../orders/entities/order.entity';
 import { OrderItem } from '../orders/entities/order-item.entity';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
+import { User } from '../users/entities/user.entity'; // <-- Thêm dòng này
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PageVisit, Order, OrderItem])],
+  // Thêm User vào danh sách forFeature
+  imports: [TypeOrmModule.forFeature([PageVisit, Order, OrderItem, User])],
   controllers: [AnalyticsController],
   providers: [AnalyticsService]
 })
-export class AnalyticsModule {}
+export class AnalyticsModule { }
