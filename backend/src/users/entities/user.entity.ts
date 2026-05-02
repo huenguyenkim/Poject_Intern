@@ -28,13 +28,13 @@ export class User {
   @Column({ type: 'text', nullable: true })
   resetPasswordTokenHash: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ nullable: true })
   resetPasswordExpiresAt: Date | null;
 
   @Column({ default: 1 })
   tokenVersion: number;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ nullable: true })
   lastPasswordChangeAt: Date | null;
 
   @OneToMany(() => Order, (order) => order.user)

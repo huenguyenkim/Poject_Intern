@@ -12,7 +12,7 @@ export class RememberToken {
   @Column()
   validatorHash: string;
 
-  @Column({ type: 'datetime' })
+  @Column()
   expiresAt: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
