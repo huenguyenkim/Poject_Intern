@@ -29,7 +29,7 @@ export class AuthController {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(RememberToken)
     private readonly rememberTokenRepository: Repository<RememberToken>,
-  ) {}
+  ) { }
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
@@ -119,8 +119,8 @@ export class AuthController {
     }
 
     user.password = await this.hashingService.hash(dto.newPassword);
-    user.resetPasswordTokenHash = null;
-    user.resetPasswordExpiresAt = null;
+    user.resetPasswordTokenHash = null as any;
+    user.resetPasswordExpiresAt = null as any;
     user.tokenVersion += 1;
     user.lastPasswordChangeAt = new Date();
     await this.userRepository.save(user);
