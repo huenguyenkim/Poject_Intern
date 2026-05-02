@@ -62,7 +62,7 @@ import { Notification } from './notifications/entities/notification.entity';
         url: process.env.DATABASE_URL,
         database: process.env.DATABASE_URL ? undefined : 'candy_ecommerce.db',
         entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification],
-        synchronize: process.env.NODE_ENV !== 'production',
+        synchronize: true,
         ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
       } as any),
     }),
