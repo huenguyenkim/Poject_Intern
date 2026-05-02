@@ -14,36 +14,36 @@ async function bootstrap() {
 
   // 2. Cấu hình CORS Nghiêm ngặt
   // 2. Cấu hình CORS Nghiêm ngặt
-  const frontendUrl = process.env.FRONTEND_URL;
+  // backend/src/main.ts
 
-  // Danh sách các nguồn được phép mặc định (development)
+  const frontendUrl = process.env.FRONTEND_URL;
   const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
-    'http://localhost:4173'
+    'http://localhost:4173',
   ];
 
-  // Thêm domain thực tế vào danh sách nếu có biến môi trường
+  // Chuẩn hóa frontendUrl: loại bỏ khoảng trắng và dấu gạch chéo cuối cùng
   if (frontendUrl) {
-    allowedOrigins.push(frontendUrl.replace(/\/$/, "")); // Loại bỏ dấu gạch chéo cuối nếu có
+    const sanitizedUrl = frontendUrl.trim().replace(/\/$/, "");
+    allowedOrigins.push(sanitizedUrl);
   }
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Cho phép các yêu cầu không có origin (như di động, curl) 
-      // hoặc origin nằm trong danh sách trắng
-      if (!origin || allowedOrigins.includes(origin)) {
+      // 1. Nếu origin không có (vd: server-to-server) hoặc nằm trong whitelist -> Cho phép
+      // 2. Kiểm tra origin sau khi đã loại bỏ dấu gạch chéo cuối (nếu có)
+      if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
         callback(null, true);
       } else {
-        console.error(`CORS blocked for origin: ${origin}`);
+        console.error(`CORS Blocked for origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Quan trọng để gửi cookie/token
-    allowedHeaders: 'Content-Type, Accept, Authorization',
+    credentials: true, // Bắt buộc cho /auth/remember (gửi cookie/token)
+    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
   });
-
   // 3. Bật Nén Dữ liệu (Compression)
   app.use(compression());
 
