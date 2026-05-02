@@ -11,6 +11,7 @@ export class User {
     public readonly role: UserRole,
     public readonly password?: string, // Password is optional when returning from logic
     public readonly deletedAt?: Date,
+    public readonly tokenVersion: number = 1,
   ) {}
 
   /**
@@ -23,6 +24,7 @@ export class User {
     role: UserRole;
     password?: string;
     deletedAt?: Date;
+    tokenVersion?: number;
   }): User {
     return new User(
       data.id,
@@ -31,6 +33,7 @@ export class User {
       data.role,
       data.password,
       data.deletedAt,
+      data.tokenVersion ?? 1,
     );
   }
 

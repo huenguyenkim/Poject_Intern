@@ -6,6 +6,18 @@ import type { Cache } from 'cache-manager';
 export class CacheHelperService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
+  async get<T>(key: string): Promise<T | undefined> {
+    return this.cacheManager.get<T>(key);
+  }
+
+  async set<T>(key: string, value: T, ttl?: number): Promise<void> {
+    await this.cacheManager.set(key, value, ttl);
+  }
+
+  async del(key: string): Promise<void> {
+    await this.cacheManager.del(key);
+  }
+
   /**
    * Invalidates cache keys starting with a specific prefix
    * Note: In-memory store allows iterating through keys.
@@ -22,18 +34,25 @@ export class CacheHelperService {
         await this.cacheManager.del(key);
       }
     } else {
-      // Fallback: reset all if keys() is not available
-      await this.reset();
+      // Fallback: clear all if keys() is not available
+      await this.clear();
     }
   }
 
-  async reset(): Promise<void> {
-    if (typeof this.cacheManager.reset === 'function') {
-      await this.cacheManager.reset();
+  async clear(): Promise<void> {
+    if (typeof (this.cacheManager as any).clear === 'function') {
+      await (this.cacheManager as any).clear();
+    } else if (typeof (this.cacheManager as any).reset === 'function') {
+      await (this.cacheManager as any).reset();
     } else if ((this.cacheManager as any).store?.reset) {
       await (this.cacheManager as any).store.reset();
-    } else if (typeof (this.cacheManager as any).clear === 'function') {
-      await (this.cacheManager as any).clear();
+    } else if ((this.cacheManager as any).store?.clear) {
+      await (this.cacheManager as any).store.clear();
     }
+  }
+
+  // Backwards compatibility
+  async reset(): Promise<void> {
+    return this.clear();
   }
 }

@@ -292,7 +292,7 @@ export class OrdersService implements OnModuleInit {
 
       // 4. Coupon Logic
       let discountAmount = 0;
-      let appliedCoupon: Coupon = null;
+      let appliedCoupon: Coupon | undefined = undefined;
       if (couponCode) {
         const coupon = await queryRunner.manager.findOne(Coupon, { 
           where: { code: couponCode, isActive: true } 
@@ -344,7 +344,7 @@ export class OrdersService implements OnModuleInit {
         paymentMethod,
         status: initialStatus,
         totalAmount: Math.round(finalTotal * 100) / 100,
-        couponCode: couponCode || null,
+        couponCode: couponCode ?? null,
         discountAmount: Math.round(discountAmount * 100) / 100,
       });
 

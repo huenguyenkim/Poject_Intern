@@ -64,7 +64,7 @@ import { Notification } from './notifications/entities/notification.entity';
         entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification],
         synchronize: process.env.NODE_ENV !== 'production',
         ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-      }),
+      } as any),
     }),
     OrdersModule,
     CategoriesModule,
