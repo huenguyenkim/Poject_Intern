@@ -26,16 +26,16 @@ export class User {
   loyaltyPoints: number;
 
   @Column({ type: 'text', nullable: true })
-  resetPasswordTokenHash: string | null;
+  resetPasswordTokenHash: string; // Đã bỏ | null
 
-  @Column({ nullable: true })
-  resetPasswordExpiresAt: Date | null;
+  @Column({ nullable: true }) // Đã bỏ type: 'datetime'
+  resetPasswordExpiresAt: Date; // Đã bỏ | null
 
   @Column({ default: 1 })
   tokenVersion: number;
 
-  @Column({ nullable: true })
-  lastPasswordChangeAt: Date | null;
+  @Column({ nullable: true }) // Đã bỏ type: 'datetime'
+  lastPasswordChangeAt: Date; // Đã bỏ | null
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
