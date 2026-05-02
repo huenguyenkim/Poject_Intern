@@ -6,7 +6,7 @@ import type { Cache } from 'cache-manager';
 export class CacheHelperService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  async get<T>(key: string): Promise<T | undefined> {
+  async get<T>(key: string): Promise<T | null | undefined> {
     return this.cacheManager.get<T>(key);
   }
 

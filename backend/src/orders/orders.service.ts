@@ -344,7 +344,7 @@ export class OrdersService implements OnModuleInit {
         paymentMethod,
         status: initialStatus,
         totalAmount: Math.round(finalTotal * 100) / 100,
-        couponCode: couponCode ?? null,
+        couponCode: couponCode ?? undefined,
         discountAmount: Math.round(discountAmount * 100) / 100,
       });
 
