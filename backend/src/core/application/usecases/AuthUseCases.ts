@@ -30,7 +30,8 @@ export class RegisterUseCase {
   ) {}
 
   async execute(data: { fullName: string; email: string; password: string }): Promise<User> {
-    const existing = await this.userRepository.findByEmail(data.email);
+    const sanitizedEmail = data.email.trim().toLowerCase();
+    const existing = await this.userRepository.findByEmail(sanitizedEmail);
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -39,6 +40,7 @@ export class RegisterUseCase {
     
     return this.userRepository.create({
       ...data,
+      email: sanitizedEmail,
       password: hashedPassword,
       role: UserRole.CUSTOMER,
     });
@@ -57,7 +59,8 @@ export class LoginUseCase {
   ) {}
 
   async execute(email: string, password: string): Promise<{ user: User; accessToken: string }> {
-    const user = await this.userRepository.findByEmail(email);
+    const sanitizedEmail = email.trim().toLowerCase();
+    const user = await this.userRepository.findByEmail(sanitizedEmail);
     if (!user || !user.password) {
       throw new UnauthorizedException('Invalid credentials');
     }

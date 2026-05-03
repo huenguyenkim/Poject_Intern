@@ -49,8 +49,8 @@ export class SeedService implements OnModuleInit {
     for (const u of testUsers) {
       try {
         const existing = await this.userRepository.findByEmail(u.email);
+        const hashedPassword = await this.hashingService.hash(u.password);
         if (!existing) {
-          const hashedPassword = await this.hashingService.hash(u.password);
           await this.userRepository.create({
             fullName: u.fullName,
             email: u.email,
@@ -58,6 +58,10 @@ export class SeedService implements OnModuleInit {
             role: UserRole.CUSTOMER,
           });
           console.log(`👤 Customer created: ${u.fullName}`);
+        } else {
+          // Update existing test user to ensure password matches seed
+          await this.userRepository.update(existing.id, { password: hashedPassword });
+          console.log(`👤 Customer updated: ${u.fullName}`);
         }
       } catch (e) {
         console.warn(`⚠️ Could not seed user ${u.email}: ${e.message}`);
