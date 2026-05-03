@@ -17,7 +17,7 @@ export class Coupon {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   minOrderValue: number;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ nullable: true })
   expiryDate: Date;
 
   @Column({ default: 0 })

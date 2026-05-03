@@ -178,7 +178,6 @@ export class OrdersService implements OnModuleInit {
           for (const item of sortedItems) {
             const product = await queryRunner.manager.findOne(Product, {
               where: { id: item.product.id },
-              lock: { mode: 'pessimistic_write' }
             });
 
             if (!product) continue;
@@ -257,7 +256,6 @@ export class OrdersService implements OnModuleInit {
       for (const item of sortedCartItems) {
         const product = await queryRunner.manager.findOne(Product, {
           where: { id: item.productId },
-          lock: { mode: 'pessimistic_write' }
         });
 
         if (!product) throw new BadRequestException(`Product #${item.productId} not found`);

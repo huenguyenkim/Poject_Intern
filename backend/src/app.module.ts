@@ -20,6 +20,7 @@ import { AuditLog } from './audit/entities/audit-log.entity';
 import { InventoryLog } from './inventory/entities/inventory-log.entity';
 import { SurveyQuestion } from './surveys/entities/survey-question.entity';
 import { RememberToken } from './infrastructure/auth/entities/remember-token.entity';
+import { Coupon } from './orders/entities/coupon.entity';
 
 // Modules
 import { OrdersModule } from './orders/orders.module';
@@ -62,7 +63,7 @@ import { PageVisit } from './analytics/entities/page-visit.entity';
         type: process.env.DATABASE_URL ? 'postgres' : 'sqlite',
         url: process.env.DATABASE_URL,
         database: process.env.DATABASE_URL ? undefined : 'candy_ecommerce.db',
-        entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification, PageVisit],
+        entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification, PageVisit, Coupon],
         synchronize: true,
         ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
       } as any),
