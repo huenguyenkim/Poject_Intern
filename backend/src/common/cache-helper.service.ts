@@ -1,58 +1,44 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import type { Cache } from 'cache-manager';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CacheHelperService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  private cache = new Map<string, { value: any, expiry: number | null }>();
 
   async get<T>(key: string): Promise<T | null | undefined> {
-    return this.cacheManager.get<T>(key);
+    const item = this.cache.get(key);
+    if (!item) return undefined;
+    if (item.expiry && Date.now() > item.expiry) {
+      this.cache.delete(key);
+      return undefined;
+    }
+    return item.value as T;
   }
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    await this.cacheManager.set(key, value, ttl);
+    const expiry = ttl ? Date.now() + (ttl * 1000) : null;
+    this.cache.set(key, { value, expiry });
   }
 
   async del(key: string): Promise<void> {
-    await this.cacheManager.del(key);
+    this.cache.delete(key);
   }
 
   /**
    * Invalidates cache keys starting with a specific prefix
-   * Note: In-memory store allows iterating through keys.
    */
   async invalidatePattern(prefix: string): Promise<void> {
-    const store = (this.cacheManager as any).store;
-    
-    // Check if the store has a keys method (standard for memory store)
-    if (store && typeof store.keys === 'function') {
-      const keys = await store.keys();
-      const filteredKeys = keys.filter((key: string) => key.startsWith(prefix));
-      
-      for (const key of filteredKeys) {
-        await this.cacheManager.del(key);
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
       }
-    } else {
-      // Fallback: clear all if keys() is not available
-      await this.clear();
     }
   }
 
   async clear(): Promise<void> {
-    if (typeof (this.cacheManager as any).clear === 'function') {
-      await (this.cacheManager as any).clear();
-    } else if (typeof (this.cacheManager as any).reset === 'function') {
-      await (this.cacheManager as any).reset();
-    } else if ((this.cacheManager as any).store?.reset) {
-      await (this.cacheManager as any).store.reset();
-    } else if ((this.cacheManager as any).store?.clear) {
-      await (this.cacheManager as any).store.clear();
-    }
+    this.cache.clear();
   }
 
-  // Backwards compatibility
   async reset(): Promise<void> {
-    return this.clear();
+    this.clear();
   }
 }
