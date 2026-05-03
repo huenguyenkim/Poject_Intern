@@ -9,8 +9,6 @@ import Badge from '../../components/ui/Badge';
 import { showSuccessToast } from '../../utils/toastUtils';
 import SEO from '../../components/seo/SEO';
 import PageTransition from '../../components/layout/PageTransition';
-import { useRecommendations } from '../../hooks/useRecommendations';
-import ProductCard from '../../components/ui/ProductCard';
 
 const ProductDetail = () => {
   const { t } = useTranslation();
@@ -23,7 +21,6 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
 
   const product = products.find(p => String(p.id) === String(id));
-  const { data: recommendations, isLoading: recLoading } = useRecommendations(id);
   const productTitle = product?.title || product?.productName || t('catalog.untitled', 'Untitled');
   // Ensure a full URL for the image; fallback to a placeholder if missing
   const productImg = product?.image || product?.imageUrl || `${window.location.origin}/placeholder.png`;
@@ -193,43 +190,6 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* AI Recommendation Engine: You Might Also Like */}
-          <div className="mt-32">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                  <span className="w-8 h-[2px] bg-primary"></span>
-                  <span>AI Powered Suggestions</span>
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black text-on_surface tracking-tight uppercase leading-none">
-                  {t('catalog.related_products', 'You Might Also Like')}
-                </h2>
-              </div>
-              <Link to={`/${lang}/shop`} className="text-sm font-black text-primary border-b-2 border-primary/20 hover:border-primary transition-all pb-1 uppercase tracking-widest">
-                {t('footer.shop_all')}
-              </Link>
-            </div>
-
-            {recLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="aspect-[4/5] bg-surface_container_high animate-pulse rounded-[32px]"></div>
-                ))}
-              </div>
-            ) : recommendations?.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                {Array.isArray(recommendations) && recommendations.filter(Boolean).map((rec) => (
-                  <ProductCard key={rec.id || Math.random()} {...rec} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 bg-surface_container_low rounded-[40px] border-2 border-dashed border-surface_container">
-                <p className="text-on_surface_variant font-bold uppercase tracking-widest text-sm">
-                  {t('catalog.no_recommendations', 'Checking our sweet vault for more treats...')}
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </PageTransition>
