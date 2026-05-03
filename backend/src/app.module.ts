@@ -40,6 +40,7 @@ import { SurveysModule } from './surveys/surveys.module';
 import { SearchModule } from './search/search.module';
 import { Blog } from './blogs/entities/blog.entity';
 import { Notification } from './notifications/entities/notification.entity';
+import { PageVisit } from './analytics/entities/page-visit.entity';
 
 @Module({
   imports: [
@@ -61,7 +62,7 @@ import { Notification } from './notifications/entities/notification.entity';
         type: process.env.DATABASE_URL ? 'postgres' : 'sqlite',
         url: process.env.DATABASE_URL,
         database: process.env.DATABASE_URL ? undefined : 'candy_ecommerce.db',
-        entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification],
+        entities: [User, Category, Product, Order, OrderItem, Banner, AuditLog, InventoryLog, Task, TaskActivity, SurveyQuestion, RememberToken, Blog, Notification, PageVisit],
         synchronize: true,
         ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
       } as any),

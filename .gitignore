@@ -34,3 +34,4 @@ coverage/
 .serverless/
 .DS_Store
 Thumbs.db
+*.db

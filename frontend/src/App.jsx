@@ -234,20 +234,4 @@ const App = () => {
     </ConfigProvider>
   );
 }
-const express = require('express');
-const cors = require('cors');
-const app = express();
-
-// Cấu hình CORS
-const corsOptions = {
-  origin: 'https://poject-intern-6s6zqbe1d-huenguyenkims-projects.vercel.app', // Cho phép Frontend Vercel gọi API
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true, // Thêm dòng này nếu API của bạn có dùng Cookie hoặc Session
-};
-
-app.use(cors(corsOptions));
-
-// (Các middleware khác như express.json() và routes của bạn ở bên dưới)
-app.use(express.json());
-// app.use('/api', authRoutes);...
 export default App;
