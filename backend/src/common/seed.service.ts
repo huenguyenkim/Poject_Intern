@@ -43,6 +43,7 @@ export class SeedService implements OnModuleInit {
     const testUsers = [
       { fullName: 'Liam Sweet', email: 'sweet@example.com', password: 'password123' },
       { fullName: 'Emma Sugar', email: 'sugar@example.com', password: 'password123' },
+      { fullName: 'Test User', email: 'testuser@example.com', password: 'test1234' },
     ];
 
     for (const u of testUsers) {
