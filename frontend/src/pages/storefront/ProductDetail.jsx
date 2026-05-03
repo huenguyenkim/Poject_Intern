@@ -218,7 +218,7 @@ const ProductDetail = () => {
               </div>
             ) : recommendations?.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                {recommendations.filter(Boolean).map((rec) => (
+                {Array.isArray(recommendations) && recommendations.filter(Boolean).map((rec) => (
                   <ProductCard key={rec.id || Math.random()} {...rec} />
                 ))}
               </div>

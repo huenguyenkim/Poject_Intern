@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CategoriesService } from '../categories/categories.service';
 
@@ -113,6 +113,9 @@ export class ProductsService {
     const recommendedIds = recommendations.map(r => r.productId);
     
     // 3. Lấy thông tin chi tiết các sản phẩm gợi ý
-    return this.productRepository.findByIds(recommendedIds);
+    return this.productRepository.find({
+      where: { id: In(recommendedIds) },
+      relations: ['category']
+    });
   }
 }
