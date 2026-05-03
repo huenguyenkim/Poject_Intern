@@ -68,6 +68,14 @@ export class SeedService implements OnModuleInit {
       }
     }
 
+    // Force remove 'The Glaze Galaxy' if it exists (per user request)
+    const allProductsInitial = await this.productsService.findAll();
+    const glzGalaxy = allProductsInitial.find(p => p.productName === 'The Glaze Galaxy');
+    if (glzGalaxy) {
+      await this.productsService.remove(glzGalaxy.id);
+      console.log('🗑️ Product removed: The Glaze Galaxy');
+    }
+
     // Check if categories exist
     const categories = await this.categoriesService.findAll();
     if (categories.length > 0) {
@@ -106,7 +114,6 @@ export class SeedService implements OnModuleInit {
       { productName: 'Rainbow Stack Donuts', price: 15.50, description: 'A towering stack of our finest glazed donuts with limited-edition sprinkles.', imageUrl: '/images/glaze-galaxy-donuts.png', categoryId: createdCategories.find(c => c.categoryName === 'Baked Goods')?.id, stock: 100 },
       { productName: 'Neon Sour Strips', price: 9.50, description: 'Zesty fruit-flavored ribbons with a signature sour crystalline coating.', imageUrl: '/images/sour-strips.png', categoryId: createdCategories.find(c => c.categoryName === 'Gummies')?.id, stock: 100 },
       { productName: 'Salted Caramel Silk', price: 12.99, description: 'Velvety milk chocolate filled with house-made fleur de sel caramel.', imageUrl: '/images/salted-caramel.png', categoryId: createdCategories.find(c => c.categoryName === 'Chocolate')?.id, stock: 100 },
-      { productName: 'The Glaze Galaxy', price: 15.50, description: 'A cosmic assortment of our finest glazed donuts with limited-edition space sprinkles.', imageUrl: '/images/glaze-galaxy-donuts.png', categoryId: createdCategories.find(c => c.categoryName === 'Baked Goods')?.id, stock: 100 },
     ];
 
     for (const p of initialProducts) {
