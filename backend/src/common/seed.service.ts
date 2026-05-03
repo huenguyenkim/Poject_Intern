@@ -3,6 +3,7 @@ import { ProductsService } from '../products/products.service';
 import { CategoriesService } from '../categories/categories.service';
 import { Category } from '../categories/entities/category.entity';
 import { BannersService } from '../banners/banners.service';
+import { CacheHelperService } from './cache-helper.service';
 
 import { IUserRepository } from '../core/domain/repositories/IUserRepository';
 import { IHashingService } from '../core/application/usecases/AuthUseCases';
@@ -16,6 +17,7 @@ export class SeedService implements OnModuleInit {
     private readonly bannersService: BannersService,
     private readonly userRepository: IUserRepository,
     private readonly hashingService: IHashingService,
+    private readonly cacheHelper: CacheHelperService,
   ) {}
 
   async onModuleInit() {
@@ -68,13 +70,20 @@ export class SeedService implements OnModuleInit {
       }
     }
 
-    // Force remove 'The Glaze Galaxy' if it exists (per user request)
+    // Force remove 'The Glaze Galaxy' and 'Rainbow Stack Donuts' if they exist
     const allProductsInitial = await this.productsService.findAll();
-    const glzGalaxy = allProductsInitial.find(p => p.productName === 'The Glaze Galaxy');
-    if (glzGalaxy) {
-      await this.productsService.remove(glzGalaxy.id);
-      console.log('🗑️ Product removed: The Glaze Galaxy');
+    const toDelete = ['The Glaze Galaxy', 'Rainbow Stack Donuts'];
+    for (const name of toDelete) {
+      const target = allProductsInitial.find(p => p.productName === name);
+      if (target) {
+        await this.productsService.remove(target.id);
+        console.log(`🗑️ Product removed: ${name}`);
+      }
     }
+
+    // Clear cache to ensure UI updates
+    await this.cacheHelper.clear();
+    console.log('🧹 Cache cleared during seeding');
 
     // Check if categories exist
     const categories = await this.categoriesService.findAll();
@@ -111,7 +120,6 @@ export class SeedService implements OnModuleInit {
       { productName: 'Magic Jelly Beans', price: 19.00, description: 'A mystical assortment of beans with galaxy-inspired flavors!', imageUrl: '/images/jellybeans-featured.png', categoryId: createdCategories.find(c => c.categoryName === 'Gummies')?.id, stock: 100 },
       { productName: 'Neon Rainbow Gummies', price: 12.99, description: 'A burst of citrus and berry flavors that pop!', imageUrl: '/images/neon-rainbow-gummies.png', categoryId: createdCategories.find(c => c.categoryName === 'Gummies')?.id, stock: 100 },
       { productName: 'Zesty Sour Belts', price: 10.99, description: 'Extra sour, extra tangy chewy belts in a classic glass jar.', imageUrl: '/images/sour-belts-jar.png', categoryId: createdCategories.find(c => c.categoryName === 'Gummies')?.id, stock: 100 },
-      { productName: 'Rainbow Stack Donuts', price: 15.50, description: 'A towering stack of our finest glazed donuts with limited-edition sprinkles.', imageUrl: '/images/glaze-galaxy-donuts.png', categoryId: createdCategories.find(c => c.categoryName === 'Baked Goods')?.id, stock: 100 },
       { productName: 'Neon Sour Strips', price: 9.50, description: 'Zesty fruit-flavored ribbons with a signature sour crystalline coating.', imageUrl: '/images/sour-strips.png', categoryId: createdCategories.find(c => c.categoryName === 'Gummies')?.id, stock: 100 },
       { productName: 'Salted Caramel Silk', price: 12.99, description: 'Velvety milk chocolate filled with house-made fleur de sel caramel.', imageUrl: '/images/salted-caramel.png', categoryId: createdCategories.find(c => c.categoryName === 'Chocolate')?.id, stock: 100 },
     ];
