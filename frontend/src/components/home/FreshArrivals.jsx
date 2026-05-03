@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import BentoProductCard from './BentoProductCard';
-import QuickViewModal from './QuickViewModal';
+import { useNavigate, useParams } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 
 /**
@@ -9,26 +9,25 @@ import apiClient from '../../api/apiClient';
  */
 const FreshArrivals = ({ newProducts = [] }) => {
   const { t } = useTranslation();
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { lang } = useParams();
 
   // Take the latest 3 products for the Bento layout
   const bentoProducts = newProducts.slice(0, 3);
   
   const handleQuickView = async (product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
+    navigate(`/${lang}/shop/${product.id}`);
     
-    // Forensic Analytics: Log "VIEW_QUICK_DETAIL"
+    // Forensic Analytics: Log "VIEW_DIRECT_DETAIL"
     try {
       await apiClient.post('/audit/log', {
-        actionType: 'VIEW_QUICK_DETAIL',
+        actionType: 'VIEW_DIRECT_DETAIL',
         recordId: product.id,
         tableName: 'products',
         userId: 0 // Anonymous or Guest
       });
     } catch (err) {
-      console.warn('[Analytics] Failed to log Quick View:', err.message);
+      console.warn('[Analytics] Failed to log View:', err.message);
     }
   };
 
@@ -75,12 +74,6 @@ const FreshArrivals = ({ newProducts = [] }) => {
         </div>
       </div>
 
-      {/* Global Quick View Modal */}
-      <QuickViewModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
     </section>
   );
 };
