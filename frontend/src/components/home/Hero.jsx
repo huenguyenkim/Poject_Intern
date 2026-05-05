@@ -23,19 +23,19 @@ const Hero = ({ activeBanners = [] }) => {
   const ctaLink = mainBanner?.linkUrl || mainBanner?.link || defaultHero.link;
 
   return (
-    <section className="mt-4 md:mt-8 mb-12 md:mb-20 bg-gradient-to-r from-primary/40 to-secondary/10 rounded-[32px] md:rounded-[40px] relative overflow-hidden flex flex-col md:flex-row items-center">
-      <div className="md:w-1/2 p-8 md:p-20 z-10 text-center md:text-left">
-        <span className="inline-block mb-4 md:mb-6 py-1.5 px-4 rounded-full bg-white/30 text-white font-bold text-[10px] md:text-xs uppercase tracking-widest backdrop-blur-sm">
+    <section className="mt-2 md:mt-8 mb-12 md:mb-20 bg-gradient-to-r from-primary/40 to-secondary/10 rounded-[28px] sm:rounded-[32px] md:rounded-[40px] relative overflow-hidden flex flex-col md:flex-row items-center">
+      <div className="md:w-1/2 p-6 sm:p-10 md:p-20 z-10 text-center md:text-left">
+        <span className="inline-block mb-3 md:mb-6 py-1 px-3 sm:py-1.5 sm:px-4 rounded-full bg-white/30 text-white font-bold text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest backdrop-blur-sm">
           {mainBanner ? t('home.hero_badge_campaign') : t('home.hero_badge_limited')}
         </span>
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-tight md:leading-[1.05] tracking-tight mb-6 md:mb-8 drop-shadow-sm uppercase">
+        <h1 className="text-3xl sm:text-4xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.1] md:leading-[1.05] tracking-tight mb-4 md:mb-8 drop-shadow-sm uppercase">
           {title}
         </h1>
-        <p className="text-base md:text-xl text-white/90 max-w-sm mx-auto md:mx-0 leading-relaxed mb-8 md:mb-10 font-medium">
+        <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 max-w-sm mx-auto md:mx-0 leading-relaxed mb-6 md:mb-10 font-medium opacity-90">
           {description}
         </p>
         <LocalizedLink to={ctaLink} className="inline-block">
-          <button className="bg-primary text-on_primary font-bold text-sm tracking-wide px-8 py-4 rounded-full flex items-center gap-2 hover:shadow-lg hover:-translate-y-1 transition-all mx-auto md:mx-0 shadow-lg shadow-primary/20 uppercase">
+          <button className="bg-primary text-on_primary font-bold text-[12px] sm:text-sm tracking-wide px-6 sm:px-8 py-3.5 sm:py-4 rounded-full flex items-center gap-2 hover:shadow-lg hover:-translate-y-1 transition-all mx-auto md:mx-0 shadow-lg shadow-primary/20 uppercase">
             {t('home.hero_cta')} <ArrowRight size={18} />
           </button>
         </LocalizedLink>

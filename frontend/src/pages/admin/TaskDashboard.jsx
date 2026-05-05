@@ -108,16 +108,8 @@ const TaskDashboard = () => {
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
   };
 
-  const handleQuickAdd = async () => {
-    const parsed = parseQuickTask(quickTitle, staffList);
-    if (!parsed.title) return;
-    try {
-      await createTask(parsed);
-      setQuickTitle('');
-      message.success('Task created');
-    } catch (error) {
-      message.error(error.response?.data?.message || 'Could not create task');
-    }
+  const handleQuickAdd = () => {
+    setIsModalVisible(true);
   };
 
   const handleFullCreate = async (values) => {
@@ -125,7 +117,7 @@ const TaskDashboard = () => {
       await createTask(values);
       form.resetFields();
       setIsModalVisible(false);
-      message.success('Task created');
+      message.success('Task created successfully');
     } catch (error) {
       message.error(error.response?.data?.message || 'Could not create task');
     }
@@ -148,20 +140,9 @@ const TaskDashboard = () => {
           <p className="mt-1 text-sm font-bold text-gray-500">KPI, alerts, timeline conflicts, workload and realtime activity in one workspace.</p>
         </div>
 
-        <div className="flex min-w-[420px] gap-3">
-          <Input
-            value={quickTitle}
-            onChange={(event) => setQuickTitle(event.target.value)}
-            onPressEnter={handleQuickAdd}
-            prefix={<Search size={16} />}
-            placeholder="Quick add: Hop team @Hung !High #ops"
-            className="h-12 rounded-2xl font-bold"
-          />
-          <Button type="primary" icon={<Plus size={16} />} className="h-12 rounded-2xl font-black" onClick={handleQuickAdd}>
+        <div className="flex min-w-[200px] justify-end gap-3">
+          <Button type="primary" icon={<Plus size={16} />} className="h-12 rounded-2xl font-black px-8" onClick={handleQuickAdd}>
             Quick Add
-          </Button>
-          <Button className="h-12 rounded-2xl font-black" onClick={() => setIsModalVisible(true)}>
-            Advanced
           </Button>
         </div>
       </div>

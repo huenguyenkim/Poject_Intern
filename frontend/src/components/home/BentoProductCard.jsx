@@ -78,8 +78,10 @@ const BentoProductCard = ({
                   e.stopPropagation();
                   onQuickView && onQuickView();
                 }}
-                className={`rounded-full font-black px-8 py-3 shadow-xl transform transition-all active:scale-95 bg-white text-candy-blue hover:bg-white/90 ${
-                  isLarge ? 'text-lg h-14' : 'text-sm h-11'
+                className={`rounded-full font-black shadow-xl transform transition-all active:scale-95 bg-white text-candy-blue hover:bg-white/90 whitespace-nowrap flex items-center justify-center ${
+                  isLarge 
+                    ? 'text-sm sm:text-base md:text-lg px-5 sm:px-6 md:px-8 h-11 sm:h-12 md:h-14' 
+                    : 'text-[10px] sm:text-xs md:text-sm px-3 sm:px-4 md:px-6 h-9 sm:h-10 md:h-11'
                 }`}
               >
                 {t('home.explore_flavor')}

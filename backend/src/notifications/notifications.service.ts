@@ -25,6 +25,11 @@ export class NotificationsService {
     return { success: true };
   }
 
+  async markAllAsRead(userId: number) {
+    await this.notificationRepository.update({ recipientId: userId, isRead: false }, { isRead: true });
+    return { success: true };
+  }
+
   async createNotification(data: {
     recipientId: number;
     title: string;

@@ -66,6 +66,18 @@ export const requestPasswordResetThunk = createAsyncThunk(
   }
 );
 
+export const verifyResetTokenThunk = createAsyncThunk(
+  'auth/verifyResetToken',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/auth/password/verify', { token });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Invalid or expired token');
+    }
+  }
+);
+
 export const resetPasswordThunk = createAsyncThunk(
   'auth/resetPassword',
   async ({ token, newPassword }, { rejectWithValue }) => {
@@ -97,11 +109,18 @@ export const logoutUserThunk = createAsyncThunk(
  */
 export const registerUserThunk = createAsyncThunk(
   'auth/register',
-  async (userData, { dispatch, rejectWithValue }) => {
+  async (userData, { rejectWithValue }) => {
     try {
-      await apiClient.post('/auth/register', userData);
-      // Auto login after registration
-      return dispatch(loginUserThunk({ email: userData.email, password: userData.password })).unwrap();
+      const response = await apiClient.post('/auth/register', userData);
+      const { user, accessToken } = response.data;
+      
+      // Auto-login: Persist JWT and return session data immediately
+      localStorage.setItem('candy_token', accessToken);
+      
+      return { 
+        user: JSON.parse(JSON.stringify(user)), 
+        token: accessToken 
+      };
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Registration failed');
     }

@@ -66,30 +66,23 @@ const UserProfile = () => {
   return (
     <PageTransition>
       <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 bg-white p-10 rounded-[45px] border border-surface_container/20 shadow-sm relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12 bg-white p-6 sm:p-10 rounded-[32px] sm:rounded-[45px] border border-surface_container/20 shadow-sm relative overflow-hidden">
           {/* Background Decorative Element */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           
-          <div className="relative z-10">
-            <h2 className="text-secondary font-black uppercase tracking-[0.3em] text-xs mb-3">{getGreeting()}, {currentUser?.name || 'Bạn'}!</h2>
-            <h1 className="text-5xl font-black text-on_surface tracking-tight mb-4">
+          <div className="relative z-10 w-full">
+            <h2 className="text-secondary font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[9px] sm:text-xs mb-2 sm:mb-3">{getGreeting()}, {currentUser?.name || 'Bạn'}!</h2>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-on_surface tracking-tight mb-6 md:mb-4 leading-[1.1] sm:leading-tight break-words">
               {currentUser?.role === 'admin' ? 'Hệ thống Quản trị' : currentUser?.role === 'staff' ? 'Bàn làm việc Staff' : 'Trang cá nhân'}
             </h1>
-            <div className="flex flex-wrap gap-3">
-              <Badge variant="surface" className="bg-primary/10 text-primary border-none font-black px-4 py-1.5 uppercase text-[10px]">
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-2 sm:mb-0">
+              <Badge variant="surface" className="bg-primary/10 text-primary border-none font-black px-3 sm:px-4 py-1 sm:py-1.5 uppercase text-[8px] sm:text-[10px] whitespace-nowrap">
                 ROLE: {currentUser?.role?.toUpperCase() || 'CUSTOMER'}
               </Badge>
               {currentUser?.role === 'admin' && (
                 <Link to="/admin">
-                  <Badge variant="primary" className="bg-on_surface text-white border-none font-black px-4 py-1.5 uppercase text-[10px] hover:bg-primary transition-colors cursor-pointer">
+                  <Badge variant="primary" className="bg-on_surface text-white border-none font-black px-3 sm:px-4 py-1 sm:py-1.5 uppercase text-[8px] sm:text-[10px] hover:bg-primary transition-colors cursor-pointer whitespace-nowrap">
                     Mở Admin Panel
-                  </Badge>
-                </Link>
-              )}
-              {currentUser?.role === 'staff' && (
-                <Link to="/admin/tasks">
-                  <Badge variant="primary" className="bg-secondary text-white border-none font-black px-4 py-1.5 uppercase text-[10px] hover:bg-secondary/80 transition-colors cursor-pointer">
-                    Xem Công việc
                   </Badge>
                 </Link>
               )}
@@ -97,17 +90,17 @@ const UserProfile = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 relative z-10">
-            <button onClick={handleSave} className="bg-primary text-white font-black py-4 px-10 rounded-[22px] flex items-center gap-3 shadow-xl hover:scale-105 transition-all w-full sm:w-fit uppercase text-sm tracking-widest active:scale-95">
-              <Save size={20} strokeWidth={3} /> {t('common.save', 'Save Changes')}
+            <button onClick={handleSave} className="bg-primary text-white font-black py-2.5 sm:py-3 px-6 sm:px-8 rounded-[18px] sm:rounded-[20px] flex items-center justify-center gap-2.5 shadow-lg hover:scale-105 transition-all w-fit mx-auto sm:mx-0 uppercase text-[10px] sm:text-xs tracking-widest active:scale-95">
+              <Save size={16} className="sm:size-18" strokeWidth={3} /> {t('common.save', 'Save Changes')}
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 mb-8">
           <div className="lg:col-span-4 h-full">
-            <div className="bg-[#FFF0F8] rounded-[45px] p-10 flex flex-col items-center text-center h-full shadow-sm border border-primary/5">
-              <div className="relative mb-8">
-                <div className="w-48 h-48 rounded-full overflow-hidden border-8 border-white shadow-2xl">
+            <div className="bg-[#FFF0F8] rounded-[32px] sm:rounded-[45px] p-8 sm:p-10 flex flex-col items-center text-center h-full shadow-sm border border-primary/5">
+              <div className="relative mb-6 sm:mb-8">
+                <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden border-8 border-white shadow-2xl">
                   <img src={profileData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name || 'User'}`}
                        alt="Profile Large"
                        className="w-full h-full object-cover bg-white" />
@@ -118,30 +111,30 @@ const UserProfile = () => {
                        className="hidden"
                        onChange={handleAvatarChange} />
                 <button type="button"
-                        className="absolute bottom-2 right-2 w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white border-4 border-white shadow-xl hover:scale-110 transition-transform"
+                        className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-full flex items-center justify-center text-white border-4 border-white shadow-xl hover:scale-110 transition-transform"
                         onClick={() => document.getElementById('avatarInput').click()}>
-                  <Camera size={20} strokeWidth={2.5} />
+                  <Camera size={18} strokeWidth={2.5} />
                 </button>
                 {profileData.avatarUrl && (
                   <button type="button"
-                          className="mt-2 text-sm font-black text-primary hover:underline underline-offset-8 uppercase tracking-widest"
+                          className="mt-3 text-xs font-black text-primary hover:underline underline-offset-8 uppercase tracking-widest"
                           onClick={handleRemoveAvatar}>
                     {t('profile.remove_photo', 'Remove Photo')}
                   </button>
                 )}
               </div>
-              <h3 className="text-2xl font-black text-on_surface mb-1 uppercase tracking-tight">{currentUser?.name || 'User'}</h3>
-              <p className="text-sm font-bold text-on_surface_variant opacity-60 tracking-widest mb-10 uppercase">{t('profile.rank', 'Pro Caramel Taster')}</p>
+              <h3 className="text-xl sm:text-2xl font-black text-on_surface mb-1 uppercase tracking-tight">{currentUser?.name || 'User'}</h3>
+              <p className="text-[10px] sm:text-sm font-bold text-on_surface_variant opacity-60 tracking-widest mb-6 sm:mb-10 uppercase">{t('profile.rank', 'Pro Caramel Taster')}</p>
             </div>
           </div>
 
           <div className="lg:col-span-8 h-full">
-            <div className="bg-white rounded-[45px] p-10 lg:p-14 h-full shadow-sm border border-surface_container/20">
-              <div className="flex items-center gap-4 mb-12">
-                <div className="w-12 h-12 rounded-2xl bg-[#f5f0fa] text-[#8e44ad] flex items-center justify-center">
-                  <User size={24} strokeWidth={2.5} />
+            <div className="bg-white rounded-[32px] sm:rounded-[45px] p-6 sm:p-10 lg:p-14 h-full shadow-sm border border-surface_container/20">
+              <div className="flex items-center gap-4 mb-8 sm:mb-12">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#f5f0fa] text-[#8e44ad] flex items-center justify-center">
+                  <User size={20} className="sm:size-24" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-2xl font-black text-on_surface tracking-tight uppercase">{t('profile.basic_info', 'Basic Information')}</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-on_surface tracking-tight uppercase">{t('profile.basic_info', 'Basic Information')}</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">

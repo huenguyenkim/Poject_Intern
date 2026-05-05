@@ -11,7 +11,8 @@
     "server_time": "🕒 Giờ hệ thống: ",
     "search_placeholder": "Tìm kiếm kẹo...",
     "help": "Trung tâm trợ giúp",
-    "back_to_shop": "Quay lại cửa hàng"
+    "back_to_shop": "Quay lại cửa hàng",
+    "checkout": "Thanh toán"
   },
   "cart": {
     "title": "Giỏ hàng",
@@ -25,7 +26,10 @@
     "subtotal": "Tạm tính",
     "tax": "Thuế (8%)",
     "shipping": "Giao hàng",
-    "free": "Miễn phí"
+    "free": "Miễn phí",
+    "start_shopping": "Tiếp tục mua sắm",
+    "empty_title": "Giỏ hàng của bạn đang trống",
+    "empty_desc": "Có vẻ như bạn chưa chọn món quà nào."
   },
   "home": {
     "hero_title": "ƯU ĐÃI NGỌT NGÀO MÙA HÈ",
@@ -84,7 +88,9 @@
     "cancel": "Hủy",
     "refresh": "Làm mới",
     "try_again": "Thử lại",
-    "close": "Đóng"
+    "close": "Đóng",
+    "total": "Tổng cộng",
+    "back": "Quay lại"
   },
   "profile": {
     "email": "Địa chỉ Email",

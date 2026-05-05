@@ -57,6 +57,9 @@ async function bootstrap() {
     transform: true,               // Tự động chuyển kiểu dữ liệu
   }));
 
+  // 6. Set global prefix
+  app.setGlobalPrefix('api');
+
   await app.listen(process.env.PORT ?? 3000);
 
   // --- NON-BLOCKING CACHE WARMING ---

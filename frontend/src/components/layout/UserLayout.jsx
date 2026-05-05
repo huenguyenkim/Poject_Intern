@@ -46,9 +46,6 @@ const UserLayout = () => {
           <h2 className="text-xl font-black text-on_surface tracking-tight leading-tight">
             {currentUser?.name || ''}
           </h2>
-          <p className="text-[10px] font-black text-on_surface_variant opacity-50 uppercase tracking-widest mt-1">
-              {currentUser?.role === 'admin' ? t('profile.admin_role', 'Premium Admin') : ''}
-          </p>
         </div>
         
         {/* Navigation Section */}
@@ -97,7 +94,45 @@ const UserLayout = () => {
         {/* Subtle background texture */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('/images/pattern-candy.png')] bg-[length:300px_300px]"></div>
         
-        <div className="max-w-[1100px] mx-auto p-12 lg:p-16 relative z-10">
+        {/* Mobile Navigation Bar */}
+        <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-surface_container/30 px-4 py-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
+          {navItems.map((item) => {
+            const localizedPath = `/${lang}${item.path}`;
+            const isActive = location.pathname === localizedPath;
+            const Icon = item.icon;
+            
+            // Short labels for mobile to prevent overflow
+            const mobileName = item.path === '/profile' ? t('header.profile').replace(' của tôi', '') : 
+                             item.path === '/profile/settings' ? t('settings.title').replace(' người dùng', '') : 
+                             item.name;
+
+            return (
+              <LocalizedLink 
+                key={item.path}
+                to={item.path} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[11px] whitespace-nowrap transition-all ${
+                  isActive 
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                  : 'bg-white text-on_surface_variant border border-surface_container/50'
+                }`}
+              >
+                <Icon size={14} strokeWidth={isActive ? 3 : 2} />
+                <span>{mobileName}</span>
+              </LocalizedLink>
+            );
+          })}
+          
+          {/* Logout button for mobile */}
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[11px] whitespace-nowrap transition-all bg-error/10 text-error border border-error/20"
+          >
+            <LogOut size={14} strokeWidth={3} />
+            <span>{t('header.logout')}</span>
+          </button>
+        </div>
+
+        <div className="max-w-[1100px] mx-auto p-6 pt-6 md:p-12 lg:p-16 relative z-10">
           <Outlet />
         </div>
       </main>

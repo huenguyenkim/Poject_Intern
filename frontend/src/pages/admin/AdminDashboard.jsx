@@ -27,7 +27,7 @@ import { useAnalytics } from '../../hooks/useAnalytics';
  */
 const AdminDashboard = () => {
   const [days, setDays] = React.useState(180);
-  const { kpis, chart, topProducts, bundles = [], isLoading } = useAnalytics(days);
+  const { kpis, chart, topProducts, forecast, bundles = [], isLoading } = useAnalytics(days);
 
   const exportToCSV = () => {
     if (!chart) return;
@@ -145,7 +145,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             
-            <div className="flex-1 min-h-[280px]">
+            <div className="flex-1 h-[320px] w-full">
               {chart && chart.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chart} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -186,42 +186,39 @@ const AdminDashboard = () => {
           </Card>
 
           {/* Top Products */}
-          <Card className="p-10 border-surface_container flex flex-col">
+          <Card className="p-6 sm:p-10 border-surface_container flex flex-col">
             <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
-              <h3 className="text-2xl font-black text-on_surface tracking-tight">Top Products</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-on_surface tracking-tight uppercase">Top Products</h3>
               <Link to="/admin/products">
-                <Button variant="ghost" size="sm" className="p-0 text-primary uppercase tracking-widest text-[11px]">VIEW ALL</Button>
+                <Button variant="ghost" size="sm" className="p-0 text-primary uppercase tracking-widest text-[10px] sm:text-[11px]">VIEW ALL</Button>
               </Link>
             </div>
             
-            <div className="space-y-6 flex-1">
+            <div className="flex flex-row gap-6 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
               {topProducts?.map((product, idx) => (
-                <div key={product.id} className="flex items-center justify-between group cursor-pointer hover:translate-x-1 transition-transform">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-surface_dim border border-surface_container p-1 group-hover:border-primary/30 transition-colors shadow-sm relative">
-                      <div className="absolute -top-1 -left-1 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-black z-10 border-2 border-white">
-                        #{idx + 1}
-                      </div>
-                      <img src={product.imageUrl || '/images/rainbow-swirl-pop.png'} alt={product.name} className="w-full h-full object-cover rounded-xl" />
+                <div key={product.id} className="flex flex-col items-center group cursor-pointer hover:-translate-y-1 transition-transform gap-4 min-w-[160px] p-4 rounded-3xl bg-surface_dim/50 border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-xl">
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white border border-surface_container p-1 group-hover:border-primary/30 transition-colors shadow-sm relative shrink-0">
+                    <div className="absolute -top-1 -left-1 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-black z-10 border-2 border-white">
+                      #{idx + 1}
                     </div>
-                    <div>
-                      <h4 className="font-black text-on_surface text-sm group-hover:text-primary transition-colors max-w-[140px] truncate" title={product.name}>
-                        {product.name}
-                      </h4>
-                      <p className="text-[11px] font-bold text-on_surface_variant mt-0.5 uppercase tracking-wide">ID: {product.id.toString().slice(0, 8)}</p>
-                    </div>
+                    <img src={product.imageUrl || '/images/rainbow-swirl-pop.png'} alt={product.name} className="w-full h-full object-cover rounded-xl" />
                   </div>
-                  <Badge variant="primary" className="text-[10px] px-2.5 py-1 font-black">
-                    {product.totalSold} sold
-                  </Badge>
+                  <div className="text-center w-full">
+                    <h4 className="font-black text-on_surface text-sm group-hover:text-primary transition-colors truncate mb-1" title={product.name}>
+                      {product.name}
+                    </h4>
+                    <Badge variant="primary" className="text-[10px] px-3 py-1 font-black">
+                      {product.totalSold} sold
+                    </Badge>
+                  </div>
                 </div>
               ))}
-              {(!topProducts || topProducts.length === 0) && (
-                <div className="text-center text-on_surface_variant text-sm font-bold mt-10">
-                  Chưa có dữ liệu sản phẩm
-                </div>
-              )}
             </div>
+            {(!topProducts || topProducts.length === 0) && (
+              <div className="text-center text-on_surface_variant text-sm font-bold mt-10">
+                Chưa có dữ liệu sản phẩm
+              </div>
+            )}
           </Card>
         </div>
 
@@ -245,7 +242,7 @@ const AdminDashboard = () => {
                   </div>
                   <h3 className="text-[11px] font-black text-white/70 uppercase tracking-[0.2em]">Smart AI Forecast</h3>
                   <h2 className="text-4xl font-black text-white leading-tight tracking-tight">
-                    Next Month: ${kpis?.predictedRevenue?.toLocaleString() || '---'}
+                    Next Month: ${forecast?.predictedRevenue?.toLocaleString() || '---'}
                   </h2>
                   <p className="text-white/90 font-bold leading-relaxed pr-6 text-sm">
                     Based on your growing trend, we predict a steady surge in sales.

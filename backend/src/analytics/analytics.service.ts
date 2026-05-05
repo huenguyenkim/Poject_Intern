@@ -32,16 +32,16 @@ export class AnalyticsService {
     const totalRevenueResult = await this.orderRepository.createQueryBuilder('order')
       .select('SUM(order.total_amount)', 'total')
       .where("order.status = :status", { status: OrderStatus.DELIVERED })
-      .andWhere("order.created_at >= :startDate", { startDate })
+      .andWhere("order.createdAt >= :startDate", { startDate })
       .getRawOne();
     
     const totalRevenue = parseFloat(totalRevenueResult?.total || 0);
     const totalOrders = await this.orderRepository.createQueryBuilder('order')
-      .where("order.created_at >= :startDate", { startDate })
+      .where("order.createdAt >= :startDate", { startDate })
       .getCount();
       
     const totalVisits = await this.visitRepository.createQueryBuilder('visit')
-      .where("visit.created_at >= :startDate", { startDate })
+      .where("visit.createdAt >= :startDate", { startDate })
       .getCount();
 
     const conversionRate = totalVisits > 0 ? ((totalOrders / totalVisits) * 100).toFixed(2) : 0;
@@ -65,7 +65,7 @@ export class AnalyticsService {
       .select(dateSelect, 'date')
       .addSelect('SUM(order.total_amount)', 'revenue')
       .where("order.status = :status", { status: OrderStatus.DELIVERED })
-      .andWhere("order.created_at >= :startDate", { startDate })
+      .andWhere("order.createdAt >= :startDate", { startDate })
       .groupBy('date')
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -109,18 +109,18 @@ export class AnalyticsService {
   async getBundledProducts() {
     // 1. Lấy tất cả các OrderItems nhóm theo OrderId cho các đơn hàng có > 1 món
     const rawBundles = await this.orderItemRepository.createQueryBuilder('item')
-      .select('item.order_id', 'orderId')
+      .select('item.order', 'orderId')
       .addSelect('product.id', 'productId')
-      .addSelect('product.name', 'productName')
+      .addSelect('product.productName', 'productName')
       .innerJoin('item.product', 'product')
       .where(qb => {
         const subQuery = qb.subQuery()
-          .select('oi.order_id')
+          .select('oi.order')
           .from(OrderItem, 'oi')
-          .groupBy('oi.order_id')
+          .groupBy('oi.order')
           .having('COUNT(oi.id) > 1')
           .getQuery();
-        return 'item.order_id IN ' + subQuery;
+        return 'item.order IN ' + subQuery;
       })
       .getRawMany();
 
@@ -156,7 +156,7 @@ export class AnalyticsService {
   async getTopProducts() {
     const topProducts = await this.orderItemRepository.createQueryBuilder('item')
       .select('product.id', 'id')
-      .addSelect('product.name', 'name')
+      .addSelect('product.productName', 'name')
       .addSelect('product.imageUrl', 'imageUrl')
       .addSelect('SUM(item.quantity)', 'totalSold')
       .innerJoin('item.product', 'product')

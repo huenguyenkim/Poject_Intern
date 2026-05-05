@@ -10,14 +10,14 @@ import LocalizedLink from '../navigation/LocalizedLink';
 const FeaturedProducts = ({ featured = [] }) => {
   const { t } = useTranslation();
   return (
-    <section className="py-24 bg-surface_dim">
+    <section className="py-16 md:py-24 bg-surface_dim">
       <div className="container-custom px-4">
-        <div className="flex justify-between items-start mb-16">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-10 md:mb-16">
           <div>
-            <h2 className="text-4xl md:text-5xl font-black text-on_surface mb-3 tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-black text-on_surface mb-2 md:mb-3 tracking-tight uppercase">
               {t('home.featured_title')}
             </h2>
-            <p className="text-on_surface_variant/60 text-lg md:text-xl font-medium">
+            <p className="text-on_surface_variant/60 text-base md:text-xl font-medium">
               {t('home.featured_subtitle')}
             </p>
           </div>

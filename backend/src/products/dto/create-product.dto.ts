@@ -18,8 +18,8 @@ export class CreateProductDto {
   stock: number;
 
   @IsString()
-  @IsNotEmpty({ message: 'Image path is required' })
-  image: string;
+  @IsNotEmpty({ message: 'Image URL is required' })
+  imageUrl: string;
 
   @IsNumber()
   @IsNotEmpty({ message: 'Category ID is required' })

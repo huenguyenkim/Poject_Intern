@@ -13,7 +13,7 @@ export class BannerRepository {
       id: item.id,
       title: item.title,
       image: item.imageUrl || item.image,
-      link: item.link,
+      link: item.linkUrl,
       endDate: item.endDate,
       tag: item.tag || 'ACTIVE',
       isActive: item.isActive
@@ -21,27 +21,45 @@ export class BannerRepository {
   }
 
   async createBanner(bannerData) {
-    const { data } = await apiClient.post('/banners', bannerData);
+    const payload = {
+      title: bannerData.title,
+      imageUrl: bannerData.image,
+      linkUrl: bannerData.link,
+      endDate: bannerData.endDate,
+      isActive: bannerData.tag === 'ACTIVE'
+    };
+    const { data } = await apiClient.post('/banners', payload);
     return {
       id: data.id,
       title: data.title,
       image: data.imageUrl,
-      link: data.link,
+      link: data.linkUrl,
       endDate: data.endDate,
-      tag: data.tag || 'ACTIVE',
+      tag: data.isActive ? 'ACTIVE' : 'DRAFT',
       isActive: data.isActive
     };
   }
 
   async updateBanner(id, bannerData) {
-    const { data } = await apiClient.put(`/banners/${id}`, bannerData);
+    const payload = {
+      title: bannerData.title,
+      imageUrl: bannerData.image,
+      linkUrl: bannerData.link,
+      endDate: bannerData.endDate,
+      isActive: bannerData.tag === 'ACTIVE'
+    };
+
+    // Filter undefined fields to avoid overwriting with null
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+
+    const { data } = await apiClient.put(`/banners/${id}`, payload);
     return {
       id: data.id,
       title: data.title,
       image: data.imageUrl,
-      link: data.link,
+      link: data.linkUrl,
       endDate: data.endDate,
-      tag: data.tag || 'ACTIVE',
+      tag: data.isActive ? 'ACTIVE' : 'DRAFT',
       isActive: data.isActive
     };
   }

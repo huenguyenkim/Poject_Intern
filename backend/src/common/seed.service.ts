@@ -8,6 +8,11 @@ import { CacheHelperService } from './cache-helper.service';
 import { IUserRepository } from '../core/domain/repositories/IUserRepository';
 import { IHashingService } from '../core/application/usecases/AuthUseCases';
 import { UserRole } from './constants/user-role.enum';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Order } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order-item.entity';
+import { OrderStatus } from './constants/order-status.enum';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
@@ -18,6 +23,10 @@ export class SeedService implements OnModuleInit {
     private readonly userRepository: IUserRepository,
     private readonly hashingService: IHashingService,
     private readonly cacheHelper: CacheHelperService,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepository: Repository<OrderItem>,
   ) {}
 
   async onModuleInit() {
@@ -28,7 +37,7 @@ export class SeedService implements OnModuleInit {
     console.log('🌱 Seeding database...');
 
     // Seed Admin User
-    const adminEmail = 'admin@candy.com';
+    const adminEmail = 'nguyenhue2612200398@gmail.com';
     const existingAdmin = await this.userRepository.findByEmail(adminEmail);
     if (!existingAdmin) {
       const hashedPassword = await this.hashingService.hash('admin123');
@@ -74,10 +83,14 @@ export class SeedService implements OnModuleInit {
     const allProductsInitial = await this.productsService.findAll();
     const toDelete = ['The Glaze Galaxy', 'Rainbow Stack Donuts'];
     for (const name of toDelete) {
-      const target = allProductsInitial.find(p => p.productName === name);
-      if (target) {
-        await this.productsService.remove(target.id);
-        console.log(`🗑️ Product removed: ${name}`);
+      try {
+        const target = allProductsInitial.find(p => p.productName === name);
+        if (target) {
+          await this.productsService.remove(target.id);
+          console.log(`🗑️ Product removed: ${name}`);
+        }
+      } catch (e) {
+        console.warn(`⚠️ Could not remove product ${name}: ${e.message}`);
       }
     }
 
@@ -85,32 +98,65 @@ export class SeedService implements OnModuleInit {
     await this.cacheHelper.clear();
     console.log('🧹 Cache cleared during seeding');
 
+    // Seed Historical Orders for Analytics
+    const products = await this.productsService.findAll();
+    if (products.length > 0) {
+        console.log('📦 Seeding historical orders for analytics...');
+        for (let i = 1; i <= 20; i++) {
+          const pastDate = new Date();
+          pastDate.setDate(pastDate.getDate() - (i * 2)); // Orders every 2 days
+          
+          const order = this.orderRepository.create({
+            receiverName: 'Liam Sweet',
+            phone: '0123456789',
+            address: '123 Candy Lane',
+            totalAmount: 50 + Math.random() * 100,
+            status: OrderStatus.DELIVERED,
+            createdAt: pastDate,
+          });
+          const savedOrder = await this.orderRepository.save(order);
+          
+          // Add random items
+          const randomProduct = products[Math.floor(Math.random() * products.length)];
+          const item = this.orderItemRepository.create({
+            order: savedOrder as any,
+            product: randomProduct,
+            quantity: 1 + Math.floor(Math.random() * 3),
+            unitPrice: randomProduct.price,
+          });
+          await this.orderItemRepository.save(item);
+        }
+        console.log('✅ Historical orders seeded!');
+      }
+
     // Check if categories exist
     const categories = await this.categoriesService.findAll();
-    if (categories.length > 0) {
+    const productsCount = await this.productsService.findAll();
+    
+    if (categories.length > 0 && productsCount.length > 0) {
       // FORCE UPDATE: Đảm bảo các sản phẩm cũ có stock để test (Vì logic seed cũ không có stock)
-      const allProds = await this.productsService.findAll();
-      for (const p of allProds) {
+      for (const p of productsCount) {
         if (!p.stock || p.stock === 0) {
            await this.productsService.update(p.id, { stock: 100 });
         }
       }
-      console.log('✅ Seeding complete (Skip existing categories, Updated Stock)!');
-      return;
+      console.log('✅ Catalog verification complete (Updated Stock)!');
     }
 
-    const categoryData = [
-      { categoryName: 'Gummies', image: '/images/cat-gummies.png', description: 'Vibrant, chewy treats with a burst of fruity joy.' },
-      { categoryName: 'Chocolate', image: '/images/cat-chocolate.png', description: 'Luxurious truffles and bars for the sophisticated palate.' },
-      { categoryName: 'Hard Candy', image: '/images/cat-hard-candy.png', description: 'Sparkling, jewel-toned sweets with long-lasting flavor.' },
-      { categoryName: 'Baked Goods', image: '/images/cat-baked-goods.png', description: 'Assorted pastries and cookies, baked to sweet perfection.' },
-      { categoryName: 'Sour Bites', image: '/images/cat-sour-bites.png', description: 'Neon-colored ribbons with a signature zesty coating.' }
-    ];
-    const createdCategories: Category[] = [];
-
-    for (const data of categoryData) {
-      const cat = await this.categoriesService.create(data) as any;
-      createdCategories.push(cat);
+    let createdCategories = categories;
+    if (categories.length === 0) {
+      const categoryData = [
+        { categoryName: 'Gummies', image: '/images/cat-gummies.png', description: 'Vibrant, chewy treats with a burst of fruity joy.' },
+        { categoryName: 'Chocolate', image: '/images/cat-chocolate.png', description: 'Luxurious truffles and bars for the sophisticated palate.' },
+        { categoryName: 'Hard Candy', image: '/images/cat-hard-candy.png', description: 'Sparkling, jewel-toned sweets with long-lasting flavor.' },
+        { categoryName: 'Baked Goods', image: '/images/cat-baked-goods.png', description: 'Assorted pastries and cookies, baked to sweet perfection.' },
+        { categoryName: 'Sour Bites', image: '/images/cat-sour-bites.png', description: 'Neon-colored ribbons with a signature zesty coating.' }
+      ];
+      createdCategories = [];
+      for (const data of categoryData) {
+        const cat = await this.categoriesService.create(data) as any;
+        createdCategories.push(cat);
+      }
     }
 
     const initialProducts = [
@@ -147,6 +193,7 @@ export class SeedService implements OnModuleInit {
     for (const b of banners) {
       await this.bannersService.create(b);
     }
+
 
     console.log('✅ Seeding complete!');
   }

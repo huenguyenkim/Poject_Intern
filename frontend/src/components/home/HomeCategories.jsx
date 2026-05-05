@@ -11,14 +11,14 @@ const HomeCategories = ({ categories = [] }) => {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <section className="mb-24">
-      <div className="flex justify-between items-end mb-12">
+    <section className="mb-16 md:mb-24 px-4 md:px-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-10 md:mb-12">
         <div>
-          <h2 className="text-4xl font-black text-on_surface mb-2 tracking-tight">{t('home.categories_title')}</h2>
-          <p className="text-on_surface_variant text-lg font-medium">{t('home.categories_subtitle')}</p>
+          <h2 className="text-3xl md:text-4xl font-black text-on_surface mb-1 md:mb-2 tracking-tight uppercase">{t('home.categories_title')}</h2>
+          <p className="text-on_surface_variant text-base md:text-lg font-medium">{t('home.categories_subtitle')}</p>
         </div>
-        <LocalizedLink to="/shop" className="hidden sm:flex items-center gap-2 text-primary font-bold hover:text-primary/70 focus:outline-none transition-colors group text-sm">
-          {t('home.all_categories')} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+        <LocalizedLink to="/shop" className="flex items-center gap-2 text-primary font-bold hover:text-primary/70 focus:outline-none transition-colors group text-xs sm:text-sm">
+          {t('home.all_categories')} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
         </LocalizedLink>
       </div>
 

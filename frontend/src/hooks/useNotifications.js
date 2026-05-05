@@ -50,3 +50,18 @@ export const useMarkAsRead = () => {
         }
     });
 };
+
+export const useMarkAllAsRead = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async () => {
+            const token = localStorage.getItem('candy_token');
+            await axios.patch(`${API_URL}/notifications/read-all`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['notifications']);
+        }
+    });
+};

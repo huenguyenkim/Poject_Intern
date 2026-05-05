@@ -13,7 +13,7 @@ import { Button as AntButton } from 'antd';
  * @param {'sm' | 'md' | 'lg'} [props.size='md'] - Button size.
  * @param {Object} props.props - Standard HTML button attributes.
  */
-const Button = ({ 
+const Button = React.forwardRef(({ 
   children, 
   variant = 'primary', 
   className = '', 
@@ -22,7 +22,7 @@ const Button = ({
   isLoading = false, 
   type, 
   ...props 
-}) => {
+}, ref) => {
   // Variant mapping to antd types
   const antType = variant === 'primary' ? 'primary' : 
                   variant === 'outline' ? 'default' : 
@@ -41,6 +41,7 @@ const Button = ({
 
   return (
     <AntButton 
+      ref={ref}
       type={antType}
       htmlType={type}
       loading={isLoading}
@@ -55,6 +56,6 @@ const Button = ({
       {children}
     </AntButton>
   );
-};
+});
 
 export default Button;

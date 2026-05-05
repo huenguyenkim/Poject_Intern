@@ -27,9 +27,10 @@ export class RegisterUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly hashingService: IHashingService,
+    private readonly tokenService: ITokenService,
   ) {}
 
-  async execute(data: { fullName: string; email: string; password: string }): Promise<User> {
+  async execute(data: { fullName: string; email: string; password: string }): Promise<{ user: User; accessToken: string }> {
     const sanitizedEmail = data.email.trim().toLowerCase();
     const existing = await this.userRepository.findByEmail(sanitizedEmail);
     if (existing) {
@@ -38,12 +39,20 @@ export class RegisterUseCase {
 
     const hashedPassword = await this.hashingService.hash(data.password);
     
-    return this.userRepository.create({
+    const user = await this.userRepository.create({
       ...data,
       email: sanitizedEmail,
       password: hashedPassword,
       role: UserRole.CUSTOMER,
     });
+
+    const payload = { sub: user.id, role: user.role, version: user.tokenVersion || 1 };
+    const token = this.tokenService.generate(payload);
+
+    return {
+      user,
+      accessToken: token,
+    };
   }
 }
 

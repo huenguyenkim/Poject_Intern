@@ -39,11 +39,11 @@ export class ProductRepository {
 
   async createProduct(productData) {
     const payload = {
-      productName: productData.title,
+      productName: productData.productName || productData.title,
       price: productData.price,
       description: productData.description,
       categoryId: productData.categoryId,
-      imageUrl: productData.image,
+      imageUrl: productData.imageUrl || productData.image,
       stock: productData.stock || 0
     };
     const { data } = await apiClient.post('/products', payload);
@@ -61,11 +61,11 @@ export class ProductRepository {
 
   async updateProduct(id, productData) {
     const payload = {
-      productName: productData.title,
+      productName: productData.productName || productData.title,
       price: productData.price,
       description: productData.description,
       categoryId: productData.categoryId,
-      imageUrl: productData.image,
+      imageUrl: productData.imageUrl || productData.image,
       stock: productData.stock
     };
     const { data } = await apiClient.put(`/products/${id}`, payload);

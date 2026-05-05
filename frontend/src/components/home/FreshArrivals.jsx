@@ -32,14 +32,14 @@ const FreshArrivals = ({ newProducts = [] }) => {
   };
 
   return (
-    <section className="py-24 bg-surface_container_lowest overflow-hidden">
-      <div className="container-custom">
+    <section className="py-16 md:py-24 bg-surface_container_lowest overflow-hidden">
+      <div className="container-custom px-4">
         {/* Section Header */}
-        <div className="flex items-center gap-6 mb-16 px-4">
-          <h2 className="text-4xl md:text-5xl font-black text-on_surface tracking-tight whitespace-nowrap">
+        <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
+          <h2 className="text-3xl md:text-5xl font-black text-on_surface tracking-tight whitespace-nowrap uppercase">
             {t('home.fresh_title')}
           </h2>
-          <div className="flex-1 h-[6px] bg-candy-pink rounded-full opacity-100 mt-2"></div>
+          <div className="flex-1 h-[4px] md:h-[6px] bg-candy-pink rounded-full opacity-100 mt-1 md:mt-2"></div>
         </div>
 
         {/* Bento Grid Layout (1 Large, 2 Small) */}

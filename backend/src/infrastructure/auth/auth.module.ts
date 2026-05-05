@@ -3,6 +3,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { RegisterUseCase, LoginUseCase, GetMeUseCase, IHashingService, ITokenService } from '../../core/application/usecases/AuthUseCases';
+import { RequestPasswordResetUseCase, VerifyResetTokenUseCase, ResetPasswordUseCase } from '../../core/application/usecases/PasswordRecoveryUseCases';
+import { MailService } from '../notifications/mail.service';
 import { IUserRepository } from '../../core/domain/repositories/IUserRepository';
 import { TypeOrmUserRepository } from '../persistence/repositories/TypeOrmUserRepository';
 import { BcryptService } from './bcrypt.service';
@@ -24,6 +26,10 @@ import { RememberToken } from './entities/remember-token.entity';
     RegisterUseCase,
     LoginUseCase,
     GetMeUseCase,
+    RequestPasswordResetUseCase,
+    VerifyResetTokenUseCase,
+    ResetPasswordUseCase,
+    MailService,
     {
       provide: IUserRepository,
       useClass: TypeOrmUserRepository,
@@ -37,6 +43,6 @@ import { RememberToken } from './entities/remember-token.entity';
       useClass: JwtTokenService,
     },
   ],
-  exports: [IUserRepository, IHashingService, ITokenService],
+  exports: [IUserRepository, IHashingService, ITokenService, MailService],
 })
 export class AuthModule {}

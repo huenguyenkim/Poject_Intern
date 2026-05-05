@@ -80,16 +80,16 @@ const ProductMgmt = () => {
       title: 'PRODUCT DETAILS',
       key: 'details',
       render: (_, record) => (
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center border border-surface_container bg-white shadow-sm">
+        <div className="flex items-center gap-4 min-w-[200px]">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center border border-surface_container bg-white shadow-sm shrink-0">
             {record.image ? (
               <img src={record.image} alt={record.productName || record.title} className="w-full h-full object-cover" />
             ) : (
               <ImageIcon size={20} className="text-on_surface_variant" />
             )}
           </div>
-          <div>
-            <p className="font-black text-on_surface text-[15px] leading-tight uppercase">{record.productName || record.title}</p>
+          <div className="truncate">
+            <p className="font-black text-on_surface text-[15px] leading-tight uppercase truncate">{record.productName || record.title}</p>
             <p className="text-[10px] font-bold text-on_surface_variant/60 mt-1 uppercase tracking-tight">ID: {record.id}</p>
           </div>
         </div>
@@ -98,6 +98,7 @@ const ProductMgmt = () => {
     {
       title: 'CATEGORY',
       key: 'category',
+      responsive: ['md'],
       render: (_, record) => {
         const cat = categories.find(c => String(c.id) === String(record.categoryId));
         return <Badge variant="outline" className="px-3 py-1 uppercase text-[10px] tracking-widest">{cat?.name || 'Uncategorized'}</Badge>;
@@ -107,6 +108,7 @@ const ProductMgmt = () => {
       title: 'PRICE',
       dataIndex: 'price',
       key: 'price',
+      responsive: ['sm'],
       render: (price) => <span className="font-black text-[15px] text-on_surface">${Number(price).toFixed(2)}</span>,
     },
     {
@@ -161,11 +163,16 @@ const ProductMgmt = () => {
     const data = {
       productName: sanitized.productName,
       price: parseFloat(sanitized.price),
-      categoryId: parseInt(sanitized.categoryId),
+      categoryId: parseInt(sanitized.categoryId, 10),
       description: sanitized.description,
-      image: sanitized.image,
-      stock: parseInt(sanitized.stock)
+      imageUrl: sanitized.imageUrl,
+      stock: parseInt(sanitized.stock, 10)
     };
+    
+    if (isNaN(data.categoryId)) {
+      showErrorToast('Please select a valid category');
+      return;
+    }
     
     try {
       if (editingId) {
@@ -183,7 +190,7 @@ const ProductMgmt = () => {
         const messages = err?.response?.data?.message;
         if (Array.isArray(messages)) {
           const fields = messages.map(msg => {
-            const field = ['productName', 'price', 'stock', 'image', 'description'].find(f => msg.toLowerCase().includes(f.toLowerCase()));
+            const field = ['productName', 'price', 'stock', 'imageUrl', 'description', 'categoryId'].find(f => msg.toLowerCase().includes(f.toLowerCase()));
             return field ? { name: field, errors: [msg] } : null;
           }).filter(Boolean);
           form.setFields(fields);
@@ -210,7 +217,7 @@ const ProductMgmt = () => {
       price: product.price,
       categoryId: String(product.categoryId),
       description: product.description || '',
-      image: product.image || '',
+      imageUrl: product.image || product.imageUrl || '',
       stock: product.stock || 0
     });
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -334,8 +341,9 @@ const ProductMgmt = () => {
               </Form.Item>
 
               <Form.Item 
-                name="image" 
+                name="imageUrl" 
                 label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface px-1">Image URL</span>}
+                rules={[{ required: true, message: 'Image URL is required' }]}
               >
                 <AntInput className="candy-input" placeholder="https://..." />
               </Form.Item>
@@ -390,6 +398,7 @@ const ProductMgmt = () => {
               rowClassName="group !bg-transparent hover:!bg-surface_dim transition-all"
               rowKey="id"
               loading={status === 'loading'}
+              scroll={{ x: 'max-content' }}
             />
           </Card>
         </div>

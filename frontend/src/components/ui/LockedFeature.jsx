@@ -8,7 +8,7 @@ const LockedFeature = ({ children, requiredTier = 'PREMIUM', featureName = 'Tín
   
   // Logic Điều kiện: Kiểm tra quyền truy cập
   // Admin luôn có quyền, hoặc user có tier >= requiredTier
-  const hasAccess = user?.role === 'ADMIN' || 
+  const hasAccess = user?.role?.toLowerCase() === 'admin' || 
                    (requiredTier === 'BASIC') || 
                    (requiredTier === 'PREMIUM' && (user?.tier === 'PREMIUM' || user?.tier === 'VIP')) ||
                    (requiredTier === 'VIP' && user?.tier === 'VIP');

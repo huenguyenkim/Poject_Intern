@@ -4,12 +4,18 @@ import { useNotifications, useMarkAsRead } from '../../hooks/useNotifications';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 const NotificationBell = () => {
     const { user } = useSelector(state => state.auth);
     const { data: notifications, isLoading } = useNotifications(user);
     const { mutate: markAsRead } = useMarkAsRead();
     const [isOpen, setIsOpen] = useState(false);
+    const location = useLocation();
+    const { lang } = useParams();
+
+    const isAdmin = location.pathname.startsWith('/admin');
+    const targetPath = isAdmin ? '/admin/notifications' : `/${lang || 'vi'}/notifications`;
 
     const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
 
@@ -85,9 +91,13 @@ const NotificationBell = () => {
                             </div>
 
                             <div className="p-4 bg-surface_dim text-center">
-                                <button className="text-[10px] font-black text-on_surface_variant/60 uppercase tracking-widest hover:text-primary transition-colors">
+                                <Link 
+                                    to={targetPath}
+                                    onClick={() => setIsOpen(false)}
+                                    className="block text-[10px] font-black text-on_surface_variant/60 uppercase tracking-widest hover:text-primary transition-colors"
+                                >
                                     Xem tất cả thông báo
-                                </button>
+                                </Link>
                             </div>
                         </motion.div>
                     </>

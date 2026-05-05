@@ -12,11 +12,13 @@ import { HelmetProvider } from 'react-helmet-async'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      staleTime: 1000 * 60 * 2, // Dữ liệu được coi là "tươi" trong 2 phút
+      cacheTime: 1000 * 60 * 10, // Giữ trong cache 10 phút
+      retry: 2,
+      refetchOnWindowFocus: false, // Tránh fetch lại liên tục khi chuyển tab ở môi trường kho bãi
     },
   },
-})
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

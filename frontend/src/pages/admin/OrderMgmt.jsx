@@ -73,7 +73,7 @@ const OrderMgmt = () => {
 
   const loadData = useCallback(() => {
     const filters = {
-      status: activeTab,
+      status: activeTab === 'All Orders' ? undefined : activeTab.toLowerCase(),
       query: searchText,
       startDate: dateRange?.[0]?.toISOString(),
       endDate: dateRange?.[1]?.toISOString(),
@@ -188,21 +188,20 @@ const OrderMgmt = () => {
             </Tooltip>
           </Link>
           <Dropdown
-            overlay={
-              <Menu onClick={({ key }) => handleUpdateStatus(record.id, key)}>
-                <Menu.Item key="confirmed" icon={<CheckCircle2 size={14} />}>Approve</Menu.Item>
-                <Menu.Item key="shipping" icon={<Truck size={14} />}>Ship Order</Menu.Item>
-                <Menu.Item key="delivered" icon={<Package size={14} />}>Mark Delivered</Menu.Item>
-                <Menu.Divider />
-                <Menu.Item key="cancelled" danger icon={<XCircle size={14} />}>Cancel</Menu.Item>
-              </Menu>
-            }
+            menu={{
+              items: [
+                { key: 'confirmed', icon: <CheckCircle2 size={14} />, label: 'Approve' },
+                { key: 'shipping', icon: <Truck size={14} />, label: 'Ship Order' },
+                { key: 'delivered', icon: <Package size={14} />, label: 'Mark Delivered' },
+                { type: 'divider' },
+                { key: 'cancelled', danger: true, icon: <XCircle size={14} />, label: 'Cancel' },
+              ],
+              onClick: ({ key }) => handleUpdateStatus(record.id, key),
+            }}
             trigger={['click']}
-          >
-            <Button variant="ghost" size="sm" className="!p-2 !w-10 !h-10">
+          ><span><Button variant="ghost" size="sm" className="!p-2 !w-10 !h-10">
                 <MoreVertical size={18} className="text-on_surface_variant" />
-            </Button>
-          </Dropdown>
+              </Button></span></Dropdown>
         </Space>
       ),
     },
@@ -233,26 +232,21 @@ const OrderMgmt = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                 <Button variant="surface" className="h-[72px] px-8 rounded-[28px] border-none bg-white shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 group">
-                    <Printer size={20} className="text-on_surface_variant group-hover:text-primary transition-colors" />
-                    <span className="text-sm font-black uppercase tracking-widest text-on_surface_variant group-hover:text-primary">Print Invoice</span>
-                 </Button>
                  <Dropdown
-                  overlay={
-                    <Menu onClick={({ key }) => handleUpdateStatus(order.id, key)}>
-                      <Menu.Item key="confirmed">Approve</Menu.Item>
-                      <Menu.Item key="shipping">Ship Order</Menu.Item>
-                      <Menu.Item key="delivered">Mark as Delivered</Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item key="cancelled" danger>Cancel Order</Menu.Item>
-                    </Menu>
-                  }
-                 >
-                   <Button variant="primary" className="h-[72px] px-10 rounded-[28px] shadow-2xl shadow-primary/20 hover:shadow-primary/30 flex items-center gap-4">
+                  menu={{
+                    items: [
+                      { key: 'confirmed', label: 'Approve' },
+                      { key: 'shipping', label: 'Ship Order' },
+                      { key: 'delivered', label: 'Mark as Delivered' },
+                      { type: 'divider' },
+                      { key: 'cancelled', danger: true, label: 'Cancel Order' },
+                    ],
+                    onClick: ({ key }) => handleUpdateStatus(order.id, key),
+                  }}
+                 ><span><Button variant="primary" className="h-[72px] px-10 rounded-[28px] shadow-2xl shadow-primary/20 hover:shadow-primary/30 flex items-center gap-4">
                       <span className="text-base font-black uppercase tracking-widest">Update Status</span>
                       <ChevronDown size={20} />
-                   </Button>
-                 </Dropdown>
+                   </Button></span></Dropdown>
               </div>
             </div>
 

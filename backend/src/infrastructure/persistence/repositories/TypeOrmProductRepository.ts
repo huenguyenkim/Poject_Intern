@@ -44,14 +44,15 @@ export class TypeOrmProductRepository implements IProductRepository {
   }
 
   async update(id: number, product: Partial<DomainProduct>): Promise<DomainProduct> {
-    await this.repository.update(id, {
-      productName: product.productName,
-      price: product.price,
-      description: product.description,
-      imageUrl: product.imageUrl,
-      category: { id: product.categoryId } as any,
-      stock: product.stock,
-    });
+    const updateData: any = {};
+    if (product.productName !== undefined) updateData.productName = product.productName;
+    if (product.price !== undefined) updateData.price = product.price;
+    if (product.description !== undefined) updateData.description = product.description;
+    if (product.imageUrl !== undefined) updateData.imageUrl = product.imageUrl;
+    if (product.categoryId !== undefined) updateData.categoryId = product.categoryId;
+    if (product.stock !== undefined) updateData.stock = product.stock;
+
+    await this.repository.update(id, updateData);
     const updated = await this.findById(id);
     return updated!;
   }

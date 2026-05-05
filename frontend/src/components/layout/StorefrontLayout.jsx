@@ -1,8 +1,9 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { ShoppingCart, User, Search, Menu, Globe } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { ShoppingCart, User, Search, Menu, Globe, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { logout } from '../../store/authSlice';
 import { showSuccessToast } from '../../utils/toastUtils';
 import Clock from '../misc/Clock';
 import LocalizedLink from '../navigation/LocalizedLink';
@@ -55,6 +56,7 @@ const StorefrontLayout = () => {
   
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
@@ -76,9 +78,12 @@ const StorefrontLayout = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
       {/* Promotional Banner */}
-      <div className="bg-primary text-on_primary flex justify-center items-center gap-4 py-2 text-sm font-bold tracking-wide">
-        <span>{t('header.free_shipping', '🍬 Free shipping on all orders over $50! 🍬')}</span>
-        <Clock prefixLabel={t('header.server_time', '🕒 Server Time: ')} />
+      <div className="bg-primary text-on_primary flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-6 py-2 px-4 text-[9px] sm:text-xs font-bold tracking-tight sm:tracking-wide transition-all min-h-[40px]">
+        <span className="text-center leading-tight">{t('header.free_shipping', '🍬 Free shipping on all orders over $50! 🍬')}</span>
+        <div className="hidden sm:block h-4 w-[1px] bg-white/20"></div>
+        <div className="flex items-center justify-center scale-90 sm:scale-100">
+          <Clock prefixLabel={t('header.server_time', '🕒 Giờ hệ thống: ')} />
+        </div>
       </div>
       
       {/* Header */}
@@ -141,7 +146,7 @@ const StorefrontLayout = () => {
         </div>
 
         {/* Mobile Menu */}
-        <div className={`fixed inset-0 z-[60] md:hidden transition-all duration-500 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-[100] md:hidden transition-all duration-500 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
            <div className={`absolute inset-0 bg-on_surface/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMenuOpen(false)}></div>
            <div className={`absolute top-0 right-0 h-full w-4/5 max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
               <div className="p-8 border-b border-surface_dim flex justify-between items-center">
@@ -159,6 +164,20 @@ const StorefrontLayout = () => {
                  <LocalizedLink to={currentUser ? "/profile" : "/auth"} className="block text-2xl font-black text-on_surface hover:text-primary transition-colors">
                     {currentUser ? t('header.profile', 'My Profile') : t('header.login', 'Sign In')}
                  </LocalizedLink>
+                 
+                 {currentUser && (
+                    <button 
+                      onClick={() => {
+                        dispatch(logout());
+                        navigate(`/${lang}/auth`);
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 text-2xl font-black text-error hover:opacity-70 transition-all mt-4"
+                    >
+                      <LogOut size={28} />
+                      <span>{t('header.logout')}</span>
+                    </button>
+                  )}
               </nav>
 
               <div className="mt-auto p-8 border-t border-surface_dim space-y-6">

@@ -9,14 +9,14 @@ export class User {
     public readonly fullName: string,
     public readonly email: string,
     public readonly role: UserRole,
-    public readonly password?: string, // Password is optional when returning from logic
+    public readonly password?: string,
     public readonly deletedAt?: Date,
     public readonly tokenVersion: number = 1,
+    public readonly resetPasswordTokenHash?: string,
+    public readonly resetPasswordExpiresAt?: Date,
+    public readonly lastPasswordChangeAt?: Date,
   ) {}
 
-  /**
-   * Static Factory Method to create a User Domain Entity
-   */
   static create(data: {
     id: number;
     fullName: string;
@@ -25,6 +25,9 @@ export class User {
     password?: string;
     deletedAt?: Date;
     tokenVersion?: number;
+    resetPasswordTokenHash?: string;
+    resetPasswordExpiresAt?: Date;
+    lastPasswordChangeAt?: Date;
   }): User {
     return new User(
       data.id,
@@ -34,6 +37,9 @@ export class User {
       data.password,
       data.deletedAt,
       data.tokenVersion ?? 1,
+      data.resetPasswordTokenHash,
+      data.resetPasswordExpiresAt,
+      data.lastPasswordChangeAt,
     );
   }
 

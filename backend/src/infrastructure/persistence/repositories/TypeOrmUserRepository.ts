@@ -47,9 +47,20 @@ export class TypeOrmUserRepository implements IUserRepository {
       email: user.email,
       password: user.password,
       role: user.role,
+      tokenVersion: user.tokenVersion,
+      resetPasswordTokenHash: user.resetPasswordTokenHash,
+      resetPasswordExpiresAt: user.resetPasswordExpiresAt,
+      lastPasswordChangeAt: user.lastPasswordChangeAt,
     });
     const updated = await this.findById(id);
     return updated!;
+  }
+
+  async findByResetToken(tokenHash: string): Promise<DomainUser | null> {
+    const item = await this.repository.findOne({ 
+      where: { resetPasswordTokenHash: tokenHash } 
+    });
+    return item ? this.mapToDomain(item) : null;
   }
 
   async delete(id: number): Promise<void> {
@@ -62,8 +73,12 @@ export class TypeOrmUserRepository implements IUserRepository {
       fullName: entity.fullName,
       email: entity.email,
       role: entity.role,
-      password: (entity as any).password, // Extract password if it was selected
+      password: (entity as any).password,
       deletedAt: entity.deletedAt,
+      tokenVersion: entity.tokenVersion,
+      resetPasswordTokenHash: entity.resetPasswordTokenHash,
+      resetPasswordExpiresAt: entity.resetPasswordExpiresAt,
+      lastPasswordChangeAt: entity.lastPasswordChangeAt,
     });
   }
 }

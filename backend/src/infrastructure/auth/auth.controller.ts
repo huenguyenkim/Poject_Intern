@@ -4,6 +4,7 @@ import { randomBytes, createHash } from 'crypto';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
 import { RegisterUseCase, LoginUseCase, GetMeUseCase, IHashingService, ITokenService } from '../../core/application/usecases/AuthUseCases';
+import { RequestPasswordResetUseCase, VerifyResetTokenUseCase, ResetPasswordUseCase } from '../../core/application/usecases/PasswordRecoveryUseCases';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 import { CreateUserDto } from '../../users/dto/create-user.dto';
@@ -15,7 +16,6 @@ import { blacklistToken } from './token-blacklist.store';
 
 const REMEMBER_COOKIE_NAME = 'candy_remember';
 const REMEMBER_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-const RESET_MAX_AGE_MS = 30 * 60 * 1000;
 
 @Controller('auth')
 export class AuthController {
@@ -25,6 +25,9 @@ export class AuthController {
     private readonly getMeUseCase: GetMeUseCase,
     private readonly hashingService: IHashingService,
     private readonly tokenService: ITokenService,
+    private readonly requestResetUseCase: RequestPasswordResetUseCase,
+    private readonly verifyResetTokenUseCase: VerifyResetTokenUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(RememberToken)
@@ -82,51 +85,31 @@ export class AuthController {
     const user = await this.getMeUseCase.execute(rememberToken.user.id);
     return {
       user,
-      accessToken: this.tokenService.generate({ sub: user.id, role: user.role }),
+      accessToken: this.tokenService.generate({ sub: user.id, role: user.role, version: user.tokenVersion }),
     };
   }
 
   @Post('password/forgot')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: RequestPasswordResetDto) {
-    const user = await this.userRepository.findOne({ where: { email: dto.email } });
-    const message = 'If that email exists, a password reset link has been sent.';
+    const token = await this.requestResetUseCase.execute(dto.email);
+    return { 
+      message: 'If that email exists, a password reset link has been sent.',
+      devToken: process.env.NODE_ENV === 'development' ? token : undefined
+    };
+  }
 
-    if (!user || user.deletedAt) {
-      return { message };
-    }
-
-    const token = randomBytes(32).toString('hex');
-    user.resetPasswordTokenHash = this.sha256(token);
-    user.resetPasswordExpiresAt = new Date(Date.now() + RESET_MAX_AGE_MS);
-    await this.userRepository.save(user);
-
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin/login?resetToken=${token}`;
-    return process.env.NODE_ENV === 'production' ? { message } : { message, resetLink, token };
+  @Post('password/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyToken(@Body() dto: { token: string }) {
+    return this.verifyResetTokenUseCase.execute(dto.token);
   }
 
   @Post('password/reset')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    const tokenHash = this.sha256(dto.token);
-    const user = await this.userRepository.createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.resetPasswordTokenHash = :tokenHash', { tokenHash })
-      .getOne();
-
-    if (!user || !user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()) {
-      throw new UnauthorizedException('Reset token is invalid or expired');
-    }
-
-    user.password = await this.hashingService.hash(dto.newPassword);
-    user.resetPasswordTokenHash = null as any;
-    user.resetPasswordExpiresAt = null as any;
-    user.tokenVersion += 1;
-    user.lastPasswordChangeAt = new Date();
-    await this.userRepository.save(user);
-    await this.rememberTokenRepository.delete({ user: { id: user.id } as any });
-
-    return { message: 'Password has been reset successfully.' };
+    await this.resetPasswordUseCase.execute(dto.token, dto.newPassword);
+    return { message: 'Password has been reset successfully. Please login with your new password.' };
   }
 
   @UseGuards(JwtAuthGuard)

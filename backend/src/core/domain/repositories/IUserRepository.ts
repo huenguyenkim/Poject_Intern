@@ -8,5 +8,6 @@ export abstract class IUserRepository {
   abstract findByEmail(email: string): Promise<User | null>;
   abstract create(user: Partial<User>): Promise<User>;
   abstract update(id: number, user: Partial<User>): Promise<User>;
+  abstract findByResetToken(tokenHash: string): Promise<User | null>;
   abstract delete(id: number): Promise<void>;
 }

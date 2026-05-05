@@ -128,46 +128,57 @@ const Checkout = () => {
   return (
     <PageTransition>
       <div className="bg-surface_dim min-h-screen">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-16">
           {currentStep !== 2 && (
-            <header className="mb-12">
-              <h1 className="text-5xl font-black text-primary mb-4 uppercase tracking-tight">{t('header.checkout')}</h1>
-              <p className="text-on_surface_variant font-bold text-lg mb-12">{t('checkout.subtitle', 'Get ready for your delicious delivery.')}</p>
+            <header className="mb-8 sm:mb-12">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-primary mb-2 sm:mb-4 uppercase tracking-tight leading-tight">{t('cart.checkout')}</h1>
+              <p className="text-on_surface_variant font-bold text-sm sm:text-lg mb-8 sm:mb-12">{t('checkout.subtitle', 'Get ready for your delicious delivery.')}</p>
               <div className="max-w-2xl">
-                <Steps current={currentStep} items={steps} className="candy-steps" />
+                <Steps 
+                  current={currentStep} 
+                  items={steps} 
+                  className="candy-steps" 
+                  size="small"
+                  responsive={true}
+                />
               </div>
             </header>
           )}
 
-          <div className="flex flex-col lg:flex-row gap-16 items-start">
-            <div className="lg:w-[62%] w-full space-y-10">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
+            <div className="lg:w-[62%] w-full space-y-6 sm:space-y-10">
               {currentStep === 0 && (
-                <div className="bg-white rounded-[40px] p-12 shadow-2xl border border-surface_container">
-                  <div className="flex items-center gap-5 mb-10">
-                    <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                      <Truck size={28} strokeWidth={2.5} />
+                <div className="bg-white rounded-[32px] sm:rounded-[40px] p-6 sm:p-12 shadow-2xl border border-surface_container">
+                  <div className="flex items-center gap-4 sm:gap-5 mb-8 sm:mb-10">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center text-primary">
+                      <Truck size={20} className="sm:size-7" strokeWidth={2.5} />
                     </div>
-                    <h2 className="text-3xl font-black text-on_surface uppercase tracking-tight">{t('checkout.shipping_info', 'Shipping Info')}</h2>
+                    <h2 className="text-xl sm:text-3xl font-black text-on_surface uppercase tracking-tight">{t('checkout.shipping_info', 'Shipping Info')}</h2>
                   </div>
 
-                  <Form layout="vertical" onFinish={handleSubmit(onShippingSubmit)} className="space-y-2">
-                    <div className="space-y-6">
+                  <Form layout="vertical" onFinish={handleSubmit(onShippingSubmit)} className="space-y-1 sm:space-y-2">
+                    <div className="space-y-4 sm:space-y-6">
                       <Controller
                         name="fullName"
                         control={control}
                         render={({ field }) => (
-                          <Form.Item label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.full_name', 'Full Name')}</span>} validateStatus={errors.fullName ? 'error' : ''} help={errors.fullName?.message}>
-                            <AntInput {...field} prefix={<User size={18} className="mr-2" />} placeholder="Charlie Bucket" className="!bg-surface_dim !border-none !rounded-2xl !py-4 !px-6 !font-bold" />
+                          <Form.Item 
+                            label={<span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.full_name', 'Full Name')}</span>} 
+                            validateStatus={errors.fullName ? 'error' : ''} 
+                            help={errors.fullName?.message}
+                            className="!mb-0"
+                          >
+                            <AntInput {...field} prefix={<User size={16} className="mr-2 opacity-50" />} placeholder="Charlie Bucket" className="!bg-surface_dim !border-none !rounded-xl sm:!rounded-2xl !py-3 sm:!py-4 !px-4 sm:!px-6 !font-bold !text-sm" />
                           </Form.Item>
                         )}
                       />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <Controller
                           name="phone"
                           control={control}
                           render={({ field }) => (
-                            <Form.Item label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('profile.phone', 'Phone Number')}</span>} validateStatus={errors.phone ? 'error' : ''} help={errors.phone?.message}>
-                              <AntInput {...field} prefix={<Phone size={18} className="mr-2" />} placeholder="+1 (555) 000-0000" className="!bg-surface_dim !border-none !rounded-2xl !py-4 !px-6 !font-bold" />
+                            <Form.Item label={<span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('profile.phone', 'Phone Number')}</span>} validateStatus={errors.phone ? 'error' : ''} help={errors.phone?.message} className="!mb-0">
+                              <AntInput {...field} prefix={<Phone size={16} className="mr-2 opacity-50" />} placeholder="+1 (555) 000-0000" className="!bg-surface_dim !border-none !rounded-xl sm:!rounded-2xl !py-3 sm:!py-4 !px-4 sm:!px-6 !font-bold !text-sm" />
                             </Form.Item>
                           )}
                         />
@@ -175,8 +186,8 @@ const Checkout = () => {
                           name="email"
                           control={control}
                           render={({ field }) => (
-                            <Form.Item label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('profile.email', 'Email Address')}</span>} validateStatus={errors.email ? 'error' : ''} help={errors.email?.message}>
-                              <AntInput {...field} prefix={<Mail size={18} className="mr-2" />} placeholder="hello@candyshop.com" className="!bg-surface_dim !border-none !rounded-2xl !py-4 !px-6 !font-bold" />
+                            <Form.Item label={<span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('profile.email', 'Email Address')}</span>} validateStatus={errors.email ? 'error' : ''} help={errors.email?.message} className="!mb-0">
+                              <AntInput {...field} prefix={<Mail size={16} className="mr-2 opacity-50" />} placeholder="hello@candyshop.com" className="!bg-surface_dim !border-none !rounded-xl sm:!rounded-2xl !py-3 sm:!py-4 !px-4 sm:!px-6 !font-bold !text-sm" />
                             </Form.Item>
                           )}
                         />
@@ -185,18 +196,18 @@ const Checkout = () => {
                         name="address"
                         control={control}
                         render={({ field }) => (
-                          <Form.Item label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.address', 'Street Address')}</span>} validateStatus={errors.address ? 'error' : ''} help={errors.address?.message}>
-                            <AntInput {...field} prefix={<MapPin size={18} className="mr-2" />} placeholder="123 Lollipop Lane" className="!bg-surface_dim !border-none !rounded-2xl !py-4 !px-6 !font-bold" />
+                          <Form.Item label={<span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.address', 'Street Address')}</span>} validateStatus={errors.address ? 'error' : ''} help={errors.address?.message} className="!mb-0">
+                            <AntInput {...field} prefix={<MapPin size={16} className="mr-2 opacity-50" />} placeholder="123 Lollipop Lane" className="!bg-surface_dim !border-none !rounded-xl sm:!rounded-2xl !py-3 sm:!py-4 !px-4 sm:!px-6 !font-bold !text-sm" />
                           </Form.Item>
                         )}
                       />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <Controller
                           name="city"
                           control={control}
                           render={({ field }) => (
-                            <Form.Item label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.city', 'City')}</span>} validateStatus={errors.city ? 'error' : ''} help={errors.city?.message}>
-                              <AntInput {...field} prefix={<Building size={18} className="mr-2" />} placeholder="Sweetwater" className="!bg-surface_dim !border-none !rounded-2xl !py-4 !px-6 !font-bold" />
+                            <Form.Item label={<span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.city', 'City')}</span>} validateStatus={errors.city ? 'error' : ''} help={errors.city?.message} className="!mb-0">
+                              <AntInput {...field} prefix={<Building size={16} className="mr-2 opacity-50" />} placeholder="Sweetwater" className="!bg-surface_dim !border-none !rounded-xl sm:!rounded-2xl !py-3 sm:!py-4 !px-4 sm:!px-6 !font-bold !text-sm" />
                             </Form.Item>
                           )}
                         />
@@ -204,8 +215,8 @@ const Checkout = () => {
                           name="postalCode"
                           control={control}
                           render={({ field }) => (
-                            <Form.Item label={<span className="text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.postal_code', 'Postal Code')}</span>} validateStatus={errors.postalCode ? 'error' : ''} help={errors.postalCode?.message}>
-                              <AntInput {...field} prefix={<Navigation size={18} className="mr-2" />} placeholder="54321" className="!bg-surface_dim !border-none !rounded-2xl !py-4 !px-6 !font-bold" />
+                            <Form.Item label={<span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-on_surface_variant">{t('checkout.postal_code', 'Postal Code')}</span>} validateStatus={errors.postalCode ? 'error' : ''} help={errors.postalCode?.message} className="!mb-0">
+                              <AntInput {...field} prefix={<Navigation size={16} className="mr-2 opacity-50" />} placeholder="54321" className="!bg-surface_dim !border-none !rounded-xl sm:!rounded-2xl !py-3 sm:!py-4 !px-4 sm:!px-6 !font-bold !text-sm" />
                             </Form.Item>
                           )}
                         />
@@ -216,35 +227,35 @@ const Checkout = () => {
               )}
 
               {currentStep === 1 && (
-                <div className="bg-white rounded-[40px] p-12 shadow-2xl border border-surface_container">
-                  <div className="flex items-center gap-5 mb-10">
-                    <div className="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
-                      <CreditCard size={28} strokeWidth={2.5} />
+                <div className="bg-white rounded-[32px] sm:rounded-[40px] p-6 sm:p-12 shadow-2xl border border-surface_container">
+                  <div className="flex items-center gap-4 sm:gap-5 mb-8 sm:mb-10">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-secondary/10 rounded-xl sm:rounded-2xl flex items-center justify-center text-secondary">
+                      <CreditCard size={20} className="sm:size-7" strokeWidth={2.5} />
                     </div>
-                    <h2 className="text-3xl font-black text-on_surface uppercase tracking-tight">{t('checkout.payment_method', 'Payment Method')}</h2>
+                    <h2 className="text-xl sm:text-3xl font-black text-on_surface uppercase tracking-tight">{t('checkout.payment_method', 'Payment Method')}</h2>
                   </div>
 
-                  <Radio.Group value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full flex flex-col gap-6">
-                    <label className={`cursor-pointer p-8 rounded-[32px] border-[3.5px] transition-all flex items-center gap-6 ${paymentMethod === 'COD' ? 'border-primary bg-primary/5 shadow-xl' : 'border-surface_container bg-surface_dim hover:border-primary/30'}`}>
+                  <Radio.Group value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full flex flex-col gap-4 sm:gap-6">
+                    <label className={`cursor-pointer p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] border-[3px] sm:border-[3.5px] transition-all flex items-center gap-4 sm:gap-6 ${paymentMethod === 'COD' ? 'border-primary bg-primary/5 shadow-xl' : 'border-surface_container bg-surface_dim hover:border-primary/30'}`}>
                       <Radio value="COD" className="candy-radio" />
                       <div className="flex-grow">
-                        <p className="font-black text-on_surface text-lg">{t('checkout.cod', 'Cash on Delivery')}</p>
-                        <p className="text-sm font-bold text-on_surface_variant">{t('checkout.cod_desc', 'Pay when your candy arrives.')}</p>
+                        <p className="font-black text-on_surface text-base sm:text-lg">{t('checkout.cod', 'Cash on Delivery')}</p>
+                        <p className="text-xs sm:text-sm font-bold text-on_surface_variant leading-tight">{t('checkout.cod_desc', 'Pay when your candy arrives.')}</p>
                       </div>
-                      <span className="text-4xl">💵</span>
+                      <span className="text-2xl sm:text-4xl shrink-0">💵</span>
                     </label>
-                    <label className={`cursor-pointer p-8 rounded-[32px] border-[3.5px] transition-all flex items-center gap-6 ${paymentMethod === 'CARD' ? 'border-primary bg-primary/5 shadow-xl' : 'border-surface_container bg-surface_dim hover:border-primary/30'}`}>
+                    <label className={`cursor-pointer p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] border-[3px] sm:border-[3.5px] transition-all flex items-center gap-4 sm:gap-6 ${paymentMethod === 'CARD' ? 'border-primary bg-primary/5 shadow-xl' : 'border-surface_container bg-surface_dim hover:border-primary/30'}`}>
                       <Radio value="CARD" className="candy-radio" />
                       <div className="flex-grow">
-                        <p className="font-black text-on_surface text-lg">{t('checkout.card', 'Credit / Debit Card')}</p>
-                        <p className="text-sm font-bold text-on_surface_variant">{t('checkout.card_desc', 'Instant, secure payment.')}</p>
+                        <p className="font-black text-on_surface text-base sm:text-lg">{t('checkout.card', 'Credit / Debit Card')}</p>
+                        <p className="text-xs sm:text-sm font-bold text-on_surface_variant leading-tight">{t('checkout.card_desc', 'Instant, secure payment.')}</p>
                       </div>
-                      <span className="text-4xl">💳</span>
+                      <span className="text-2xl sm:text-4xl shrink-0">💳</span>
                     </label>
                   </Radio.Group>
 
-                  <div className="mt-12">
-                    <Button variant="ghost" onClick={() => setCurrentStep(0)} className="!text-on_surface_variant !font-black !uppercase tracking-widest gap-2 flex items-center"><ArrowLeft size={18} /> {t('checkout.back', 'Back')}</Button>
+                  <div className="mt-8 sm:mt-12">
+                    <Button variant="ghost" onClick={() => setCurrentStep(0)} className="!text-on_surface_variant !font-black !uppercase tracking-widest gap-2 flex items-center text-xs sm:text-sm"><ArrowLeft size={16} /> {t('checkout.back', 'Back')}</Button>
                   </div>
                 </div>
               )}
@@ -253,27 +264,27 @@ const Checkout = () => {
                 <div className="w-full animate-in fade-in slide-in-from-bottom-8">
                   <Result
                     status="success"
-                    title={<h2 className="text-5xl font-black uppercase tracking-tight mt-4">{t('checkout.success_title', 'Order Confirmed!')}</h2>}
-                    subTitle={<p className="text-lg font-bold text-on_surface_variant max-w-md mx-auto mt-4">{t('checkout.success_msg', "Packed with love. We'll notify you soon!")}</p>}
-                    className="bg-white rounded-[40px] border shadow-2xl p-16"
+                    title={<h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight mt-4 leading-tight">{t('checkout.success_title', 'Order Confirmed!')}</h2>}
+                    subTitle={<p className="text-base sm:text-lg font-bold text-on_surface_variant max-w-md mx-auto mt-2 sm:mt-4">{t('checkout.success_msg', "Packed with love. We'll notify you soon!")}</p>}
+                    className="bg-white rounded-[32px] sm:rounded-[40px] border shadow-2xl p-8 sm:p-16"
                     extra={[
-                      <div key="actions" className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                        <Link to={`/${lang}/profile/orders`} key="orders"><Button variant="primary" className="h-16 px-10 rounded-2xl font-black uppercase tracking-widest gap-3"><ShoppingBag size={20} /> {t('orders.title', 'View Orders')}</Button></Link>
-                        <Link to={`/${lang}/shop`} key="shop"><Button variant="surface" className="h-16 px-10 rounded-2xl font-black uppercase tracking-widest">🍭 {t('cart.start_shopping', 'Shop More')}</Button></Link>
+                      <div key="actions" className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-6 sm:mt-8">
+                        <Link to={`/${lang}/profile/orders`} key="orders" className="w-full sm:w-auto"><Button variant="primary" className="h-14 sm:h-16 w-full sm:px-10 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest gap-3 text-xs sm:text-base"><ShoppingBag size={18} className="sm:size-5" /> {t('orders.title', 'View Orders')}</Button></Link>
+                        <Link to={`/${lang}/shop`} key="shop" className="w-full sm:w-auto"><Button variant="surface" className="h-14 sm:h-16 w-full sm:px-10 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-xs sm:text-base">🍭 {t('cart.start_shopping', 'Shop More')}</Button></Link>
                       </div>
                     ]}
                   >
-                    <div className="mt-12 space-y-6">
-                      <Divider className="!m-0"><span className="text-[10px] font-black text-on_surface_variant/40 uppercase tracking-[0.4em]">{t('checkout.order_summary', 'Order Summary')}</span></Divider>
-                      <div className="bg-surface_dim/50 rounded-3xl p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3 text-primary"><MapPin size={18} strokeWidth={3} /><span className="text-[11px] font-black uppercase tracking-widest">{t('checkout.shipping_info', 'Delivery Address')}</span></div>
-                          <p className="font-bold text-on_surface leading-relaxed">{shippingInfo.fullName}<br />{shippingInfo.address}<br />{shippingInfo.city}, {shippingInfo.postalCode}</p>
+                    <div className="mt-8 sm:mt-12 space-y-4 sm:space-y-6">
+                      <Divider className="!m-0"><span className="text-[9px] sm:text-[10px] font-black text-on_surface_variant/40 uppercase tracking-[0.4em]">{t('checkout.order_summary', 'Order Summary')}</span></Divider>
+                      <div className="bg-surface_dim/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                        <div className="space-y-3 sm:space-y-4 text-center md:text-left">
+                          <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 text-primary"><MapPin size={16} className="sm:size-18" strokeWidth={3} /><span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{t('checkout.shipping_info', 'Delivery Address')}</span></div>
+                          <p className="font-bold text-on_surface text-sm sm:text-base leading-relaxed">{shippingInfo.fullName}<br />{shippingInfo.address}<br />{shippingInfo.city}, {shippingInfo.postalCode}</p>
                         </div>
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3 text-secondary"><CreditCard size={18} strokeWidth={3} /><span className="text-[11px] font-black uppercase tracking-widest">{t('checkout.payment_method', 'Payment Details')}</span></div>
-                          <p className="font-bold text-on_surface uppercase tracking-tight">{paymentMethod === 'COD' ? t('checkout.cod', 'Cash on Delivery') : t('checkout.card', 'Credit / Debit Card')}</p>
-                          <Badge variant="surface" className="!bg-emerald-500/10 !text-emerald-500 !border-none !px-3 !py-1 !text-[9px] !font-black uppercase tracking-widest">{t('checkout.secure', 'Transaction Secure')}</Badge>
+                        <div className="space-y-3 sm:space-y-4 text-center md:text-left">
+                          <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 text-secondary"><CreditCard size={16} className="sm:size-18" strokeWidth={3} /><span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{t('checkout.payment_method', 'Payment Details')}</span></div>
+                          <p className="font-bold text-on_surface uppercase tracking-tight text-sm sm:text-base">{paymentMethod === 'COD' ? t('checkout.cod', 'Cash on Delivery') : t('checkout.card', 'Credit / Debit Card')}</p>
+                          <Badge variant="surface" className="!bg-emerald-500/10 !text-emerald-500 !border-none !px-3 !py-1 !text-[8px] sm:!text-[9px] !font-black uppercase tracking-widest">{t('checkout.secure', 'Transaction Secure')}</Badge>
                         </div>
                       </div>
                     </div>
@@ -283,46 +294,50 @@ const Checkout = () => {
             </div>
 
             {currentStep !== 2 && (
-              <div className="lg:w-[38%] w-full sticky top-32 space-y-6">
-                <div className="bg-white rounded-[40px] shadow-2xl border border-surface_container overflow-hidden">
-                  <div className="bg-primary px-10 py-8 flex items-center justify-between text-on_primary">
-                    <div className="flex items-center gap-4"><ShoppingBag size={24} strokeWidth={3} /><h3 className="text-xl font-black uppercase tracking-widest">{t('checkout.summary', 'Summary')}</h3></div>
-                    <Badge variant="surface" className="!bg-white/20 !text-on_primary !border-none !px-4 !py-1.5 !rounded-full !text-xs !font-black">{t('cart.items_count', { count: cartItems.length })}</Badge>
+              <div className="lg:w-[38%] w-full lg:sticky lg:top-32 space-y-6">
+                <div className="bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl border border-surface_container overflow-hidden">
+                  <div className="bg-primary px-6 sm:px-10 py-6 sm:py-8 flex items-center justify-between text-on_primary">
+                    <div className="flex items-center gap-3 sm:gap-4"><ShoppingBag size={20} className="sm:size-6" strokeWidth={3} /><h3 className="text-base sm:text-xl font-black uppercase tracking-widest">{t('checkout.summary', 'Summary')}</h3></div>
+                    <Badge variant="surface" className="!bg-white/20 !text-on_primary !border-none !px-3 sm:!px-4 !py-1 sm:!py-1.5 !rounded-full !text-[10px] sm:!text-xs !font-black">{t('cart.items_count', { count: cartItems.length })}</Badge>
                   </div>
 
-                  <div className="p-10">
-                    <div className="space-y-8 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="p-6 sm:p-10">
+                    <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-10 max-h-[250px] sm:max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                       {cartItems.map(item => (
-                        <div key={item.id} className="flex items-center gap-5 group">
-                          <div className="w-16 h-16 bg-white rounded-[20px] overflow-hidden flex-shrink-0 border p-1 group-hover:scale-110 transition-transform">
-                            {item.image && <img src={item.image} className="w-full h-full object-cover rounded-xl" alt={item.title} />}
+                        <div key={item.id} className="flex items-center gap-4 sm:gap-5 group">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-[20px] overflow-hidden flex-shrink-0 border p-1 group-hover:scale-110 transition-transform">
+                            {item.image && <img src={item.image} className="w-full h-full object-cover rounded-lg sm:rounded-xl" alt={item.title} />}
                           </div>
                           <div className="flex-grow">
-                            <h4 className="font-black text-on_surface text-[15px] leading-tight mb-1">{item.title}</h4>
-                            <p className="text-on_surface_variant font-bold text-[11px] uppercase tracking-wider">{t('cart.quantity', 'QTY')}: {item.quantity}</p>
+                            <h4 className="font-black text-on_surface text-sm sm:text-[15px] leading-tight mb-0.5 sm:mb-1">{item.title}</h4>
+                            <p className="text-on_surface_variant font-bold text-[10px] sm:text-[11px] uppercase tracking-wider">{t('cart.quantity', 'QTY')}: {item.quantity}</p>
                           </div>
-                          <span className="font-black text-primary text-sm">${(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="font-black text-primary text-xs sm:text-sm">${(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
-                    <Divider className="!my-8" />
-                    <div className="space-y-5 mb-10 font-bold text-sm">
+                    <Divider className="!my-6 sm:!my-8" />
+                    <div className="space-y-4 sm:space-y-5 mb-8 sm:mb-10 font-bold text-xs sm:text-sm">
                       <div className="flex justify-between items-center"><span className="text-on_surface_variant">{t('cart.subtotal', 'Subtotal')}</span><span className="text-on_surface">${cartTotal.toFixed(2)}</span></div>
-                      <div className="flex justify-between items-center"><span className="text-on_surface_variant text-xs">{t('cart.tax', 'Sales Tax')} (8%)</span><span className="text-on_surface">${(cartTotal * 0.08).toFixed(2)}</span></div>
-                      <div className="flex justify-between items-center"><span className="text-on_surface_variant">{t('cart.shipping', 'Shipping')}</span><span className="text-emerald-500 uppercase font-black text-[10px] tracking-widest">{t('cart.free', 'Free')}</span></div>
+                      <div className="flex justify-between items-center"><span className="text-on_surface_variant text-[11px] sm:text-xs">{t('cart.tax', 'Sales Tax')} (8%)</span><span className="text-on_surface">${(cartTotal * 0.08).toFixed(2)}</span></div>
+                      <div className="flex justify-between items-center"><span className="text-on_surface_variant">{t('cart.shipping', 'Shipping')}</span><span className="text-emerald-500 uppercase font-black text-[9px] sm:text-[10px] tracking-widest">{t('cart.free', 'Free')}</span></div>
                     </div>
-                    <div className="flex justify-between items-end mb-10 border-t-2 border-surface_dim pt-8">
-                      <span className="text-xl font-black text-on_surface uppercase tracking-tight">{t('common.total', 'Total')}</span>
-                      <span className="text-5xl font-black text-primary tracking-tighter leading-none">${(cartTotal + (cartTotal * 0.08)).toFixed(2)}</span>
+                    <div className="flex justify-between items-end mb-8 sm:mb-10 border-t-2 border-surface_dim pt-6 sm:pt-8">
+                      <span className="text-lg sm:text-xl font-black text-on_surface uppercase tracking-tight">{t('common.total', 'Total')}</span>
+                      <span className="text-3xl sm:text-5xl font-black text-primary tracking-tighter leading-none">${(cartTotal + (cartTotal * 0.08)).toFixed(2)}</span>
                     </div>
 
-                    <Button onClick={currentStep === 0 ? handleSubmit(onShippingSubmit) : placeOrder} isLoading={orderStatus === 'loading'} className="w-full h-[72px] rounded-[24px] !text-xl !font-black uppercase tracking-widest gap-4 group shadow-xl shadow-primary/20">
-                      {currentStep === 0 ? t('checkout.payment_method', 'Payment Method') : t('checkout.confirm_order', 'Confirm Order')}
-                      <ArrowRight size={24} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
+                    <Button 
+                      onClick={currentStep === 0 ? handleSubmit(onShippingSubmit) : placeOrder} 
+                      isLoading={orderStatus === 'loading'} 
+                      className="w-full h-14 sm:h-[72px] rounded-2xl sm:rounded-[24px] text-xs sm:text-lg md:text-xl font-black uppercase tracking-widest gap-2 sm:gap-4 group shadow-xl shadow-primary/20 flex items-center justify-center px-4"
+                    >
+                      <span className="truncate">{currentStep === 0 ? t('checkout.payment_method', 'Payment Method') : t('checkout.confirm_order', 'Confirm Order')}</span>
+                      <ArrowRight size={18} strokeWidth={3} className="sm:size-6 group-hover:translate-x-1 transition-transform shrink-0" />
                     </Button>
-                    <div className="mt-8 flex items-center justify-center gap-2 opacity-40">
-                      <Lock size={14} strokeWidth={3} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{t('checkout.secure', 'Secure Checkout')}</span>
+                    <div className="mt-6 sm:mt-8 flex items-center justify-center gap-2 opacity-40">
+                      <Lock size={12} className="sm:size-14" strokeWidth={3} />
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">{t('checkout.secure', 'Secure Checkout')}</span>
                     </div>
                   </div>
                 </div>

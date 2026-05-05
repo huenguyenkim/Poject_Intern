@@ -51,7 +51,13 @@ async function runAdminTests() {
     const createProdReq = await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productName: 'TEST_PRODUCT', price: 15.5, categoryId: catId })
+      body: JSON.stringify({ 
+        productName: 'TEST_PRODUCT', 
+        price: 15.5, 
+        categoryId: catId,
+        stock: 50,
+        image: '/images/test-product.png'
+      })
     });
     assert(createProdReq.status === 201, `POST /products trả về HTTP Status ${createProdReq.status} (Created)`);
     const createdProd = await createProdReq.json();
@@ -65,6 +71,7 @@ async function runAdminTests() {
       body: JSON.stringify({ productName: 'TEST_EDIT', price: 9.99 })
     });
     const updatedProd = await updateProdReq.json();
+    console.log('DEBUG updatedProd:', updatedProd);
     // Validate value persistence (JS floats!)
     assert(updatedProd.price === "9.99" || Number(updatedProd.price) === 9.99, 'Endpoint đã cập nhật giá sản phẩm thành công.');
     

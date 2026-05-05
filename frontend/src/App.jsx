@@ -47,6 +47,7 @@ import Placeholder from './components/ui/Placeholder';
 import TaskDashboard from './pages/admin/TaskDashboard';
 import StaffLayout from './components/layout/StaffLayout';
 import MyTasks from './pages/staff/MyTasks';
+import NotificationCenter from './pages/shared/NotificationCenter';
 
 const SUPPORTED_LANGS = ['vi', 'en'];
 
@@ -121,6 +122,7 @@ const AppContent = () => {
               <Route path="checkout" element={<Checkout />} />
               <Route path="auth" element={<Auth />} />
               <Route path="contact" element={<Contact />} />
+              <Route path="notifications" element={<ProtectedRoute><NotificationCenter /></ProtectedRoute>} />
 
               {/* User Profile Routes */}
               <Route path="profile" element={<ProtectedRoute role="customer"><UserLayout /></ProtectedRoute>}>
@@ -142,6 +144,7 @@ const AppContent = () => {
               <Route path="orders" element={<OrderMgmt />} />
               <Route path="orders/:id" element={<OrderMgmt />} />
               <Route path="banners" element={<BannerMgmt />} />
+              <Route path="notifications" element={<NotificationCenter />} />
               <Route path="*" element={<Placeholder title="Admin Page" />} />
             </Route>
 
