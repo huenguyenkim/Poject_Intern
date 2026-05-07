@@ -25,6 +25,9 @@ export class Order {
   @Column({ name: 'payment_method', type: 'simple-enum', enum: PaymentMethod, default: PaymentMethod.COD })
   paymentMethod: PaymentMethod;
 
+  @Column({ name: 'shipping_method', default: 'STANDARD' })
+  shippingMethod: string;
+
   @Column('decimal', { precision: 12, scale: 2, name: 'total_amount' })
   totalAmount: number;
 

@@ -1,21 +1,13 @@
 import React from 'react';
 import { Dropdown, Spin } from 'antd';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, Settings, User, LogOut, ShieldCheck, Package, FileText, Users } from 'lucide-react';
+import { Search, Settings, User, LogOut, ShieldCheck, Package, FileText, Users, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { logout } from '../../store/authSlice';
 import { logoutUserThunk } from '../../store/authThunks';
 import NotificationBell from '../ui/NotificationBell';
-
-const SECTION_LABELS = {
-  admin: 'Dashboard',
-  tasks: 'Tasks',
-  products: 'Products',
-  categories: 'Categories',
-  orders: 'Orders',
-  banners: 'Banners',
-};
 
 const resultConfig = {
   users: { title: 'Users', icon: Users },
@@ -23,17 +15,30 @@ const resultConfig = {
   blogs: { title: 'Blogs', icon: FileText },
 };
 
+import LanguageSwitcher from '../navigation/LanguageSwitcher';
+
 const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
+  const { t, i18n } = useTranslation();
   const inputRef = React.useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { lang } = useParams();
   const { user } = useSelector((state) => state.auth);
 
   const [query, setQuery] = React.useState('');
   const [results, setResults] = React.useState({ users: [], orders: [], blogs: [] });
   const [isSearching, setIsSearching] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+
+  const SECTION_LABELS = {
+    admin: t('admin.dashboard'),
+    tasks: t('admin.tasks'),
+    products: t('admin.products'),
+    categories: t('admin.categories'),
+    orders: t('admin.orders'),
+    banners: t('admin.banners'),
+  };
 
   React.useEffect(() => {
     const handleKeyDown = (event) => {
@@ -59,7 +64,7 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
     setIsSearching(true);
     const timeoutId = window.setTimeout(async () => {
       try {
-        const response = await apiClient.get('/api/search', { params: { q: term } });
+        const response = await apiClient.get('/search', { params: { q: term } });
         setResults(response.data);
       } catch {
         setResults({ users: [], orders: [], blogs: [] });
@@ -73,16 +78,19 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
 
   const breadcrumbs = React.useMemo(() => {
     const parts = location.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'admin') return [];
+    // Remove the language part if present
+    const cleanParts = parts[0] === lang ? parts.slice(1) : parts;
+    
+    if (cleanParts[0] !== 'admin') return [];
 
-    return parts.map((part, index) => {
-      const path = `/${parts.slice(0, index + 1).join('/')}`;
+    return cleanParts.map((part, index) => {
+      const path = `/${lang}/${cleanParts.slice(0, index + 1).join('/')}`;
       return {
         label: SECTION_LABELS[part] || part.replace(/-/g, ' '),
         path,
       };
     });
-  }, [location.pathname]);
+  }, [location.pathname, t, i18n.language, lang]);
 
   const groupedResults = Object.entries(results).filter(([, items]) => items?.length);
   const fullName = user?.fullName || user?.name || 'Admin User';
@@ -94,7 +102,7 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
     } catch {
       dispatch(logout());
     } finally {
-      navigate('/admin/login', { replace: true });
+      navigate(`/${lang}/admin/login`, { replace: true });
     }
   };
 
@@ -102,7 +110,7 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
     {
       key: 'logout',
       icon: <LogOut size={16} />,
-      label: 'Logout',
+      label: t('header.logout'),
       danger: true,
       onClick: handleLogout,
     },
@@ -123,7 +131,7 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
                 setQuery(event.target.value);
                 setIsSearchOpen(true);
               }}
-              placeholder={placeholder}
+              placeholder={t('header.search_placeholder')}
               className="w-full bg-surface_dim/50 py-2.5 pl-12 pr-20 rounded-2xl outline-none border border-transparent focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-lg bg-white px-2 py-1 text-[10px] font-black text-on_surface_variant shadow-sm">
@@ -136,10 +144,10 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
                 <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-[24px] border border-surface_container bg-white shadow-2xl">
                   {isSearching ? (
                     <div className="flex items-center justify-center gap-3 p-6 text-sm font-bold text-on_surface_variant">
-                      <Spin size="small" /> Searching
+                      <Spin size="small" /> {t('common.loading')}
                     </div>
                   ) : groupedResults.length === 0 ? (
-                    <div className="p-6 text-sm font-bold text-on_surface_variant">No matching results</div>
+                    <div className="p-6 text-sm font-bold text-on_surface_variant">{t('catalog.empty')}</div>
                   ) : (
                     <div className="max-h-[420px] overflow-y-auto py-3">
                       {groupedResults.map(([group, items]) => {
@@ -198,8 +206,9 @@ const TopUtilityBar = ({ placeholder = 'Search everything...' }) => {
         </div>
 
         <div className="flex items-center justify-end gap-5">
+          <LanguageSwitcher />
+          
           <NotificationBell />
-
 
           <div className="w-px h-8 bg-surface_container" />
 

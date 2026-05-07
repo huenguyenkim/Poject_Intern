@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import Hero from '../../components/home/Hero';
+import HeroSlider from '../../components/home/HeroSlider';
 import HomeCategories from '../../components/home/HomeCategories';
 import FeaturedProducts from '../../components/home/FeaturedProducts';
 import FreshArrivals from '../../components/home/FreshArrivals';
@@ -17,8 +17,16 @@ const StorefrontHome = () => {
   }
 
   const activeBanners = [...banners]
-    .filter(b => b.tag === 'ACTIVE' || b.isActive)
-    .sort((a, b) => (b.priority || b.id || 0) - (a.priority || a.id || 0));
+    .filter(b => b.isActive)
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+  // Additional scheduling filter
+  const now = new Date();
+  const scheduledBanners = activeBanners.filter(b => {
+    const startOk = !b.startDate || new Date(b.startDate) <= now;
+    const endOk = !b.endDate || new Date(b.endDate) >= now;
+    return startOk && endOk;
+  });
 
   const parentCategories = categories;
   const featured = products.slice(0, 8);
@@ -26,12 +34,12 @@ const StorefrontHome = () => {
 
   return (
     <PageTransition>
-      <div className="pb-16 overflow-hidden max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+      <div className="pb-16 overflow-hidden max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-20">
         <SEO 
           title={t('home.seo_title', 'Candy Shop - Premium Gummy & Chocolate')}
           description={t('home.seo_desc', 'Discover our collection of handmade gummies and premium chocolates. Sweetness delivered to your door.')}
         />
-        <Hero activeBanners={activeBanners} />
+        <HeroSlider banners={scheduledBanners} />
         <HomeCategories categories={parentCategories} />
         <FeaturedProducts featured={featured} />
         <FreshArrivals newProducts={newProducts} />

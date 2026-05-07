@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation, Navigate, Link, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useTranslation } from 'react-i18next';
 import { 
   Candy, 
   Mail, 
@@ -15,6 +16,10 @@ import {
   Store,
   ShieldCheck,
   Zap,
+  RefreshCw,
+  X,
+  Timer,
+  Globe
 } from 'lucide-react';
 import { loginUserThunk, logoutUserThunk, requestPasswordResetThunk, resetPasswordThunk } from '../../store/authThunks';
 import { showSuccessToast, showErrorToast } from '../../utils/toastUtils';
@@ -22,53 +27,44 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 
 // Validation Schema
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid admin email'),
-  password: z.string().min(1, 'Secret key is required'),
+const loginSchema = (t) => z.object({
+  email: z.string().email(t('admin_login.invalid_email', 'Please enter a valid admin email')),
+  password: z.string().min(1, t('admin_login.password_required', 'Secret key is required')),
   rememberMe: z.boolean().optional(),
 });
 
-/**
- * AdminLogin: Redesigned premium split-screen login page.
- * Optimized with react-hook-form and zod validation.
- */
+import LanguageSwitcher from '../../components/navigation/LanguageSwitcher';
+
 const AdminLogin = () => {
+  const { t } = useTranslation();
+  const { lang } = useParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [recoveryMode, setRecoveryMode] = useState(null);
   const [resetEmail, setResetEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
+  const [otpArray, setOtpArray] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
-  const [recoveryMessage, setRecoveryMessage] = useState('');
+  const [expiryTimer, setExpiryTimer] = useState(0);
+  const [resendTimer, setResendTimer] = useState(0);
+  
   const dispatch = useDispatch();
   const { user: currentUser, status } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
+  const otpRefs = useRef([]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema(t)),
     defaultValues: {
       email: '',
       password: '',
       rememberMe: false,
     },
   });
-
-  React.useEffect(() => {
-    const token = new URLSearchParams(location.search).get('resetToken');
-    if (token) {
-      setResetToken(token);
-      setRecoveryMode('reset');
-    }
-  }, [location.search]);
-
-  // Redirect if already logged in as admin
-  if (currentUser && currentUser.role === 'admin') {
-    return <Navigate to="/admin" replace />;
-  }
 
   const onSubmit = async (data) => {
     try {
@@ -78,46 +74,111 @@ const AdminLogin = () => {
         rememberMe: data.rememberMe,
       })).unwrap();
       
-      // Role filtering: Only allow admin or staff roles
       if (result.user.role !== 'admin' && result.user.role !== 'staff') {
-        // Log out immediately if role is not allowed
         await dispatch(logoutUserThunk());
-        showErrorToast('Unauthorized: Only administrators can enter this portal.');
+        showErrorToast(t('admin_login.unauthorized'));
         return;
       }
 
-      showSuccessToast('Admin Portal Access Granted 🔑');
-      navigate('/admin', { replace: true });
+      showSuccessToast(t('admin_login.granted'));
+      navigate(`/${lang}/admin`, { replace: true });
     } catch (err) {
-      showErrorToast(err || 'Invalid Admin Credentials');
+      showErrorToast(err || t('admin_login.invalid'));
+    }
+  };
+
+  // Dual Timer Effect
+  useEffect(() => {
+    let interval;
+    if (expiryTimer > 0 || resendTimer > 0) {
+      interval = setInterval(() => {
+        setExpiryTimer(prev => (prev > 0 ? prev - 1 : 0));
+        setResendTimer(prev => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [expiryTimer, resendTimer]);
+
+  const resetToken = otpArray.join('');
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otpArray];
+    newOtp[index] = value.substring(value.length - 1);
+    setOtpArray(newOtp);
+
+    if (value && index < 5) {
+      otpRefs.current[index + 1].focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpArray[index] && index > 0) {
+      otpRefs.current[index - 1].focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').trim().slice(0, 6).split('');
+    const newOtp = [...otpArray];
+    pasteData.forEach((char, i) => {
+      if (!isNaN(char)) newOtp[i] = char;
+    });
+    setOtpArray(newOtp);
+    if (pasteData.length > 0) {
+      const nextIndex = Math.min(pasteData.length, 5);
+      otpRefs.current[nextIndex].focus();
     }
   };
 
   const requestPasswordReset = async () => {
     try {
       const result = await dispatch(requestPasswordResetThunk(resetEmail)).unwrap();
-      setRecoveryMessage(result.resetLink ? `Dev reset link: ${result.resetLink}` : result.message);
-      if (result.token) {
-        setResetToken(result.token);
-        setRecoveryMode('reset');
-      }
-      showSuccessToast('Password reset request sent');
+      setRecoveryMode('reset');
+      setOtpArray(['', '', '', '', '', '']); // Clear OTP for security
+      setExpiryTimer(180); // 3 minutes total life
+      setResendTimer(60);   // 60 seconds cooldown for resend button
+      showSuccessToast(t('admin_login.check_email'));
     } catch (err) {
-      showErrorToast(err || 'Password reset request failed');
+      showErrorToast(err || t('common.error'));
     }
   };
 
   const resetPassword = async () => {
+    if (resetToken.length < 6) {
+      showErrorToast(t('admin_login.otp_label'));
+      return;
+    }
+    if (expiryTimer === 0) {
+      showErrorToast(t('admin_login.otp_expired'));
+      return;
+    }
     try {
-      const result = await dispatch(resetPasswordThunk({ token: resetToken, newPassword })).unwrap();
-      setRecoveryMessage(result.message);
+      await dispatch(resetPasswordThunk({ 
+        email: resetEmail, 
+        otp: resetToken, 
+        newPassword 
+      })).unwrap();
+      
+      showSuccessToast(t('profile.save_success'));
       setRecoveryMode(null);
       setNewPassword('');
-      showSuccessToast('Password reset successfully');
+      navigate(`/${lang}/admin`, { replace: true });
     } catch (err) {
-      showErrorToast(err || 'Password reset failed');
+      showErrorToast(err || t('common.error'));
     }
   };
+
+  if (currentUser && currentUser.role === 'admin') {
+    return <Navigate to={`/${lang}/admin`} replace />;
+  }
 
   return (
     <div className="min-h-screen flex bg-white font-sans overflow-hidden">
@@ -125,160 +186,229 @@ const AdminLogin = () => {
       {/* Left Side: Login Form */}
       <div className="w-full lg:w-[45%] flex flex-col justify-center px-10 md:px-20 lg:px-24 relative bg-[#fcf9fc]">
         
-        {/* Decorative Background Element */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-tertiary"></div>
         
         <div className="max-w-md w-full mx-auto space-y-12">
           
-          {/* Logo & Header */}
           <div className="space-y-6">
-            <Link to="/" className="inline-flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-primary rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center text-white transform group-hover:rotate-12 transition-transform">
-                <Candy size={26} strokeWidth={3} />
+            <div className="flex items-center justify-between">
+              <Link to={`/${lang}`} className="inline-flex items-center gap-3 group">
+                <div className="w-12 h-12 bg-primary rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center text-white transform group-hover:rotate-12 transition-transform">
+                  <Candy size={26} strokeWidth={3} />
+                </div>
+                <span className="text-2xl font-black text-on_surface tracking-tight uppercase italic">CandyAdmin</span>
+              </Link>
+              <div className="lg:hidden">
+                <LanguageSwitcher />
               </div>
-              <span className="text-2xl font-black text-on_surface tracking-tight uppercase italic">CandyAdmin</span>
-            </Link>
+            </div>
             
             <div className="space-y-2">
               <h1 className="text-5xl font-black text-on_surface tracking-tighter leading-tight">
-                Welcome to the <span className="text-primary">Sweet Admin</span>
+                {recoveryMode ? t('admin_login.recovery') : t('admin_login.welcome')} <span className="text-primary">{recoveryMode ? '' : t('admin_login.sweet_admin')}</span>
               </h1>
-              <p className="text-on_surface_variant font-bold text-lg opacity-60">Unlock the candy kingdom portal.</p>
+              <p className="text-on_surface_variant font-bold text-lg opacity-60">
+                {recoveryMode ? t('admin_login.recovery_tagline') : t('admin_login.tagline')}
+              </p>
             </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <Input 
-              label="Admin Email"
-              type="email" 
-              {...register('email')}
-              placeholder="admin@candyshop.com"
-              icon={Mail}
-              error={errors.email?.message}
-            />
-
-            <div className="relative">
+          {!recoveryMode ? (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <Input 
-                label="Secret Key"
-                type={showPassword ? "text" : "password"}
-                {...register('password')}
-                placeholder="••••••••••••"
-                icon={Lock}
-                error={errors.password?.message}
+                label={t('admin_login.email_label')}
+                type="email" 
+                {...register('email')}
+                placeholder={t('admin_login.email_placeholder')}
+                icon={Mail}
+                error={errors.email?.message}
               />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-6 top-[55px] -translate-y-1/2 text-on_surface_variant/40 hover:text-primary transition-colors z-10"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
 
-            <div className="flex items-center justify-between gap-4">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <span className="relative grid h-6 w-6 place-items-center rounded-lg border-2 border-surface_container bg-white transition-colors group-hover:border-primary">
-                  <input
-                    type="checkbox"
-                    {...register('rememberMe')}
-                    className="peer absolute inset-0 cursor-pointer opacity-0"
+              <div className="relative">
+                <Input 
+                  label={t('admin_login.password_label')}
+                  type={showPassword ? "text" : "password"}
+                  {...register('password')}
+                  placeholder={t('admin_login.password_placeholder')}
+                  icon={Lock}
+                  error={errors.password?.message}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-[55px] -translate-y-1/2 text-on_surface_variant/40 hover:text-primary transition-colors z-10"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <span className="relative grid h-6 w-6 place-items-center rounded-lg border-2 border-surface_container bg-white transition-colors group-hover:border-primary">
+                    <input
+                      type="checkbox"
+                      {...register('rememberMe')}
+                      className="peer absolute inset-0 cursor-pointer opacity-0"
+                    />
+                    <Check size={14} strokeWidth={4} className="text-primary opacity-0 transition-opacity peer-checked:opacity-100" />
+                  </span>
+                  <span className="text-sm font-bold text-on_surface_variant group-hover:text-on_surface transition-colors">{t('admin_login.remember_me')}</span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setRecoveryMode('forgot')}
+                  className="text-sm font-black text-primary hover:underline underline-offset-4"
+                >
+                  {t('admin_login.forgot_password')}
+                </button>
+              </div>
+
+              <Button 
+                type="submit" 
+                variant="primary"
+                className="w-full py-6 text-lg rounded-[25px] shadow-2xl shadow-primary/20 mt-4 group"
+                isLoading={status === 'loading'}
+              >
+                {t('admin_login.signin_btn')}
+                <ArrowRight size={22} strokeWidth={3} className="ml-3 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </form>
+          ) : (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {recoveryMode === 'forgot' ? (
+                <div className="space-y-4">
+                  <Input
+                    label={t('admin_login.recovery_email')}
+                    type="email"
+                    value={resetEmail}
+                    onChange={(event) => setResetEmail(event.target.value)}
+                    placeholder={t('admin_login.email_placeholder')}
+                    icon={Mail}
                   />
-                  <Check size={14} strokeWidth={4} className="text-primary opacity-0 transition-opacity peer-checked:opacity-100" />
-                </span>
-                <span className="text-sm font-bold text-on_surface_variant group-hover:text-on_surface transition-colors">Remember me</span>
-              </label>
+                  <Button type="button" variant="primary" className="w-full py-4 rounded-2xl" onClick={requestPasswordReset}>
+                    {t('admin_login.send_otp')}
+                  </Button>
+                  <button 
+                    onClick={() => setRecoveryMode(null)}
+                    className="w-full text-center text-sm font-bold text-on_surface_variant hover:text-primary transition-colors"
+                  >
+                    {t('admin_login.back_to_login')}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                    <p className="text-xs font-bold text-primary flex items-center gap-2">
+                      <Zap size={14} fill="currentColor" />
+                      {t('admin_login.check_email')}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="text-xs font-black text-on_surface_variant uppercase tracking-widest ml-1 opacity-70">{t('admin_login.otp_label')}</label>
+                    <div className="flex justify-between gap-2" onPaste={handlePaste}>
+                      {otpArray.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={el => otpRefs.current[idx] = el}
+                          type="text"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleOtpChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                          className={`w-full aspect-square bg-white border-2 ${expiryTimer === 0 ? 'border-error/20' : 'border-surface_container'} focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl text-center text-2xl font-black text-on_surface outline-none transition-all shadow-sm`}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setRecoveryMode(recoveryMode === 'forgot' ? null : 'forgot');
-                  setRecoveryMessage('');
-                }}
-                className="text-sm font-black text-primary hover:underline underline-offset-4"
-              >
-                Forgot Password?
-              </button>
-            </div>
-
-            {recoveryMode && (
-              <div className="space-y-4 rounded-[20px] border border-surface_container bg-white/70 p-5 shadow-sm">
-                {recoveryMode === 'forgot' ? (
-                  <>
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2 text-on_surface_variant/60 font-bold text-sm bg-surface_container/30 px-3 py-1.5 rounded-full">
+                      <Timer size={14} className={expiryTimer > 0 ? "animate-pulse text-primary" : "text-error"} />
+                      <span className={expiryTimer === 0 ? "text-error" : ""}>
+                        {expiryTimer > 0 ? formatTime(expiryTimer) : "Expired"}
+                      </span>
+                    </div>
+                    {resendTimer === 0 ? (
+                      <button 
+                        onClick={requestPasswordReset}
+                        className="text-sm font-black text-primary hover:text-primary_container transition-colors flex items-center gap-2 underline underline-offset-4"
+                      >
+                        <RefreshCw size={14} /> {t('admin_login.resend_otp')}
+                      </button>
+                    ) : (
+                      <div className="text-xs font-bold text-on_surface_variant/40 flex items-center gap-2">
+                        <RefreshCw size={14} className="animate-spin-slow" />
+                        {t('admin_login.resend_in')} {resendTimer}s
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="pt-2 relative">
                     <Input
-                      label="Recovery Email"
-                      type="email"
-                      value={resetEmail}
-                      onChange={(event) => setResetEmail(event.target.value)}
-                      placeholder="admin@candy.com"
-                      icon={Mail}
-                    />
-                    <Button type="button" variant="outline" className="w-full" onClick={requestPasswordReset}>
-                      Send Reset Link
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Input
-                      label="Reset Token"
-                      value={resetToken}
-                      onChange={(event) => setResetToken(event.target.value)}
-                      placeholder="Paste reset token"
-                      icon={ShieldCheck}
-                    />
-                    <Input
-                      label="New Password"
-                      type="password"
+                      label={t('admin_login.new_password')}
+                      type={showNewPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
-                      placeholder="At least 8 characters"
+                      placeholder="Min. 8 characters"
                       icon={Lock}
                     />
-                    <Button type="button" variant="outline" className="w-full" onClick={resetPassword}>
-                      Reset Password
+                    <button 
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-6 top-[58px] -translate-y-1/2 text-on_surface_variant/40 hover:text-primary transition-colors z-10"
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="primary" 
+                      className="w-full py-6 text-lg rounded-[25px] shadow-2xl shadow-primary/20 group" 
+                      onClick={resetPassword}
+                      disabled={expiryTimer === 0}
+                    >
+                      {t('admin_login.update_login')}
+                      <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                  </>
-                )}
-                {recoveryMessage && (
-                  <p className="break-words text-xs font-bold text-on_surface_variant">{recoveryMessage}</p>
-                )}
-              </div>
-            )}
+                    <button 
+                      onClick={() => setRecoveryMode(null)}
+                      className="w-full text-center text-sm font-bold text-on_surface_variant hover:text-primary transition-colors flex items-center justify-center gap-2"
+                    >
+                      <X size={16} /> {t('admin_login.cancel_recovery')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-            <Button 
-              type="submit" 
-              variant="primary"
-              className="w-full py-6 text-lg rounded-[25px] shadow-2xl shadow-primary/20 mt-4 group"
-              isLoading={status === 'loading'}
-            >
-              Sign In to Dashboard
-              <ArrowRight size={22} strokeWidth={3} className="ml-3 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </form>
-
-          {/* Footer Links */}
           <div className="pt-10 border-t border-surface_container/30 flex items-center justify-between text-xs font-black text-on_surface_variant/40 uppercase tracking-widest">
-            <Link to="/" className="flex items-center gap-2 hover:text-primary transition-colors">
+            <Link to={`/${lang}`} className="flex items-center gap-2 hover:text-primary transition-colors">
               <Store size={14} />
-              Return to Storefront
+              {t('admin_login.return_store')}
             </Link>
-            <span>Auth v2.4.0</span>
+            <span>v2.5.2-ULTIMATE</span>
           </div>
         </div>
       </div>
 
-      {/* Right Side: Visual Hero */}
       <div className="hidden lg:block lg:flex-1 relative overflow-hidden bg-on_surface">
         <img 
           src="/images/admin_login_hero.png" 
           alt="Candy Kingdom" 
           className="absolute inset-0 w-full h-full object-cover opacity-80"
         />
-        
-        {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-on_surface/80"></div>
         
-        {/* Floating Glassmorphism Content */}
+        {/* Language Switcher for Desktop */}
+        <div className="absolute top-10 right-10 z-20">
+          <LanguageSwitcher />
+        </div>
+
         <div className="absolute bottom-20 left-20 right-20 space-y-8 animate-in slide-in-from-bottom-10 duration-1000">
           <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[40px] p-10 space-y-6 shadow-2xl">
             <div className="flex items-center gap-4">
@@ -286,41 +416,12 @@ const AdminLogin = () => {
                 <Zap size={24} fill="white" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="text-xl font-black text-white tracking-tight">Real-time Management</h3>
-                <p className="text-white/60 font-bold text-sm">Control every gummy and truffle with ease.</p>
+                <h3 className="text-xl font-black text-white tracking-tight">Ultimate Security</h3>
+                <p className="text-white/60 font-bold text-sm">Protected by independent dual-timer OTP logic.</p>
               </div>
             </div>
-            
-            <div className="flex gap-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-on_surface bg-surface_dim overflow-hidden shadow-lg">
-                    <img src={`https://i.pravatar.cc/100?u=${i}`} alt="Admin" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-xs font-black text-white uppercase tracking-widest">Join 12+ Active Admins</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                  <span className="text-[10px] font-bold text-green-400 uppercase">Live System Status</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between px-6">
-             <div className="flex items-center gap-2 text-white/40 font-black text-[10px] uppercase tracking-[0.3em]">
-                <ShieldCheck size={16} />
-                High Security Zone
-             </div>
-             <div className="w-12 h-1 bg-white/20 rounded-full"></div>
           </div>
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-10 right-10 w-24 h-24 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 left-1/4 w-40 h-40 bg-secondary/10 rounded-full blur-[80px]"></div>
       </div>
 
     </div>

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
-import { RegisterUseCase, LoginUseCase, GetMeUseCase, IHashingService, ITokenService } from '../../core/application/usecases/AuthUseCases';
+import { RegisterUseCase, RegisterRequestUseCase, RegisterVerifyUseCase, LoginUseCase, GetMeUseCase, IHashingService, ITokenService } from '../../core/application/usecases/AuthUseCases';
 import { RequestPasswordResetUseCase, VerifyResetTokenUseCase, ResetPasswordUseCase } from '../../core/application/usecases/PasswordRecoveryUseCases';
 import { MailService } from '../notifications/mail.service';
 import { IUserRepository } from '../../core/domain/repositories/IUserRepository';
@@ -24,6 +24,8 @@ import { RememberToken } from './entities/remember-token.entity';
   controllers: [AuthController],
   providers: [
     RegisterUseCase,
+    RegisterRequestUseCase,
+    RegisterVerifyUseCase,
     LoginUseCase,
     GetMeUseCase,
     RequestPasswordResetUseCase,

@@ -17,14 +17,26 @@ export class Coupon {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   minOrderValue: number;
 
-  @Column({ nullable: true })
-  expiryDate: Date;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  maxDiscountAmount: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  startDate: Date;
+
+  @Column({ type: 'datetime', nullable: true })
+  endDate: Date;
 
   @Column({ default: 0 })
   usageCount: number;
 
+  @Column({ default: 0 })
+  reservedCount: number; // For locking mechanism
+
   @Column({ nullable: true })
   maxUsage: number;
+
+  @Column({ default: 1 })
+  limitPerUser: number;
 
   @Column({ default: true })
   isActive: boolean;

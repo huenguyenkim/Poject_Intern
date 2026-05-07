@@ -18,25 +18,26 @@ export class RequestPasswordResetUseCase {
     const user = await this.userRepository.findByEmail(sanitizedEmail);
     
     if (!user) {
-      // Security: don't reveal if user exists to the frontend
-      // But log internally for monitoring
       this.logger.warn(`Password reset requested for NON-EXISTENT email: ${sanitizedEmail}`);
       return null;
     }
 
-    this.logger.log(`Password reset requested for VALID email: ${sanitizedEmail}. User ID: ${user.id}`);
-
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    // Generate a 6-digit OTP
+    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetTokenHash = crypto.createHash('sha256').update(resetOtp).digest('hex');
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes as requested
 
     await this.userRepository.update(user.id, {
       resetPasswordTokenHash: resetTokenHash,
       resetPasswordExpiresAt: expiresAt,
-    });
+      resetPasswordRetryCount: 0, // Reset retry count for new request
+    } as any);
 
-    await this.mailService.sendPasswordResetEmail(sanitizedEmail, resetToken);
-    return resetToken;
+    await this.mailService.sendPasswordResetEmail(sanitizedEmail, resetOtp);
+    
+    this.logger.log(`[SECURITY] OTP generated for ${sanitizedEmail}: ${resetOtp}`);
+    
+    return resetOtp; // Return OTP to the client for debugging/console use
   }
 }
 
@@ -46,16 +47,51 @@ export class VerifyResetTokenUseCase {
 
   constructor(private readonly userRepository: IUserRepository) {}
 
-  async execute(token: string): Promise<{ isValid: boolean }> {
-    const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await this.userRepository.findByResetToken(resetTokenHash);
+  async execute(email: string, otp: string): Promise<{ isValid: boolean }> {
+    const sanitizedEmail = email.trim().toLowerCase();
+    const user = await this.userRepository.findByEmail(sanitizedEmail);
 
-    if (!user || !user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()) {
-      this.logger.warn(`Invalid or expired token verification attempt: ${token.substring(0, 5)}...`);
-      throw new BadRequestException('Invalid or expired reset token');
+    if (!user) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn.');
+    }
+
+    // Brute-force protection: check retry count
+    if (user.resetPasswordRetryCount >= 3) {
+      await this.invalidateOtp(user.id);
+      throw new BadRequestException('Bạn đã nhập sai quá 3 lần. Vui lòng yêu cầu mã mới.');
+    }
+
+    // Check expiration
+    if (!user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()) {
+      throw new BadRequestException('Mã OTP đã hết hạn.');
+    }
+
+    const resetTokenHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+    if (!user.resetPasswordTokenHash || user.resetPasswordTokenHash !== resetTokenHash) {
+      // Increment retry count
+      const newCount = (user.resetPasswordRetryCount || 0) + 1;
+      await this.userRepository.update(user.id, { resetPasswordRetryCount: newCount } as any);
+      
+      this.logger.warn(`Invalid OTP attempt for ${sanitizedEmail}. Attempt: ${newCount}/3`);
+      
+      if (newCount >= 3) {
+        await this.invalidateOtp(user.id);
+        throw new BadRequestException('Bạn đã nhập sai quá 3 lần. Vui lòng yêu cầu mã mới.');
+      }
+      
+      throw new BadRequestException(`Mã xác thực không chính xác. Bạn còn ${3 - newCount} lần thử.`);
     }
 
     return { isValid: true };
+  }
+
+  private async invalidateOtp(userId: number) {
+    await this.userRepository.update(userId, {
+      resetPasswordTokenHash: null,
+      resetPasswordExpiresAt: null,
+      resetPasswordRetryCount: 0
+    } as any);
   }
 }
 
@@ -67,15 +103,18 @@ export class ResetPasswordUseCase {
     private readonly userRepository: IUserRepository,
     private readonly hashingService: IHashingService,
     private readonly mailService: MailService,
+    private readonly verifyResetTokenUseCase: VerifyResetTokenUseCase
   ) {}
 
-  async execute(token: string, password: string): Promise<void> {
-    const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await this.userRepository.findByResetToken(resetTokenHash);
+  async execute(email: string, otp: string, password: string): Promise<any> {
+    const sanitizedEmail = email.trim().toLowerCase();
+    
+    // First, verify the OTP using the verify use case logic (handles retries)
+    await this.verifyResetTokenUseCase.execute(sanitizedEmail, otp);
 
-    if (!user || !user.resetPasswordExpiresAt || user.resetPasswordExpiresAt < new Date()) {
-      this.logger.error(`Critical: Unauthorized password reset attempt with invalid token hash: ${resetTokenHash}`);
-      throw new BadRequestException('Invalid or expired reset token');
+    const user = await this.userRepository.findByEmail(sanitizedEmail);
+    if (!user) {
+      throw new BadRequestException('Người dùng không tồn tại.');
     }
 
     // Hash password & update token version (Revoke all sessions)
@@ -85,14 +124,18 @@ export class ResetPasswordUseCase {
     await this.userRepository.update(user.id, {
       password: hashedPassword,
       tokenVersion: newTokenVersion,
-      resetPasswordTokenHash: undefined, // Step 6: Invalidate token
-      resetPasswordExpiresAt: undefined,
+      resetPasswordTokenHash: null, // Invalidate OTP after success
+      resetPasswordExpiresAt: null,
+      resetPasswordRetryCount: 0,
       lastPasswordChangeAt: new Date(),
-    });
+    } as any);
 
     this.logger.log(`Password reset COMPLETED for user ${user.id} (${user.email})`);
 
-    // Step 8: Send success email
+    // Send success email
     await this.mailService.sendPasswordResetSuccessEmail(user.email);
+
+    // Fetch fresh user data to return
+    return this.userRepository.findByEmail(sanitizedEmail);
   }
 }

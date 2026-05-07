@@ -8,7 +8,7 @@ import { JwtAuthGuard, RolesGuard } from '../infrastructure/auth/jwt-auth.guard'
 import { Roles } from '../infrastructure/auth/roles.decorator';
 import { UserRole } from '../common/constants/user-role.enum';
 
-@Controller('api/tasks')
+@Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TasksController {
   constructor(

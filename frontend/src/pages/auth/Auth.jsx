@@ -1,104 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  Candy, Mail, Lock, User as UserIcon, Eye, EyeOff, Check, ArrowRight,
+  Candy, Mail, Lock, User as UserIcon, Eye, EyeOff, Check, ArrowRight, ArrowLeft,
+  AlertCircle, ShieldCheck, Smartphone, RefreshCw, X, CheckCircle
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
-import { loginUserThunk, registerUserThunk, requestPasswordResetThunk, verifyResetTokenThunk, resetPasswordThunk } from '../../store/authThunks';
-import { socialLogin as socialLoginAction } from '../../store/authSlice';
+import { loginUserThunk } from '../../store/authThunks';
+import { socialLogin as socialLoginAction, setCredentials } from '../../store/authSlice';
 import { showSuccessToast, showErrorToast } from '../../utils/toastUtils';
-import { mapBackendErrors, sanitizeData } from '../../utils/validationUtils';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import PageTransition from '../../components/layout/PageTransition';
+import apiClient from '../../api/apiClient';
 
+// --- SCHEMAS ---
 const loginSchema = (t) => z.object({
-  email: z.string().email(t('auth.invalid_email', 'Invalid email format')),
+  email: z.string().min(1, t('auth.email_required', 'Email is required')),
   password: z.string().min(1, t('auth.password_required', 'Password is required')),
 });
 
 const registerSchema = (t) => z.object({
   fullName: z.string().min(2, t('auth.name_min', 'Name must be at least 2 characters')),
-  email: z.string().email(t('auth.invalid_email', 'Invalid email format')),
-  password: z
-    .string()
+  email: z.string().min(1, t('auth.email_required', 'Email is required')),
+  password: z.string()
     .min(8, t('auth.password_min', 'Password must be at least 8 characters'))
-    .regex(/[!@#$%^&*(),.?":{}|<>]/, t('auth.password_special', 'Include at least one special character')),
-  confirmPassword: z.string().min(1, t('auth.confirm_password_required', 'Please confirm your password')),
+    .regex(/[A-Z]/, t('auth.password_uppercase', 'Need 1 uppercase letter'))
+    .regex(/[0-9]/, t('auth.password_number', 'Need 1 number'))
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, t('auth.password_special', 'Need 1 special character')),
+  confirmPassword: z.string().min(1, t('auth.confirm_password_required', 'Please confirm password')),
 }).refine((data) => data.password === data.confirmPassword, {
   message: t('auth.passwords_dont_match', "Passwords don't match"),
   path: ["confirmPassword"],
 });
 
 const recoveryEmailSchema = (t) => z.object({
-  email: z.string().email(t('auth.invalid_email', 'Invalid email format')),
-});
-
-const recoveryTokenSchema = (t) => z.object({
-  token: z.string().min(1, 'Verification token is required'),
+  email: z.string().min(1, t('auth.email_required', 'Email is required')).email(t('auth.invalid_email', 'Invalid email format')),
 });
 
 const resetPasswordSchema = (t) => z.object({
-  newPassword: z.string().min(8, t('auth.password_min', 'Password must be at least 8 characters')),
-  confirmPassword: z.string().min(8, 'Please confirm your password'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
+  password: z.string()
+    .min(8, t('auth.password_min', 'Password must be at least 8 characters'))
+    .regex(/[A-Z]/, t('auth.password_uppercase', 'Need 1 uppercase letter'))
+    .regex(/[0-9]/, t('auth.password_number', 'Need 1 number'))
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, t('auth.password_special', 'Need 1 special character')),
+  confirmPassword: z.string().min(1, t('auth.confirm_password_required', 'Please confirm password')),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: t('auth.passwords_dont_match', "Passwords don't match"),
   path: ["confirmPassword"],
 });
 
 const Auth = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
-  const [recoveryStep, setRecoveryStep] = useState(1); // 1: Email, 2: Token, 3: New Password
-  const [recoveryToken, setRecoveryToken] = useState('');
+  const [recoveryStep, setRecoveryStep] = useState(1); // 1: Email, 2: OTP, 3: Reset, 4: Success
+  const [registerStep, setRegisterStep] = useState(1); // 1: Form, 2: OTP
   
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpTimer, setOtpTimer] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  
   const dispatch = useDispatch();
-  const { user: currentUser, status } = useSelector((state) => state.auth);
+  const { user: currentUser } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check for token in URL (Step 2/3)
-  React.useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    const token = query.get('token');
-    const step = query.get('step');
-    if (token) {
-      setRecoveryToken(token);
-      setIsRecovery(true);
-      setRecoveryStep(step === '3' ? 3 : 2);
-    }
-  }, [location]);
+  const otpRefs = useRef([]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
     reset,
-    setError,
   } = useForm({
+    mode: 'onChange',
     resolver: zodResolver(
       isRecovery 
-        ? (recoveryStep === 1 ? recoveryEmailSchema(t) : recoveryStep === 2 ? recoveryTokenSchema(t) : resetPasswordSchema(t))
+        ? (recoveryStep === 1 ? recoveryEmailSchema(t) : (recoveryStep === 3 ? resetPasswordSchema(t) : z.any()))
         : (isLogin ? loginSchema(t) : registerSchema(t))
     ),
     defaultValues: {
       fullName: '',
       email: '',
       password: '',
-      token: '',
-      newPassword: '',
       confirmPassword: '',
     },
   });
+
+  const watchEmail = watch('email', '');
+  const watchPassword = watch('password', '');
+
+  // OTP Timer logic
+  useEffect(() => {
+    let interval = null;
+    if (otpTimer > 0) {
+      interval = setInterval(() => setOtpTimer(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpTimer]);
 
   const from = location.state?.from?.pathname || '/';
 
@@ -109,200 +116,367 @@ const Auth = () => {
   const handleToggleMode = () => {
     setIsLogin(!isLogin);
     setIsRecovery(false);
+    setRegisterStep(1);
     setRecoveryStep(1);
     reset();
   };
 
-  const handleRecoveryMode = () => {
+  const handleForgotPassword = () => {
     setIsRecovery(true);
     setRecoveryStep(1);
     reset();
   };
 
   const onFormSubmit = async (data) => {
-    const sanitizedData = sanitizeData(data);
+    setLoading(true);
+    try {
+      if (isLogin && !isRecovery) {
+        await dispatch(loginUserThunk({ 
+          email: data.email, 
+          password: data.password,
+          rememberMe: stayLoggedIn
+        })).unwrap();
+        showSuccessToast(t('auth.login_success', 'Welcome back! 🍭'));
+      } else if (!isLogin && !isRecovery) {
+        // Register Stage 1: Request OTP
+        await apiClient.post('/auth/register/request', data);
+        setRegisterStep(2);
+        setOtpTimer(60);
+        showSuccessToast(t('auth.register_request_success', 'OTP code sent! 🍬'));
+      } else if (isRecovery && recoveryStep === 1) {
+        // Forgot Password Stage 1: Request OTP
+        const response = await apiClient.post('/auth/forgot-password/request', { email: data.email });
+        
+        // Show OTP in console for DEV testing
+        if (response.data.devOtp) {
+          console.log('%c [DEV ONLY] OTP Code: ' + response.data.devOtp, 'background: #e040a0; color: #fff; padding: 5px; border-radius: 5px; font-weight: bold;');
+        }
+
+        setRecoveryStep(2);
+        setOtpTimer(60);
+        showSuccessToast(t('admin_login.check_email', 'Check your email for the verification code.'));
+      } else if (isRecovery && recoveryStep === 3) {
+        // Forgot Password Stage 3: Reset & Auto Login
+        const response = await apiClient.post('/auth/forgot-password/reset', {
+          email: watchEmail,
+          otp: otp.join(''),
+          newPassword: data.password
+        });
+        
+        const { user, accessToken } = response.data;
+        
+        // Persist token (using localStorage by default for recovery auto-login)
+        localStorage.setItem('candy_token', accessToken);
+        
+        // Update Redux state
+        dispatch(setCredentials({ user, accessToken }));
+        
+        showSuccessToast(t('auth.password_reset_success', 'Password reset successful! 🍭'));
+        
+        // Wait a tiny bit for the user to see the message then redirect
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 1500);
+
+        reset();
+      }
+    } catch (err) {
+      console.error('Auth Error:', err);
+      if (isLogin && !isRecovery) {
+        showErrorToast(t('auth.failed', 'Invalid credentials'));
+      } else {
+        showErrorToast(err?.response?.data?.message || t('common.error'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const otpValue = otp.join('');
+    if (otpValue.length < 6) return;
+    setLoading(true);
 
     try {
-      if (isRecovery) {
-        if (recoveryStep === 1) {
-          const result = await dispatch(requestPasswordResetThunk(sanitizedData.email)).unwrap();
-          showSuccessToast('Reset link sent! Check your email 📧');
-          if (result.devToken) {
-            setRecoveryToken(result.devToken);
-            showSuccessToast('Development Mode: Token captured automatically! 🛠️');
-          }
-          setRecoveryStep(2);
-        } else if (recoveryStep === 2) {
-          const token = sanitizedData.token || recoveryToken;
-          await dispatch(verifyResetTokenThunk(token)).unwrap();
-          setRecoveryToken(token);
-          setRecoveryStep(3);
-        } else if (recoveryStep === 3) {
-          await dispatch(resetPasswordThunk({ token: recoveryToken, newPassword: sanitizedData.newPassword })).unwrap();
-          showSuccessToast('Password reset successful! Please login 🍭');
-          setIsRecovery(false);
-          setIsLogin(true);
-          setRecoveryStep(1);
-        }
-        return;
-      }
-
-      if (isLogin) {
-        await dispatch(loginUserThunk({ 
-          email: sanitizedData.email, 
-          password: sanitizedData.password 
-        })).unwrap();
-        showSuccessToast(t('auth.login_success', 'Successfully logged in! 🍭'));
+      if (!isRecovery) {
+        const response = await apiClient.post('/auth/register/verify', {
+          email: watchEmail,
+          otp: otpValue
+        });
+        const { user, accessToken } = response.data;
+        dispatch(setCredentials({ user, accessToken }));
+        showSuccessToast(t('auth.register_success', 'Registration successful! 🍬✨'));
+        navigate(from, { replace: true });
       } else {
-        if (!agreeTerms) {
-          showErrorToast(t('auth.agree_error', 'Please agree to the Terms & Privacy Policy'));
-          return;
-        }
-        await dispatch(registerUserThunk({ 
-          fullName: sanitizedData.fullName, 
-          email: sanitizedData.email, 
-          password: sanitizedData.password 
-        })).unwrap();
-        showSuccessToast('Sweet account created! You are now logged in 🍭✨');
+        // Verify OTP for Recovery
+        await apiClient.post('/auth/forgot-password/verify', {
+          email: watchEmail,
+          otp: otpValue
+        });
+        setRecoveryStep(3);
+        showSuccessToast(t('admin_login.granted', 'Verification code correct. Please set a new password.'));
       }
-      navigate(from, { replace: true });
     } catch (err) {
-      if (err?.response?.status === 400) {
-        mapBackendErrors(err, setError);
-      } else {
-        showErrorToast(err || t('auth.failed', 'Authentication failed'));
+      showErrorToast(err?.response?.data?.message || t('admin_login.otp_expired', 'Invalid or expired OTP'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.substring(value.length - 1);
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      otpRefs.current[index + 1].focus();
+    }
+    
+    if (value && index === 5) {
+      const fullOtp = [...newOtp].join('');
+      if (fullOtp.length === 6) {
+        setTimeout(handleVerifyOtp, 100);
       }
     }
   };
 
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1].focus();
+    }
+  };
+
+  const isLoginActive = watchEmail && watchPassword && !loading;
+
   return (
     <PageTransition>
-      <div className="min-h-screen flex items-center justify-center py-20 px-4 bg-surface_dim">
-        <div className="max-w-6xl w-full bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-surface_container">
-          {/* Left Side: Branding */}
-          <div className="w-full md:w-5/12 bg-gradient-to-br from-primary/5 via-secondary/5 to-tertiary/5 p-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center py-20 px-4 bg-[#F8F9FB]">
+        <div className="max-w-6xl w-full bg-white rounded-[48px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row border border-gray-100">
+          
+          {/* --- LEFT SIDE: BRANDING --- */}
+          <div className="w-full md:w-5/12 bg-[#FFF0F5] p-12 lg:p-16 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-secondary/5 rounded-full blur-3xl"></div>
+            
             <div className="relative z-10 w-full">
-              <h1 className="text-5xl font-black text-on_surface tracking-tight mb-4 uppercase tracking-tighter">CandyShop</h1>
-              <p className="text-on_surface_variant font-bold text-lg mb-12 uppercase leading-tight">
-                {isRecovery ? 'Security Center' : t('auth.tagline', 'The sweetest place on the internet.')}<br />
-                {isRecovery ? `Step ${recoveryStep}: ${recoveryStep === 1 ? 'Identify Account' : recoveryStep === 2 ? 'Verify Identity' : 'Reset Password'}` : (isLogin ? t('auth.login_hint', 'Login to grab your treats!') : t('auth.signup_hint', 'Join our sweet community!'))}
+              <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-8 transform -rotate-6">
+                <Candy size={40} className="text-primary" strokeWidth={2.5} />
+              </div>
+              <h1 className="text-4xl lg:text-5xl font-black text-[#1A1A1A] tracking-tighter mb-4 uppercase">CANDYSHOP</h1>
+              <p className="text-gray-500 font-bold text-sm lg:text-base uppercase tracking-[0.2em] mb-12">
+                {isRecovery ? t('admin_login.recovery') : (isLogin ? t('auth.welcome_back') : t('auth.tagline'))}
               </p>
-              <div className="w-full max-w-[320px] aspect-square mx-auto bg-white/20 backdrop-blur-sm rounded-[50px] p-6 shadow-2xl relative">
-                <div className="w-full h-full bg-primary/5 rounded-[35px] overflow-hidden shadow-inner flex items-center justify-center">
-                  <div className="text-9xl">{isRecovery ? '🔐' : '🍭'}</div>
+              
+              <div className="hidden md:block w-full max-w-[280px] aspect-square mx-auto bg-white/40 backdrop-blur-md rounded-[40px] p-4 shadow-inner">
+                <div className="w-full h-full bg-white/60 rounded-[30px] flex items-center justify-center text-8xl shadow-sm">
+                  {isRecovery ? '🔒' : (isLogin ? '🍬' : '✨')}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Side: Form */}
-          <div className="w-full md:w-7/12 p-12 lg:p-20 flex flex-col justify-center">
-            {/* Top Toggle */}
-            {!isRecovery && (
-              <div className="flex justify-center mb-12">
-                <div className="bg-surface_dim p-1.5 rounded-[22px] flex items-center w-full max-w-[340px] shadow-sm">
-                  <button type="button" onClick={handleToggleMode} className={`flex-1 py-3.5 px-6 rounded-[18px] font-black text-[15px] transition-all uppercase tracking-widest ${isLogin ? 'bg-white text-primary shadow-lg' : 'text-on_surface_variant/60 hover:text-on_surface'}`}>
-                    {t('auth.login', 'Login')}
-                  </button>
-                  <button type="button" onClick={handleToggleMode} className={`flex-1 py-3.5 px-6 rounded-[18px] font-black text-[15px] transition-all uppercase tracking-widest ${!isLogin ? 'bg-white text-primary shadow-lg' : 'text-on_surface_variant/60 hover:text-on_surface'}`}>
-                    {t('auth.signup', 'Sign Up')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-10">
-              <form className="space-y-8" onSubmit={handleSubmit(onFormSubmit)} noValidate>
-                {isRecovery ? (
-                  <>
-                    {recoveryStep === 1 && (
-                      <Input label={t('profile.email')} type="email" {...register('email')} placeholder="Enter your registered email" icon={Mail} error={errors.email?.message} />
-                    )}
-                    {recoveryStep === 2 && (
-                      <div className="space-y-4">
-                        <Input label="Verification Token" type="text" {...register('token')} placeholder="Paste token from email" icon={Check} error={errors.token?.message} />
-                        {recoveryToken && (
-                          <div className="bg-primary/5 p-5 rounded-3xl border border-primary/20 animate-pulse">
-                            <p className="text-[11px] font-black text-primary uppercase tracking-[0.1em] leading-relaxed">
-                              🛠️ Development Helper:<br/>
-                              <span className="text-[10px] opacity-70">Email service is inactive. We've captured the token for you! Just click the button below to continue.</span>
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {recoveryStep === 3 && (
-                      <>
-                        <Input label="New Password" type={showPassword ? "text" : "password"} {...register('newPassword')} placeholder="Min 8 characters" icon={Lock} error={errors.newPassword?.message} />
-                        <Input label="Confirm New Password" type="password" {...register('confirmPassword')} placeholder="Repeat new password" icon={Lock} error={errors.confirmPassword?.message} />
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {!isLogin && (
-                      <Input label={t('checkout.full_name')} type="text" {...register('fullName')} placeholder={t('checkout.full_name')} icon={UserIcon} error={errors.fullName?.message} />
-                    )}
-                    <Input label={t('profile.email')} type="email" {...register('email')} placeholder="sweet@candyshop.com" icon={Mail} error={errors.email?.message} />
-                    <div className="relative">
-                      <Input label={t('auth.password', 'Password')} type={showPassword ? "text" : "password"} {...register('password')} placeholder="********" icon={Lock} error={errors.password?.message} />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-1 top-[54px] -translate-y-1/2 p-2 text-on_surface_variant/60 hover:text-primary transition-colors z-10">
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                    {!isLogin && (
-                      <Input label={t('auth.confirm_password', 'Confirm Password')} type="password" {...register('confirmPassword')} placeholder="********" icon={Lock} error={errors.confirmPassword?.message} />
-                    )}
-                  </>
-                )}
-
-                {isLogin && !isRecovery && (
-                  <div className="flex justify-end -mt-4">
-                    <button type="button" onClick={handleRecoveryMode} className="text-xs font-black text-primary uppercase tracking-widest hover:underline">
-                      {t('auth.forgot_password', 'Forgot Password?')}
-                    </button>
-                  </div>
-                )}
-
-                {!isRecovery && (
-                  <div className="flex items-center gap-3 ml-1">
-                    <button type="button" onClick={() => isLogin ? setStayLoggedIn(!stayLoggedIn) : setAgreeTerms(!agreeTerms)} className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${((isLogin && stayLoggedIn) || (!isLogin && agreeTerms)) ? 'bg-primary border-primary shadow-lg' : 'bg-surface_dim border-surface_container'}`}>
-                      {((isLogin && stayLoggedIn) || (!isLogin && agreeTerms)) && <Check size={16} className="text-on_primary" strokeWidth={3} />}
-                    </button>
-                    <p className="text-[13px] font-black text-on_surface_variant uppercase tracking-tight">
-                      {isLogin ? t('auth.stay_logged_in', 'Stay logged in') : (
-                        <>{t('auth.agree_prefix', 'I agree to the')} <span className="text-primary hover:underline cursor-pointer">{t('auth.terms', 'Terms')}</span> & <span className="text-primary hover:underline cursor-pointer">{t('auth.privacy', 'Privacy')}</span></>
-                      )}
+          {/* --- RIGHT SIDE: CONTENT --- */}
+          <div className="w-full md:w-7/12 p-8 lg:p-20 flex flex-col justify-center">
+            
+            {((registerStep === 1 && recoveryStep === 1) || (isRecovery && recoveryStep === 3)) ? (
+                <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="space-y-2">
+                    <h2 className="text-3xl font-black text-[#1A1A1A] tracking-tight">
+                      {isRecovery 
+                        ? (recoveryStep === 3 ? t('settings.change_password') : t('admin_login.forgot_password')) 
+                        : (isLogin ? t('auth.login') : t('auth.create_account'))}
+                    </h2>
+                    <p className="text-gray-400 font-bold text-xs uppercase tracking-widest leading-relaxed">
+                      {isRecovery 
+                        ? (recoveryStep === 3 ? t('admin_login.recovery_tagline') : t('admin_login.tagline'))
+                        : (isLogin ? t('auth.login_hint') : t('auth.signup_hint'))}
                     </p>
                   </div>
-                )}
 
-                <Button type="submit" variant="primary" className="w-full py-6 text-lg mt-4 uppercase tracking-widest" isLoading={status === 'loading'}>
-                  {isRecovery 
-                    ? (recoveryStep === 1 ? 'SEND RESET LINK' : recoveryStep === 2 ? 'VERIFY TOKEN' : 'UPDATE PASSWORD')
-                    : (isLogin ? t('auth.login_btn', 'Sweeten My Day') : t('auth.signup_btn', 'CREATE SWEET ACCOUNT'))
-                  }
-                  <ArrowRight size={22} strokeWidth={3} className="ml-4" />
-                </Button>
-                
-                {isRecovery && (
-                  <button type="button" onClick={handleToggleMode} className="w-full text-center text-xs font-black text-on_surface_variant/60 uppercase tracking-widest hover:text-primary transition-colors">
-                    Back to Login
-                  </button>
-                )}
-              </form>
+                  {!isRecovery && (
+                    <div className="flex bg-gray-50 p-1.5 rounded-3xl w-full max-w-[360px] shadow-sm">
+                      <button type="button" onClick={() => { if(!isLogin) handleToggleMode(); }} className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isLogin ? 'bg-white text-primary shadow-md' : 'text-gray-400 hover:text-gray-600'}`}>{t('auth.login')}</button>
+                      <button type="button" onClick={() => { if(isLogin) handleToggleMode(); }} className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${!isLogin ? 'bg-white text-primary shadow-md' : 'text-gray-400 hover:text-gray-600'}`}>{t('auth.signup')}</button>
+                    </div>
+                  )}
 
-              {!isRecovery && (
-                <div className="text-center space-y-8">
-                  <p className="text-on_surface_variant font-bold uppercase tracking-tight text-sm">
-                    {isLogin ? t('auth.new_here', "New to the shop?") : t('auth.have_account', "Already have an account?")}{' '}
-                    <button type="button" onClick={handleToggleMode} className="text-primary hover:underline font-black">
-                      {isLogin ? t('auth.create_account', 'Create an account') : t('auth.login_action', 'Login')}
+                  <form className="space-y-6" onSubmit={handleSubmit(onFormSubmit)}>
+                    {(!isLogin && !isRecovery) && (
+                      <Input label={t('auth.full_name')} type="text" {...register('fullName')} placeholder={t('checkout.full_name_placeholder')} icon={UserIcon} error={errors.fullName?.message} />
+                    )}
+                    
+                    {(recoveryStep !== 3) && (
+                      <Input 
+                        label={t('auth.email')} 
+                        type="text" 
+                        {...register('email')} 
+                        placeholder="example@mail.com" 
+                        icon={Mail} 
+                        error={errors.email?.message} 
+                      />
+                    )}
+
+                    {isRecovery && recoveryStep === 3 && (
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <Input label={t('admin_login.new_password')} type={showPassword ? "text" : "password"} {...register('password')} placeholder="********" icon={Lock} error={errors.password?.message} />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[42px] text-gray-400 hover:text-primary transition-colors">
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <Input label={t('checkout.confirm_order')} type={showConfirmPassword ? "text" : "password"} {...register('confirmPassword')} placeholder="********" icon={Lock} error={errors.confirmPassword?.message} />
+                          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-[42px] text-gray-400 hover:text-primary transition-colors">
+                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {isLogin && !isRecovery && (
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <Input label={t('auth.password')} type={showPassword ? "text" : "password"} {...register('password')} placeholder="********" icon={Lock} error={errors.password?.message} />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[42px] text-gray-400 hover:text-primary transition-colors">
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                          <div className="flex justify-end mt-2">
+                            <button type="button" onClick={handleForgotPassword} className="text-xs font-black text-primary hover:underline uppercase tracking-wider">
+                              {t('admin_login.forgot_password')}
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 py-2">
+                          <input 
+                            type="checkbox" 
+                            id="remember" 
+                            checked={stayLoggedIn}
+                            onChange={(e) => setStayLoggedIn(e.target.checked)}
+                            className="w-5 h-5 rounded-lg border-2 border-gray-200 text-primary focus:ring-primary transition-all cursor-pointer" 
+                          />
+                          <label htmlFor="remember" className="text-sm font-bold text-gray-500 cursor-pointer select-none">{t('admin_login.remember_me')}</label>
+                        </div>
+                      </div>
+                    )}
+
+                    {!isLogin && !isRecovery && (
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <Input label={t('auth.password')} type={showPassword ? "text" : "password"} {...register('password')} placeholder="********" icon={Lock} error={errors.password?.message} />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[42px] text-gray-400 hover:text-primary transition-colors">
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <Input label={t('checkout.confirm_order')} type={showConfirmPassword ? "text" : "password"} {...register('confirmPassword')} placeholder="********" icon={Lock} error={errors.confirmPassword?.message} />
+                          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-[42px] text-gray-400 hover:text-primary transition-colors">
+                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-3 py-2">
+                          <input 
+                            type="checkbox" 
+                            id="terms" 
+                            checked={agreeTerms}
+                            onChange={(e) => setAgreeTerms(e.target.checked)}
+                            className="w-5 h-5 rounded-lg border-2 border-gray-200 text-primary focus:ring-primary transition-all cursor-pointer" 
+                          />
+                          <label htmlFor="terms" className="text-sm font-bold text-gray-500 cursor-pointer select-none">
+                            {t('auth.agree_prefix')} <span className="text-primary hover:underline">{t('auth.terms')} & {t('auth.privacy')}</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      className="w-full py-6 text-base font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                      isLoading={loading}
+                      disabled={isLogin && !isRecovery && !isLoginActive}
+                    >
+                      {isRecovery 
+                        ? (recoveryStep === 1 ? t('admin_login.send_otp') : t('admin_login.update_login')) 
+                        : (isLogin ? t('auth.login_btn') : t('auth.signup_btn'))}
+                      <ArrowRight size={20} className="ml-3" strokeWidth={3} />
+                    </Button>
+                  </form>
+
+                  <div className="text-center">
+                    {isRecovery ? (
+                      <button type="button" onClick={() => setIsRecovery(false)} className="text-gray-400 font-bold text-sm hover:text-primary transition-colors flex items-center gap-2 mx-auto">
+                        <ArrowLeft size={14} /> {t('admin_login.back_to_login')}
+                      </button>
+                    ) : (
+                      <p className="text-gray-400 font-bold text-sm">
+                        {isLogin ? t('auth.new_here') : t('auth.have_account')} {' '}
+                        <button type="button" onClick={handleToggleMode} className="text-primary hover:underline font-black">
+                          {isLogin ? t('auth.signup') : t('auth.login')}
+                        </button>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* --- OTP SCREEN (For Register OR Recovery) --- */
+                <div className="space-y-12 animate-in fade-in zoom-in-95 duration-500">
+                  <div className="text-center space-y-4">
+                    <div className="w-20 h-20 bg-primary/5 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+                      <ShieldCheck size={40} strokeWidth={2.5} />
+                    </div>
+                    <h2 className="text-3xl font-black text-[#1A1A1A] tracking-tight">{t('admin_login.otp_label')}</h2>
+                    <p className="text-gray-400 font-bold text-sm leading-relaxed px-10">
+                      {t('admin_login.check_email')} <br/>
+                      <span className="text-[#1A1A1A] font-black">{watchEmail}</span>
+                    </p>
+                  </div>
+
+                  <div className="flex justify-center gap-3">
+                    {otp.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={el => otpRefs.current[idx] = el}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        className="w-12 h-16 sm:w-14 sm:h-20 bg-gray-50 border-2 border-transparent focus:border-primary/30 focus:bg-white rounded-2xl text-center text-2xl font-black text-on_surface outline-none transition-all"
+                      />
+                    ))}
+                  </div>
+
+                  <div className="space-y-8">
+                    <Button 
+                      onClick={handleVerifyOtp}
+                      variant="primary" 
+                      className="w-full py-6 text-base font-black uppercase tracking-[0.2em] shadow-xl"
+                      disabled={otp.join('').length < 6 || loading}
+                      isLoading={loading}
+                    >
+                      {t('admin_login.otp_label')}
+                    </Button>
+
+                    <div className="text-center">
+                      {otpTimer > 0 ? (
+                        <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">
+                          {t('admin_login.resend_in')} <span className="text-primary">{otpTimer}s</span>
+                        </p>
+                      ) : (
+                        <button type="button" onClick={onFormSubmit} className="text-primary hover:underline font-black text-xs uppercase tracking-widest flex items-center gap-2 mx-auto">
+                          <RefreshCw size={14} strokeWidth={3} /> {t('admin_login.resend_otp')}
+                        </button>
+                      )}
+                    </div>
+
+                    <button type="button" onClick={() => { setRegisterStep(1); setRecoveryStep(1); }} className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-gray-600 transition-colors">
+                      <X size={14} strokeWidth={3} /> {t('common.refresh')}
                     </button>
-                  </p>
+                  </div>
                 </div>
               )}
-            </div>
           </div>
         </div>
       </div>

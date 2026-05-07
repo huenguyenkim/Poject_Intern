@@ -117,16 +117,18 @@ const CategoryMgmt = () => {
       await dispatch(deleteCategoryThunk({ id, force })).unwrap();
       showSuccessToast('Category removed');
     } catch (err) {
-      if (err.includes('containing products') || err.includes('with children')) {
+      const errorMsg = typeof err === 'string' ? err : (err?.message || 'Failed to delete category');
+      
+      if (typeof errorMsg === 'string' && (errorMsg.includes('containing products') || errorMsg.includes('with children'))) {
         Modal.confirm({
           title: 'Constraints Detected',
-          content: `${err}. Do you want to force delete? This will unassign all products and children.`,
+          content: `${errorMsg}. Do you want to force delete? This will unassign all products and children.`,
           okText: 'Force Delete',
           okType: 'danger',
           onOk: () => handleDelete(id, true)
         });
       } else {
-        showErrorToast(err);
+        showErrorToast(errorMsg);
       }
     }
   };

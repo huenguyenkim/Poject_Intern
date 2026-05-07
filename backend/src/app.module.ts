@@ -83,7 +83,7 @@ import { PageVisit } from './analytics/entities/page-visit.entity';
     NotificationsModule,
     SurveysModule,
     SearchModule,
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order, OrderItem, Coupon]),
   ],
   controllers: [AppController],
   providers: [

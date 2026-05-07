@@ -5,7 +5,7 @@
  * @returns {string} - The localized path (e.g., '/vi/shop').
  */
 export const localizePath = (path, lang) => {
-  if (!lang) return path;
+  if (!path || !lang) return path || '/';
   if (path.startsWith(`/${lang}/`) || path === `/${lang}`) return path;
   
   // Remove any leading slash and add the language prefix

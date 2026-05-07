@@ -1,6 +1,7 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Candy, 
   LayoutDashboard, 
@@ -13,24 +14,25 @@ import TopUtilityBar from './TopUtilityBar';
 
 const { Header, Sider, Content } = Layout;
 
-// Static navigation configuration
-const ADMIN_NAV_ITEMS = [
-  { key: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-  { key: '/admin/tasks', label: 'Tasks', icon: <Grid size={18} /> },
-  { key: '/admin/products', label: 'Products', icon: <Package size={18} /> },
-  { key: '/admin/categories', label: 'Categories', icon: <Grid size={18} /> },
-  { key: '/admin/orders', label: 'Orders', icon: <ShoppingBag size={18} /> },
-  { key: '/admin/banners', label: 'Banners', icon: <ImagePlus size={18} /> },
-];
-
 /**
  * AdminLayout: Modernized using Ant Design Layout components.
  * Features a persistent sidebar and premium top bar.
  * Optimized with memoized callbacks and static nav items.
  */
 const AdminLayout = () => {
+  const { t } = useTranslation();
+  const { lang } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const navItems = [
+    { key: `/${lang}/admin`, label: t('admin.dashboard'), icon: <LayoutDashboard size={18} /> },
+    { key: `/${lang}/admin/tasks`, label: t('admin.tasks'), icon: <Grid size={18} /> },
+    { key: `/${lang}/admin/products`, label: t('admin.products'), icon: <Package size={18} /> },
+    { key: `/${lang}/admin/categories`, label: t('admin.categories'), icon: <Grid size={18} /> },
+    { key: `/${lang}/admin/orders`, label: t('admin.orders'), icon: <ShoppingBag size={18} /> },
+    { key: `/${lang}/admin/banners`, label: t('admin.banners'), icon: <ImagePlus size={18} /> },
+  ];
 
   return (
     <Layout className="min-h-screen bg-surface_dim">
@@ -42,7 +44,7 @@ const AdminLayout = () => {
         style={{ height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0 }}
       >
         <div className="p-8 pb-4">
-          <Link to="/admin" className="flex items-center gap-3 group">
+          <Link to={`/${lang}/admin`} className="flex items-center gap-3 group">
             <div className="bg-primary p-2 rounded-2xl shadow-lg shadow-primary/20">
               <Candy size={24} className="text-on_primary" />
             </div>
@@ -56,7 +58,7 @@ const AdminLayout = () => {
         <Menu
           mode="inline"
           selectedKeys={[location.pathname]}
-          items={ADMIN_NAV_ITEMS.map(item => ({
+          items={navItems.map(item => ({
             ...item,
             onClick: () => navigate(item.key)
           }))}

@@ -4,12 +4,15 @@ import { Repository, In, IsNull } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Product } from '../products/entities/product.entity';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
   ) {}
 
   private generateSlug(name: string): string {
@@ -140,6 +143,20 @@ export class CategoriesService {
       }
       if (category.children && category.children.length > 0) {
         throw new BadRequestException('Cannot delete category with children. Delete or move children first.');
+      }
+    } else {
+      // Manual unlinking to ensure success regardless of DB onDelete settings
+      if (category.products && category.products.length > 0) {
+        await this.productRepository.update(
+          { categoryId: id },
+          { categoryId: null as any }
+        );
+      }
+      if (category.children && category.children.length > 0) {
+        await this.categoryRepository.update(
+          { parentId: id },
+          { parentId: null as any }
+        );
       }
     }
 

@@ -67,4 +67,22 @@ export class UsersController {
   async changePassword(@Request() req, @Body() dto: ChangePasswordDto) {
     return this.usersService.changePassword(req.user.id, dto);
   }
+
+  @Get('check-username/:username')
+  async checkUsername(@Param('username') username: string) {
+    const available = await this.usersService.checkUsernameAvailability(username);
+    return { available };
+  }
+
+  @Get('check-email/:email')
+  async checkEmail(@Param('email') email: string) {
+    const available = await this.usersService.checkEmailAvailability(email);
+    return { available };
+  }
+
+  @Get('check-phone/:phone')
+  async checkPhone(@Param('phone') phone: string) {
+    const available = await this.usersService.checkPhoneAvailability(phone);
+    return { available };
+  }
 }

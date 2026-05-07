@@ -5,7 +5,7 @@ import { RolesGuard } from '../infrastructure/auth/jwt-auth.guard';
 import { Roles } from '../infrastructure/auth/roles.decorator';
 import { UserRole } from '../common/constants/user-role.enum';
 
-@Controller('api/analytics')
+@Controller('analytics')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 

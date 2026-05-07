@@ -13,7 +13,7 @@ export const useNotifications = (user) => {
         queryKey: ['notifications'],
         queryFn: async () => {
             const token = localStorage.getItem('candy_token');
-            const res = await axios.get(`${API_URL}/notifications`, {
+            const res = await axios.get(`${API_URL}/api/notifications`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             return res.data;
@@ -41,7 +41,7 @@ export const useMarkAsRead = () => {
     return useMutation({
         mutationFn: async (id) => {
             const token = localStorage.getItem('candy_token');
-            await axios.patch(`${API_URL}/notifications/${id}/read`, {}, {
+            await axios.patch(`${API_URL}/api/notifications/${id}/read`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
         },
@@ -56,7 +56,7 @@ export const useMarkAllAsRead = () => {
     return useMutation({
         mutationFn: async () => {
             const token = localStorage.getItem('candy_token');
-            await axios.patch(`${API_URL}/notifications/read-all`, {}, {
+            await axios.patch(`${API_URL}/api/notifications/read-all`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
         },

@@ -10,6 +10,12 @@ import { UserRole } from '../common/constants/user-role.enum';
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+  
+  @Post('manual-seed')
+  async manualSeed() {
+    await this.ordersService.manualSeedCoupons();
+    return { message: 'Coupons seeded' };
+  }
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -65,6 +71,18 @@ export class OrdersController {
     console.log('📦 Create Order Body:', JSON.stringify(createOrderDto, null, 2));
     const realIp = req.headers['x-forwarded-for'] || ip;
     return this.ordersService.createOrder(createOrderDto, { userId: req.user.id, ip: realIp, ua });
+  }
+
+  @Post('validate-coupon')
+  @UseGuards(JwtAuthGuard)
+  async validateCoupon(@Body('code') code: string, @Body('subtotal') subtotal: number, @Request() req) {
+    console.log(`Validating coupon: ${code} for subtotal: ${subtotal}, user: ${req.user?.id}`);
+    try {
+      return await this.ordersService.validateCoupon(code, Number(subtotal), req.user?.id);
+    } catch (e) {
+      console.error(`Coupon validation error: ${e.message}`);
+      throw e;
+    }
   }
 
   @Post('ipn')

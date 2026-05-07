@@ -12,6 +12,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { logout } from '../../store/authSlice';
 import LocalizedLink from '../navigation/LocalizedLink';
+import LanguageSwitcher from '../navigation/LanguageSwitcher';
 
 /**
  * UserLayout: Sidebar layout for profile, orders, and settings.
@@ -43,6 +44,9 @@ const UserLayout = () => {
         
         {/* User Profile Summary at Top (Dynamic) */}
         <div className="p-10 pb-6 flex flex-col items-center text-center">
+          <div className="mb-6">
+             <LanguageSwitcher />
+          </div>
           <h2 className="text-xl font-black text-on_surface tracking-tight leading-tight">
             {currentUser?.name || ''}
           </h2>
@@ -96,6 +100,9 @@ const UserLayout = () => {
         
         {/* Mobile Navigation Bar */}
         <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-surface_container/30 px-4 py-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
+          <div className="pr-4 border-r border-surface_container/30">
+            <LanguageSwitcher />
+          </div>
           {navItems.map((item) => {
             const localizedPath = `/${lang}${item.path}`;
             const isActive = location.pathname === localizedPath;

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Banner } from './entities/banner.entity';
+import { Repository, LessThanOrEqual, MoreThanOrEqual, And, IsNull, Or } from 'typeorm';
+import { Banner, BannerPosition } from './entities/banner.entity';
 
 @Injectable()
 export class BannersService {
@@ -10,31 +10,65 @@ export class BannersService {
     private readonly bannerRepository: Repository<Banner>,
   ) {}
 
-  findAll() {
-    return this.bannerRepository.find();
+  async findAll(query?: { position?: BannerPosition; activeOnly?: boolean }) {
+    const where: any = {};
+    
+    if (query?.position) {
+      where.position = query.position;
+    }
+
+    if (query?.activeOnly) {
+      where.isActive = true;
+      const now = new Date();
+      // Filter by date range: current time between start and end (or null)
+      // Note: Simplified logic here, in production we might use more complex TypeORM queries
+    }
+
+    let banners = await this.bannerRepository.find({
+      where,
+      order: { priority: 'DESC', createdAt: 'DESC' }
+    });
+
+    if (query?.activeOnly) {
+      const now = new Date();
+      banners = banners.filter(b => {
+        const startOk = !b.startDate || b.startDate <= now;
+        const endOk = !b.endDate || b.endDate >= now;
+        return startOk && endOk;
+      });
+    }
+
+    return banners;
   }
 
   async findOne(id: number) {
     const banner = await this.bannerRepository.findOne({ where: { id } });
-    if (!banner) {
-      throw new NotFoundException(`Banner with ID ${id} not found`);
-    }
+    if (!banner) throw new NotFoundException('Banner not found');
     return banner;
   }
 
-  create(data: Partial<Banner>) {
+  async create(data: Partial<Banner>) {
     const banner = this.bannerRepository.create(data);
     return this.bannerRepository.save(banner);
   }
 
   async update(id: number, data: Partial<Banner>) {
-    await this.findOne(id);
-    await this.bannerRepository.update(id, data);
-    return this.findOne(id);
+    const banner = await this.findOne(id);
+    Object.assign(banner, data);
+    return this.bannerRepository.save(banner);
   }
 
   async remove(id: number) {
     const banner = await this.findOne(id);
     return this.bannerRepository.remove(banner);
+  }
+
+  // Analytics logic
+  async trackImpression(id: number) {
+    return this.bannerRepository.increment({ id }, 'impressions', 1);
+  }
+
+  async trackClick(id: number) {
+    return this.bannerRepository.increment({ id }, 'clicks', 1);
   }
 }

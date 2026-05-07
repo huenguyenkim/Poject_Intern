@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes, createHash } from 'crypto';
 import type { Response } from 'express';
 import { Repository } from 'typeorm';
-import { RegisterUseCase, LoginUseCase, GetMeUseCase, IHashingService, ITokenService } from '../../core/application/usecases/AuthUseCases';
+import { RegisterUseCase, RegisterRequestUseCase, RegisterVerifyUseCase, LoginUseCase, GetMeUseCase, IHashingService, ITokenService } from '../../core/application/usecases/AuthUseCases';
 import { RequestPasswordResetUseCase, VerifyResetTokenUseCase, ResetPasswordUseCase } from '../../core/application/usecases/PasswordRecoveryUseCases';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
+import { RequestPasswordResetDto, VerifyPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { User as UserEntity } from '../../users/entities/user.entity';
 import { RememberToken } from './entities/remember-token.entity';
 import { blacklistToken } from './token-blacklist.store';
@@ -21,6 +21,8 @@ const REMEMBER_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 export class AuthController {
   constructor(
     private readonly registerUseCase: RegisterUseCase,
+    private readonly registerRequestUseCase: RegisterRequestUseCase,
+    private readonly registerVerifyUseCase: RegisterVerifyUseCase,
     private readonly loginUseCase: LoginUseCase,
     private readonly getMeUseCase: GetMeUseCase,
     private readonly hashingService: IHashingService,
@@ -39,14 +41,23 @@ export class AuthController {
     return this.registerUseCase.execute(createUserDto);
   }
 
+  @Post('register/request')
+  async registerRequest(@Body() createUserDto: CreateUserDto) {
+    return this.registerRequestUseCase.execute(createUserDto);
+  }
+
+  @Post('register/verify')
+  async registerVerify(@Body() dto: { email: string; otp: string }) {
+    return this.registerVerifyUseCase.execute(dto.email, dto.otp);
+  }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const result = await this.loginUseCase.execute(loginDto.email, loginDto.password);
 
-    if (loginDto.rememberMe) {
-      await this.issueRememberCookie(result.user.id, response);
-    }
+    // Always issue a refresh token (cookie), but its persistence depends on rememberMe
+    await this.issueRememberCookie(result.user.id, response, !!loginDto.rememberMe);
 
     return result;
   }
@@ -79,8 +90,13 @@ export class AuthController {
       throw new UnauthorizedException('Remember session expired');
     }
 
+    // Token Rotation: Delete old and issue new one
     await this.rememberTokenRepository.delete(rememberToken.id);
-    await this.issueRememberCookie(rememberToken.user.id, response);
+    
+    // Maintain the same persistence as before by checking if cookie had an expiration hint
+    // If the expiration is far in the future (> 24h), we assume it was a persistent cookie
+    const isPersistent = rememberToken.expiresAt.getTime() - Date.now() > 24 * 60 * 60 * 1000;
+    await this.issueRememberCookie(rememberToken.user.id, response, isPersistent);
 
     const user = await this.getMeUseCase.execute(rememberToken.user.id);
     return {
@@ -89,27 +105,42 @@ export class AuthController {
     };
   }
 
-  @Post('password/forgot')
+  // Changed from password/forgot to forgot-password/request to match frontend Auth.jsx
+  @Post('forgot-password/request')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: RequestPasswordResetDto) {
-    const token = await this.requestResetUseCase.execute(dto.email);
+    const otp = await this.requestResetUseCase.execute(dto.email);
     return { 
-      message: 'If that email exists, a password reset link has been sent.',
-      devToken: process.env.NODE_ENV === 'development' ? token : undefined
+      message: 'If that email exists, an OTP has been sent.',
+      devOtp: process.env.NODE_ENV === 'development' ? otp : undefined
     };
   }
 
-  @Post('password/verify')
+  @Post('forgot-password/verify')
   @HttpCode(HttpStatus.OK)
-  async verifyToken(@Body() dto: { token: string }) {
-    return this.verifyResetTokenUseCase.execute(dto.token);
+  async verifyToken(@Body() dto: VerifyPasswordResetDto) {
+    return this.verifyResetTokenUseCase.execute(dto.email, dto.otp);
   }
 
-  @Post('password/reset')
+  @Post('forgot-password/reset')
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() dto: ResetPasswordDto) {
-    await this.resetPasswordUseCase.execute(dto.token, dto.newPassword);
-    return { message: 'Password has been reset successfully. Please login with your new password.' };
+  async resetPassword(@Body() dto: ResetPasswordDto, @Res({ passthrough: true }) response: Response) {
+    const user = await this.resetPasswordUseCase.execute(dto.email, dto.otp, dto.newPassword);
+    
+    // Automatically login the user after password reset
+    await this.issueRememberCookie(user.id, response, true); // Persistent by default for UX
+    
+    const accessToken = this.tokenService.generate({ 
+      sub: user.id, 
+      role: user.role, 
+      version: user.tokenVersion 
+    });
+
+    return { 
+      message: 'Mật khẩu đã được cập nhật. Bạn đã được đăng nhập tự động!', 
+      user,
+      accessToken
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -137,24 +168,36 @@ export class AuthController {
     return this.getMeUseCase.execute(req.user.id);
   }
 
-  private async issueRememberCookie(userId: number, response: Response) {
+  private async issueRememberCookie(userId: number, response: Response, isPersistent: boolean) {
     const selector = randomBytes(12).toString('hex');
     const validator = randomBytes(32).toString('hex');
+    
+    // If not persistent, token expires in 2 hours in DB (Session-like)
+    // If persistent, token expires in 30 days
+    const expirationMs = isPersistent ? REMEMBER_MAX_AGE_MS : 2 * 60 * 60 * 1000;
+
     const token = this.rememberTokenRepository.create({
       selector,
       validatorHash: this.sha256(validator),
-      expiresAt: new Date(Date.now() + REMEMBER_MAX_AGE_MS),
+      expiresAt: new Date(Date.now() + expirationMs),
       user: { id: userId } as UserEntity,
     });
 
     await this.rememberTokenRepository.save(token);
-    response.cookie(REMEMBER_COOKIE_NAME, `${selector}:${validator}`, {
+
+    const cookieOptions: any = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: REMEMBER_MAX_AGE_MS,
       path: '/',
-    });
+    };
+
+    if (isPersistent) {
+      cookieOptions.maxAge = REMEMBER_MAX_AGE_MS;
+    }
+    // If NOT persistent, we don't set maxAge/expires -> Browser treats as Session Cookie
+
+    response.cookie(REMEMBER_COOKIE_NAME, `${selector}:${validator}`, cookieOptions);
   }
 
   private clearRememberCookie(response: Response) {

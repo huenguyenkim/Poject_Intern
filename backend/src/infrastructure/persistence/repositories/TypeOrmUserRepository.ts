@@ -30,19 +30,32 @@ export class TypeOrmUserRepository implements IUserRepository {
     return item ? this.mapToDomain(item) : null;
   }
 
+  async findByPhone(phone: string): Promise<DomainUser | null> {
+    const item = await this.repository.findOne({ where: { phone } });
+    return item ? this.mapToDomain(item) : null;
+  }
+
   async create(user: Partial<DomainUser>): Promise<DomainUser> {
     const entity = this.repository.create({
       fullName: user.fullName,
       email: user.email,
       password: user.password,
       role: user.role,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      coverUrl: user.coverUrl,
+      phone: user.phone,
+      bio: user.bio,
+      dob: user.dob,
+      address: user.address,
+      gender: user.gender,
     });
-    const saved = await this.repository.save(entity);
+    const saved = await this.repository.save(entity) as UserEntity;
     return this.mapToDomain(saved);
   }
 
   async update(id: number, user: Partial<DomainUser>): Promise<DomainUser> {
-    await this.repository.update(id, {
+    const updatePayload = {
       fullName: user.fullName,
       email: user.email,
       password: user.password,
@@ -51,7 +64,17 @@ export class TypeOrmUserRepository implements IUserRepository {
       resetPasswordTokenHash: user.resetPasswordTokenHash,
       resetPasswordExpiresAt: user.resetPasswordExpiresAt,
       lastPasswordChangeAt: user.lastPasswordChangeAt,
-    });
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      coverUrl: user.coverUrl,
+      phone: user.phone,
+      bio: user.bio,
+      dob: user.dob,
+      address: user.address,
+      gender: user.gender,
+    };
+    console.log('TypeOrmUserRepository.update -> payload:', updatePayload);
+    await this.repository.update(id, updatePayload);
     const updated = await this.findById(id);
     return updated!;
   }
@@ -79,6 +102,14 @@ export class TypeOrmUserRepository implements IUserRepository {
       resetPasswordTokenHash: entity.resetPasswordTokenHash,
       resetPasswordExpiresAt: entity.resetPasswordExpiresAt,
       lastPasswordChangeAt: entity.lastPasswordChangeAt,
+      username: entity.username,
+      avatarUrl: entity.avatarUrl,
+      coverUrl: entity.coverUrl,
+      phone: entity.phone,
+      bio: entity.bio,
+      dob: entity.dob,
+      address: entity.address,
+      gender: entity.gender,
     });
   }
 }

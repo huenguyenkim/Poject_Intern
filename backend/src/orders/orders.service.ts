@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { DataSource, LessThan } from 'typeorm';
+import { DataSource, LessThan, Not, In } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Product } from '../products/entities/product.entity';
@@ -168,6 +168,30 @@ export class OrdersService implements OnModuleInit {
 
       const oldStatus = order.status;
 
+      // Cơ chế Hoàn tất khấu trừ (Commit) & Khôi phục mã (Rollback)
+      if (order.couponCode) {
+        // 1. Commit: Chuyển từ PENDING sang trạng thái hợp lệ (CONFIRMED/SHIPPED/DELIVERED)
+        const activeStatuses = [OrderStatus.CONFIRMED, OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.PAID];
+        if (oldStatus === OrderStatus.PENDING && activeStatuses.includes(status)) {
+          await queryRunner.manager.update(Coupon, { code: order.couponCode }, {
+            reservedCount: () => 'reservedCount - 1',
+            usageCount: () => 'usageCount + 1'
+          });
+        }
+        // 2. Rollback: Chuyển sang CANCELLED khi vẫn đang PENDING (đang giữ chỗ)
+        else if (status === OrderStatus.CANCELLED && oldStatus === OrderStatus.PENDING) {
+          await queryRunner.manager.update(Coupon, { code: order.couponCode }, {
+            reservedCount: () => 'reservedCount - 1'
+          });
+        }
+        // 3. Refund usage: Chuyển sang CANCELLED sau khi đã Commit
+        else if (status === OrderStatus.CANCELLED && activeStatuses.includes(oldStatus)) {
+          await queryRunner.manager.update(Coupon, { code: order.couponCode }, {
+            usageCount: () => 'usageCount - 1'
+          });
+        }
+      }
+
       // Logic Hoàn Kho có điều kiện (Selective Return)
       if (status === OrderStatus.CANCELLED && oldStatus !== OrderStatus.CANCELLED) {
         const allowedStatusesForRefund = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
@@ -245,6 +269,15 @@ export class OrdersService implements OnModuleInit {
 
     try {
       // 2. Fetch User & Validate
+      const { 
+        receiverName, 
+        phone, 
+        address, 
+        paymentMethod, 
+        couponCode, 
+        cartItems, 
+        shippingMethod = 'STANDARD' 
+      } = createOrderDto;
       const user = await queryRunner.manager.findOne(User, { where: { id: userId } });
       if (!user) throw new BadRequestException('User not found');
 
@@ -288,43 +321,22 @@ export class OrdersService implements OnModuleInit {
         });
       }
 
-      // 4. Coupon Logic
+      // 4. Coupon Logic & Reservation (Locking)
       let discountAmount = 0;
-      let appliedCoupon: Coupon | undefined = undefined;
       if (couponCode) {
-        const coupon = await queryRunner.manager.findOne(Coupon, { 
-          where: { code: couponCode, isActive: true } 
+        const couponResult = await this.validateCoupon(couponCode, subtotal, userId);
+        discountAmount = couponResult.discountAmount;
+
+        // Cơ chế Giữ chỗ mã (Locking/Reservation):
+        // Tạm thời tăng reservedCount để "giữ chỗ" 1 lượt sử dụng
+        await queryRunner.manager.update(Coupon, { code: couponCode }, {
+          reservedCount: () => 'reservedCount + 1'
         });
-
-        if (coupon) {
-          // Check expiry
-          if (coupon.expiryDate && coupon.expiryDate < new Date()) {
-             throw new BadRequestException('Coupon has expired');
-          }
-          // Check usage
-          if (coupon.maxUsage && coupon.usageCount >= coupon.maxUsage) {
-             throw new BadRequestException('Coupon usage limit reached');
-          }
-          // Check min order
-          if (coupon.minOrderValue && subtotal < Number(coupon.minOrderValue)) {
-             throw new BadRequestException(`Order value must be at least $${coupon.minOrderValue} for this coupon`);
-          }
-
-          if (coupon.discountType === 'percent') {
-            discountAmount = subtotal * (Number(coupon.discountValue) / 100);
-          } else {
-            discountAmount = Number(coupon.discountValue);
-          }
-
-          appliedCoupon = coupon;
-          coupon.usageCount += 1;
-          await queryRunner.manager.save(coupon);
-        }
       }
 
       // 5. Final Calculation
       const taxRate = 0.08; // 8% VAT
-      const shippingFee = subtotal > 50 ? 0 : 5.99;
+      const shippingFee = shippingMethod === 'EXPRESS' ? 15 : (subtotal > 50 ? 0 : 5);
       const taxAmount = (subtotal - discountAmount) * taxRate;
       const finalTotal = subtotal - discountAmount + taxAmount + shippingFee;
 
@@ -340,6 +352,7 @@ export class OrdersService implements OnModuleInit {
         phone,
         address,
         paymentMethod,
+        shippingMethod,
         status: initialStatus,
         totalAmount: Math.round(finalTotal * 100) / 100,
         couponCode: couponCode ?? undefined,
@@ -391,18 +404,7 @@ export class OrdersService implements OnModuleInit {
   async handlePaymentIPN(orderId: number, transactionId: string): Promise<void> {
     const order = await this.dataSource.manager.findOne(Order, { where: { id: orderId } });
     if (order && order.status === OrderStatus.PENDING) {
-      order.status = OrderStatus.PAID;
-      // order.transactionId = transactionId; // If we add this field
-      await this.dataSource.manager.save(order);
-      
-      // Notify user
-      await this.notificationsService.createNotification({
-        recipientId: order.user.id,
-        title: 'Payment Successful! 💰',
-        content: `Your payment for order #${order.id} was confirmed.`,
-        type: 'ORDER',
-        relatedId: order.id.toString()
-      });
+      await this.updateStatus(orderId, OrderStatus.PAID, { ua: 'IPN Gateway' });
     }
   }
 
@@ -424,6 +426,90 @@ export class OrdersService implements OnModuleInit {
     }
 
     return expiredOrders.length;
+  }
+
+  async validateCoupon(code: string, subtotal: number, userId?: number): Promise<{ discountAmount: number, discountType: string, discountValue: number, code: string }> {
+    const coupon = await this.dataSource.manager.findOne(Coupon, { 
+      where: { code, isActive: true } 
+    });
+    
+    // Auto-seed if not exists for testing
+    if (!coupon && code === 'CANDYLOVE2024') {
+      await this.manualSeedCoupons();
+      return this.validateCoupon(code, subtotal, userId);
+    }
+
+    // 1. Kiểm tra tồn tại và trạng thái
+    if (!coupon || !coupon.isActive) {
+      throw new BadRequestException('Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa');
+    }
+
+    // 2. Kiểm tra hiệu lực thời gian
+    const now = new Date();
+    if (coupon.startDate && coupon.startDate > now) {
+      throw new BadRequestException('Mã giảm giá chưa đến thời gian sử dụng');
+    }
+    if (coupon.endDate && coupon.endDate < now) {
+      throw new BadRequestException('Mã giảm giá đã hết hạn sử dụng');
+    }
+
+    // 3. Kiểm tra số lượt dùng (Toàn hệ thống)
+    // Tổng số lượt đang dùng + đang giữ chỗ
+    const totalEffectiveUsage = Number(coupon.usageCount) + Number(coupon.reservedCount);
+    if (coupon.maxUsage && totalEffectiveUsage >= coupon.maxUsage) {
+      throw new BadRequestException('Mã giảm giá đã hết lượt sử dụng (toàn hệ thống)');
+    }
+
+    // 4. Kiểm tra số lượt dùng (Cá nhân User)
+    if (userId) {
+      const userUsageCount = await this.dataSource.manager.count(Order, {
+        where: { user: { id: userId }, couponCode: code, status: Not(In([OrderStatus.CANCELLED, OrderStatus.REFUNDED])) }
+      });
+      if (coupon.limitPerUser && userUsageCount >= coupon.limitPerUser) {
+        throw new BadRequestException('Bạn đã hết lượt sử dụng mã giảm giá này');
+      }
+    }
+
+    // 5. Kiểm tra giá trị đơn hàng tối thiểu
+    if (coupon.minOrderValue && subtotal < Number(coupon.minOrderValue)) {
+      throw new BadRequestException(`Đơn hàng tối thiểu $${coupon.minOrderValue} để áp dụng mã này`);
+    }
+
+    // 6. Tính toán số tiền giảm
+    let discountAmount = 0;
+    if (coupon.discountType === 'percent') {
+      discountAmount = subtotal * (Number(coupon.discountValue) / 100);
+      // Áp dụng mức giảm tối đa nếu có
+      if (coupon.maxDiscountAmount && discountAmount > Number(coupon.maxDiscountAmount)) {
+        discountAmount = Number(coupon.maxDiscountAmount);
+      }
+    } else {
+      discountAmount = Number(coupon.discountValue);
+    }
+
+    return {
+      code: coupon.code,
+      discountAmount: Math.round(discountAmount * 100) / 100,
+      discountType: coupon.discountType,
+      discountValue: Number(coupon.discountValue)
+    };
+  }
+
+  async manualSeedCoupons() {
+    const code = 'CANDYLOVE2024';
+    const existing = await this.dataSource.manager.findOne(Coupon, { where: { code } });
+    if (!existing) {
+      const coupon = this.dataSource.manager.create(Coupon, {
+        code,
+        discountType: 'percent',
+        discountValue: 20,
+        isActive: true,
+        minOrderValue: 10,
+        maxUsage: 100,
+        usageCount: 0
+      });
+      await this.dataSource.manager.save(coupon);
+    }
   }
 
   async getPurchasedProductIds(userId: number): Promise<number[]> {

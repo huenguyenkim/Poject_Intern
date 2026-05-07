@@ -24,6 +24,7 @@ import {
   updateBannerUseCase, 
   deleteBannerUseCase 
 } from '../core/application/use-cases/manageBanner';
+import { bannerRepository } from '../data/repositories/bannerRepository';
 
 /**
  * Thunks: Fetch Data
@@ -112,7 +113,7 @@ export const addCategoryThunk = createAsyncThunk(
       const result = await createCategoryUseCase.execute(categoryData);
       return toPlain(result);
     } catch (err) {
-      return rejectWithValue(err.message || 'Failed to add category');
+      return rejectWithValue(err.message || err || 'Failed to add category');
     }
   }
 );
@@ -124,7 +125,7 @@ export const updateCategoryThunk = createAsyncThunk(
       const result = await updateCategoryUseCase.execute(id, data);
       return toPlain(result);
     } catch (err) {
-      return rejectWithValue(err.message || 'Failed to update category');
+      return rejectWithValue(err.message || err || 'Failed to update category');
     }
   }
 );
@@ -136,7 +137,7 @@ export const deleteCategoryThunk = createAsyncThunk(
       await deleteCategoryUseCase.execute(id, force);
       return id;
     } catch (err) {
-      return rejectWithValue(err.message || 'Failed to delete category');
+      return rejectWithValue(err.message || err || 'Failed to delete category');
     }
   }
 );
@@ -176,6 +177,30 @@ export const deleteBannerThunk = createAsyncThunk(
       return id;
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to delete banner');
+    }
+  }
+);
+
+export const trackBannerClickThunk = createAsyncThunk(
+  'catalog/trackClick',
+  async (id) => {
+    try {
+      await bannerRepository.trackClick(id);
+      return id;
+    } catch (err) {
+      console.error('Failed to track click', err);
+    }
+  }
+);
+
+export const trackBannerImpressionThunk = createAsyncThunk(
+  'catalog/trackImpression',
+  async (id) => {
+    try {
+      await bannerRepository.trackImpression(id);
+      return id;
+    } catch (err) {
+      console.error('Failed to track impression', err);
     }
   }
 );

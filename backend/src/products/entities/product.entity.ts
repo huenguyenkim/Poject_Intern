@@ -22,7 +22,7 @@ export class Product {
   @Column({ name: 'image_url', nullable: true })
   imageUrl: string;
 
-  @ManyToOne(() => Category, (category) => category.products)
+  @ManyToOne(() => Category, (category) => category.products, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'category_id' })
   category: Category;
 

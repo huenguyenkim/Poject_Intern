@@ -38,7 +38,7 @@ const ProductDetail = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-24 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-on_surface_variant font-bold">{t('orders.loading', 'Loading sweet details...')}</p>
+        <p className="text-on_surface_variant font-bold">{t('orders.loading')}</p>
       </div>
     );
   }
@@ -46,8 +46,8 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-24 text-center">
-        <h2 className="text-4xl font-black mb-4">{t('catalog.empty', 'Product Not Found')}</h2>
-        <Button variant="primary" onClick={() => navigate(`/${lang}/shop`)}>{t('common.try_again', 'Back to Shop')}</Button>
+        <h2 className="text-4xl font-black mb-4">{t('catalog.empty')}</h2>
+        <Button variant="primary" onClick={() => navigate(`/${lang}/shop`)}>{t('common.back')}</Button>
       </div>
     );
   }
@@ -86,8 +86,8 @@ const ProductDetail = () => {
     <PageTransition>
       <div className="bg-surface_dim min-h-screen pb-20">
         <SEO 
-          title={`${productTitle} - ${t('catalog.seo_single_title', 'Premium Sweets')}`}
-          description={product.description || t('catalog.seo_single_desc', 'Experience the best treats.')}
+          title={`${productTitle} - ${t('catalog.seo_single_title')}`}
+          description={product.description || t('catalog.seo_single_desc')}
           image={productImg}
           type="product"
           schemaData={schemaData}
@@ -105,7 +105,7 @@ const ProductDetail = () => {
                 <img src={productImg} alt={productTitle} className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isOutOfStock ? 'grayscale opacity-70' : ''}`} />
                 {isOutOfStock ? (
                   <span className="absolute top-6 left-6 z-10 font-black text-[12px] uppercase tracking-[0.2em] px-6 py-3 rounded-full bg-error text-white shadow-xl border-2 border-white/20 backdrop-blur-md">
-                    HẾT HÀNG
+                    {t('catalog.sold_out')}
                   </span>
                 ) : (product.tag || isSale) && (
                   <span className="absolute top-6 left-6 z-10 font-black text-[10px] uppercase tracking-[0.2em] px-5 py-2 rounded-full bg-secondary text-on_primary shadow-xl">
@@ -128,21 +128,21 @@ const ProductDetail = () => {
               {isOutOfStock ? (
                 <div className="bg-error/10 border border-error/20 p-4 rounded-2xl mb-8 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-error animate-pulse"></div>
-                  <span className="text-sm font-black text-error uppercase tracking-widest">Sản phẩm hiện đang tạm hết hàng</span>
+                  <span className="text-sm font-black text-error uppercase tracking-widest">{t('catalog.out_of_stock_msg')}</span>
                 </div>
               ) : isLowStock ? (
                 <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-2xl mb-8 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-yellow-500 animate-bounce"></div>
-                  <span className="text-sm font-black text-yellow-600 uppercase tracking-widest">Chỉ còn {product.stock} gói trong kho!</span>
+                  <span className="text-sm font-black text-yellow-600 uppercase tracking-widest">{t('catalog.low_stock_msg', { count: product.stock })}</span>
                 </div>
               ) : null}
 
               <p className="text-lg text-on_surface_variant mb-10 leading-relaxed font-medium">
-                {product.description || t('catalog.default_desc', 'A burst of citrus and berry flavors that pop in your mouth!')}
+                {product.description || t('catalog.default_desc')}
               </p>
 
               <div className="flex items-center gap-8 mb-12">
-                <span className="font-black text-lg text-on_surface">{t('cart.quantity', 'Quantity')}</span>
+                <span className="font-black text-lg text-on_surface">{t('cart.quantity')}</span>
                 <div className={`flex items-center bg-surface_container_high rounded-full p-1 border-2 border-surface_container_high ${isOutOfStock ? 'opacity-30 pointer-events-none' : ''}`}>
                   <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white text-on_surface text-2xl font-black transition-all">-</button>
                   <span className="w-12 text-center font-black text-xl text-on_surface">{quantity}</span>
@@ -153,7 +153,7 @@ const ProductDetail = () => {
               <div className="flex flex-col sm:flex-row gap-5 mb-12">
                 {isOutOfStock ? (
                   <Button variant="surface" className="flex-1 py-5 text-xl bg-on_surface/10 text-on_surface_variant cursor-not-allowed">
-                    {t('catalog.out_of_stock', 'Out of Stock')}
+                    {t('catalog.sold_out')}
                   </Button>
                 ) : (
                   <>
@@ -173,8 +173,8 @@ const ProductDetail = () => {
                     <Truck size={24} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-on_surface leading-tight">{t('catalog.fast_delivery', 'Fast Delivery')}</h4>
-                    <p className="text-[11px] font-bold text-on_surface_variant/60 uppercase tracking-widest mt-1">2-3 {t('catalog.business_days', 'Business Days')}</p>
+                    <h4 className="font-black text-sm text-on_surface leading-tight">{t('catalog.fast_delivery')}</h4>
+                    <p className="text-[11px] font-bold text-on_surface_variant/60 uppercase tracking-widest mt-1">2-3 {t('catalog.business_days')}</p>
                   </div>
                 </div>
                 <div className="bg-white/50 p-6 rounded-[32px] flex items-center gap-5 border border-white group">
@@ -182,8 +182,8 @@ const ProductDetail = () => {
                     <ShieldCheck size={24} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h4 className="font-black text-sm text-on_surface leading-tight">{t('catalog.guarantee', 'Satisfaction Guarantee')}</h4>
-                    <p className="text-[11px] font-bold text-on_surface_variant/60 uppercase tracking-widest mt-1">100% {t('catalog.happy', 'Satisfaction')}</p>
+                    <h4 className="font-black text-sm text-on_surface leading-tight">{t('catalog.guarantee')}</h4>
+                    <p className="text-[11px] font-bold text-on_surface_variant/60 uppercase tracking-widest mt-1">100% {t('catalog.happy')}</p>
                   </div>
                 </div>
               </div>

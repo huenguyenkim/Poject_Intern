@@ -8,7 +8,7 @@ import { User } from '../users/entities/user.entity';
 import { Order } from '../orders/entities/order.entity';
 import { Blog } from '../blogs/entities/blog.entity';
 
-@Controller('api/search')
+@Controller('search')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.STAFF)
 export class SearchController {

@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { Order } from '../orders/entities/order.entity';
 import { OrderItem } from '../orders/entities/order-item.entity';
 import { OrderStatus } from './constants/order-status.enum';
+import { Coupon } from '../orders/entities/coupon.entity';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
@@ -27,6 +28,8 @@ export class SeedService implements OnModuleInit {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(Coupon)
+    private readonly couponRepository: Repository<Coupon>,
   ) {}
 
   async onModuleInit() {
@@ -55,6 +58,7 @@ export class SeedService implements OnModuleInit {
       { fullName: 'Liam Sweet', email: 'sweet@example.com', password: 'password123' },
       { fullName: 'Emma Sugar', email: 'sugar@example.com', password: 'password123' },
       { fullName: 'Test User', email: 'testuser@example.com', password: 'test1234' },
+      { fullName: 'Def User', email: 'def@example.com', password: '@User22222' },
     ];
 
     for (const u of testUsers) {
@@ -175,23 +179,46 @@ export class SeedService implements OnModuleInit {
     }
 
     // Seed Premium Banners
-    const banners = [
+    const bannerData = [
       { 
         title: 'Spring Delights', 
-        subtitle: 'Experience the magic of seasonal treats', 
-        imageUrl: '/images/macaron-featured.png', 
-        isActive: true 
+        imagePcUrl: '/images/macaron-featured.png', 
+        isActive: true,
+        priority: 10,
+        position: 'home' as any
       },
       { 
         title: 'Dark Desire Collection', 
-        subtitle: 'Premium hand-crafted dark chocolates', 
-        imageUrl: '/images/chocolate_cat.png', 
-        isActive: true 
+        imagePcUrl: '/images/chocolate_cat.png', 
+        isActive: true,
+        priority: 5,
+        position: 'home' as any
       }
     ];
 
-    for (const b of banners) {
-      await this.bannersService.create(b);
+    const existingBanners = await this.bannersService.findAll();
+    if (existingBanners.length === 0) {
+      for (const b of bannerData) {
+        await this.bannersService.create(b);
+      }
+      console.log('🖼️ Banners seeded!');
+    }
+    
+    // Seed Test Coupons
+    const testCoupon = {
+      code: 'CANDYLOVE2024',
+      discountType: 'percent',
+      discountValue: 20,
+      isActive: true,
+      minOrderValue: 10,
+      maxUsage: 100,
+      usageCount: 0
+    };
+    
+    const existingCoupon = await this.couponRepository.findOne({ where: { code: testCoupon.code } });
+    if (!existingCoupon) {
+      await this.couponRepository.save(this.couponRepository.create(testCoupon));
+      console.log('🎫 Coupon seeded: CANDYLOVE2024');
     }
 
 

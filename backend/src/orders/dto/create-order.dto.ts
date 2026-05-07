@@ -39,6 +39,10 @@ export class CreateOrderDto {
   @IsOptional()
   couponCode?: string;
 
+  @IsString()
+  @IsOptional()
+  shippingMethod?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @ArrayMinSize(1)

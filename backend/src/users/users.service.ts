@@ -158,4 +158,19 @@ export class UsersService {
 
     return { success: true, message: 'Password updated successfully. Please log in again on other devices.' };
   }
+
+  async checkUsernameAvailability(username: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({ where: { username } });
+    return !user;
+  }
+
+  async checkEmailAvailability(email: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    return !user;
+  }
+
+  async checkPhoneAvailability(phone: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({ where: { phone } });
+    return !user;
+  }
 }

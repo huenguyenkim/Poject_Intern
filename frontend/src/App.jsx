@@ -1,5 +1,5 @@
 import React, { Suspense, useLayoutEffect, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfigProvider, App as AntApp, theme as antTheme } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -70,31 +70,31 @@ const LanguageGuard = ({ children }) => {
     const fallbackLang = SUPPORTED_LANGS.includes(detectedLang) ? detectedLang : 'vi';
 
     // Redirect to the same path but with language prefix
-    const newPath = `/${fallbackLang}${location.pathname}${location.search}`;
-    return <Navigate to={newPath} replace />;
+    // Ensure we don't double prefix if something went wrong
+    const cleanPath = location.pathname.startsWith(`/${fallbackLang}`) 
+      ? location.pathname 
+      : `/${fallbackLang}${location.pathname}`;
+    
+    return <Navigate to={`${cleanPath}${location.search}`} replace />;
   }
 
-  return children;
+  return children || <Outlet />;
 };
 
-const AppLoading = () => (
-  <div className="min-h-screen bg-surface_dim flex flex-col items-center justify-center gap-8">
-    <div className="relative">
-      <div className="w-24 h-24 bg-primary/10 rounded-full animate-ping absolute inset-0"></div>
-      <div className="w-24 h-24 bg-primary rounded-[30px] flex items-center justify-center text-white shadow-2xl relative">
-        <span className="text-5xl animate-bounce">🍭</span>
+const AppLoading = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen bg-surface_dim flex flex-col items-center justify-center gap-8">
+      <div className="relative">
+        <div className="w-24 h-24 bg-primary/10 rounded-full animate-ping absolute inset-0"></div>
+        <div className="w-24 h-24 bg-primary rounded-[30px] flex items-center justify-center text-white shadow-2xl relative">
+          <span className="text-5xl animate-bounce">🍭</span>
+        </div>
       </div>
+      <h2 className="text-2xl font-black text-primary uppercase tracking-widest">{t('common.loading', 'Sweetening...')}</h2>
     </div>
-    <h2 className="text-2xl font-black text-primary uppercase tracking-widest">Sweetening...</h2>
-    <style dangerouslySetInnerHTML={{
-      __html: `
-      @keyframes loading {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(200%); }
-      }
-    `}} />
-  </div>
-);
+  );
+};
 
 const AppContent = () => {
   const { message, notification, modal } = AntApp.useApp();
@@ -111,51 +111,58 @@ const AppContent = () => {
             {/* Redirect root to default language */}
             <Route path="/" element={<Navigate to="/vi" replace />} />
 
-            {/* Localized Storefront Routes */}
-            <Route path="/:lang" element={<LanguageGuard><StorefrontLayout /></LanguageGuard>}>
-              <Route index element={<StorefrontHome />} />
-              <Route path="shop" element={<ProductCatalog />} />
-              <Route path="shop/:id" element={<ProductDetail />} />
-              <Route path="blog" element={<BlogList />} />
-              <Route path="blog/:id" element={<BlogDetail />} />
-              <Route path="cart" element={<ShoppingCart />} />
-              <Route path="checkout" element={<Checkout />} />
-              <Route path="auth" element={<Auth />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="notifications" element={<ProtectedRoute><NotificationCenter /></ProtectedRoute>} />
+            {/* Global Language Wrapper */}
+            <Route path="/:lang" element={<LanguageGuard />}>
+              
+              {/* Storefront Routes */}
+              <Route element={<StorefrontLayout />}>
+                <Route index element={<StorefrontHome />} />
+                <Route path="shop" element={<ProductCatalog />} />
+                <Route path="shop/:id" element={<ProductDetail />} />
+                <Route path="blog" element={<BlogList />} />
+                <Route path="blog/:id" element={<BlogDetail />} />
+                <Route path="cart" element={<ShoppingCart />} />
+                <Route path="checkout" element={<Checkout />} />
+                <Route path="auth" element={<Auth />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="notifications" element={<ProtectedRoute><NotificationCenter /></ProtectedRoute>} />
 
-              {/* User Profile Routes */}
-              <Route path="profile" element={<ProtectedRoute role="customer"><UserLayout /></ProtectedRoute>}>
-                <Route index element={<UserProfile />} />
-                <Route path="orders" element={<UserOrders />} />
-                <Route path="survey" element={<CustomerSurvey />} />
-                <Route path="settings" element={<UserSettings />} />
+                {/* User Profile Routes */}
+                <Route path="profile" element={<ProtectedRoute role="customer"><UserLayout /></ProtectedRoute>}>
+                  <Route index element={<UserProfile />} />
+                  <Route path="orders" element={<UserOrders />} />
+                  <Route path="survey" element={<CustomerSurvey />} />
+                  <Route path="settings" element={<UserSettings />} />
+                </Route>
               </Route>
+
+              {/* Admin Routes */}
+              <Route path="admin">
+                <Route path="login" element={<AdminLogin />} />
+                <Route element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="tasks" element={<TaskDashboard />} />
+                  <Route path="products" element={<ProductMgmt />} />
+                  <Route path="categories" element={<CategoryMgmt />} />
+                  <Route path="orders" element={<OrderMgmt />} />
+                  <Route path="orders/:id" element={<OrderMgmt />} />
+                  <Route path="banners" element={<BannerMgmt />} />
+                  <Route path="notifications" element={<NotificationCenter />} />
+                  <Route path="*" element={<Placeholder title="Admin Page" />} />
+                </Route>
+              </Route>
+
+              {/* Staff Routes */}
+              <Route path="staff" element={<ProtectedRoute role="staff"><StaffLayout /></ProtectedRoute>}>
+                <Route index element={<Navigate to="tasks" replace />} />
+                <Route path="tasks" element={<MyTasks />} />
+                <Route path="*" element={<Placeholder title="Staff Page" />} />
+              </Route>
+
               <Route path="*" element={<Placeholder />} />
             </Route>
 
-            {/* Admin Routes (No localization for admin usually, keep simple) */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="tasks" element={<TaskDashboard />} />
-              <Route path="products" element={<ProductMgmt />} />
-              <Route path="categories" element={<CategoryMgmt />} />
-              <Route path="orders" element={<OrderMgmt />} />
-              <Route path="orders/:id" element={<OrderMgmt />} />
-              <Route path="banners" element={<BannerMgmt />} />
-              <Route path="notifications" element={<NotificationCenter />} />
-              <Route path="*" element={<Placeholder title="Admin Page" />} />
-            </Route>
-
-            {/* Staff Routes (Mobile Optimized) */}
-            <Route path="/staff" element={<ProtectedRoute role="staff"><StaffLayout /></ProtectedRoute>}>
-              <Route index element={<Navigate to="tasks" replace />} />
-              <Route path="tasks" element={<MyTasks />} />
-              <Route path="*" element={<Placeholder title="Staff Page" />} />
-            </Route>
-
-            {/* Final fallback */}
+            {/* Final fallback for non-prefixed routes */}
             <Route path="*" element={<Navigate to="/vi" replace />} />
           </Routes>
         </Suspense>
@@ -194,6 +201,7 @@ const App = () => {
           const sessionId = `session-${Math.random().toString(36).substring(2, 15)}`;
           await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/analytics/visit`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sessionId })
           });

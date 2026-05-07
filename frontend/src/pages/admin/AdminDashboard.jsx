@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { saveAs } from 'file-saver';
+import { useTranslation } from 'react-i18next';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -26,6 +27,7 @@ import { useAnalytics } from '../../hooks/useAnalytics';
  * Powered by React Query and Recharts.
  */
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const [days, setDays] = React.useState(180);
   const { kpis, chart, topProducts, forecast, bundles = [], isLoading } = useAnalytics(days);
 
@@ -40,11 +42,11 @@ const AdminDashboard = () => {
   // Derived Data for Top KPIs
   const stats = React.useMemo(() => {
     return [
-      { label: 'TOTAL REVENUE', value: kpis?.totalRevenue || 0, prefix: '$', suffix: '', change: '+12%', icon: TrendingUp, color: '!bg-primary' },
-      { label: 'CONVERSION RATE', value: kpis?.conversionRate || 0, prefix: '', suffix: '%', change: '+8%', icon: ShoppingBag, color: '!bg-secondary' },
-      { label: 'TOTAL VISITS', value: kpis?.totalVisits || 0, prefix: '', suffix: '', change: '+24%', icon: Activity, color: '!bg-[#2D2D2D]' },
+      { label: t('admin.total_revenue'), value: kpis?.totalRevenue || 0, prefix: '$', suffix: '', change: '+12%', icon: TrendingUp, color: '!bg-primary' },
+      { label: t('admin.conversion_rate'), value: kpis?.conversionRate || 0, prefix: '', suffix: '%', change: '+8%', icon: ShoppingBag, color: '!bg-secondary' },
+      { label: t('admin.total_visits'), value: kpis?.totalVisits || 0, prefix: '', suffix: '', change: '+24%', icon: Activity, color: '!bg-[#2D2D2D]' },
     ];
-  }, [kpis]);
+  }, [kpis, t]);
 
   if (isLoading) {
     return (
@@ -64,11 +66,11 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-on_surface_variant/60">
               <span>Admin</span>
               <span className="w-1 h-1 rounded-full bg-primary/40"></span>
-              <span className="text-primary font-black uppercase tracking-[0.2em]">Analytics Dashboard</span>
+              <span className="text-primary font-black uppercase tracking-[0.2em]">{t('admin.analytics')}</span>
             </div>
             <div className="space-y-1">
-              <h1 className="text-6xl font-black text-on_surface tracking-tight leading-none uppercase">Sweet Insights</h1>
-              <p className="text-on_surface_variant font-bold text-lg max-w-xl">Monitor your business performance and customer joy in real-time.</p>
+              <h1 className="text-6xl font-black text-on_surface tracking-tight leading-none uppercase">{t('admin.sweet_insights')}</h1>
+              <p className="text-on_surface_variant font-bold text-lg max-w-xl">{t('admin.monitor_joy')}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -80,17 +82,17 @@ const AdminDashboard = () => {
               popupClassName="rounded-2xl"
               style={{ background: 'white', borderRadius: '28px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}
             >
-              <Select.Option value={7}>Last 7 Days</Select.Option>
-              <Select.Option value={30}>Last 30 Days</Select.Option>
-              <Select.Option value={90}>Last 3 Months</Select.Option>
-              <Select.Option value={180}>Last 6 Months</Select.Option>
+              <Select.Option value={7}>{t('admin.last_7_days')}</Select.Option>
+              <Select.Option value={30}>{t('admin.last_30_days')}</Select.Option>
+              <Select.Option value={90}>{t('admin.last_3_months')}</Select.Option>
+              <Select.Option value={180}>{t('admin.last_6_months')}</Select.Option>
             </Select>
             <Button 
               onClick={exportToCSV}
               variant="primary" 
               className="h-[72px] px-8 rounded-[28px] font-black uppercase tracking-widest text-[11px]"
             >
-              EXPORT DATA
+              {t('admin.export')}
             </Button>
           </div>
         </div>
@@ -120,7 +122,7 @@ const AdminDashboard = () => {
                       <Badge variant="surface" className="bg-white/20 border-none text-white text-[10px] py-1">
                         {stat.change}
                       </Badge>
-                      <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest">Growth</span>
+                      <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest">{t('admin.growth')}</span>
                     </div>
                   </div>
                   <div className="absolute -right-6 -bottom-6 opacity-20 group-hover:scale-110 transition-transform duration-700">
@@ -136,11 +138,11 @@ const AdminDashboard = () => {
           {/* Revenue Chart */}
           <Card className="lg:col-span-2 p-10 border-surface_container flex flex-col">
             <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
-              <h3 className="text-2xl font-black text-on_surface tracking-tight">Revenue Trends</h3>
+              <h3 className="text-2xl font-black text-on_surface tracking-tight">{t('admin.revenue_trends')}</h3>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-primary"></div>
-                  <span className="text-xs font-black text-on_surface_variant uppercase tracking-wider">Revenue</span>
+                  <span className="text-xs font-black text-on_surface_variant uppercase tracking-wider">{t('admin.revenue')}</span>
                 </div>
               </div>
             </div>
@@ -172,14 +174,14 @@ const AdminDashboard = () => {
                     />
                     <RechartsTooltip 
                       contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }}
-                      formatter={(value) => [`$${value}`, 'Revenue']}
+                      formatter={(value) => [`$${value}`, t('admin.revenue')]}
                     />
                     <Area type="monotone" dataKey="revenue" stroke="#FF76B8" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-on_surface_variant font-bold">
-                  Chưa đủ dữ liệu biểu đồ
+                  {t('admin.no_chart_data')}
                 </div>
               )}
             </div>
@@ -188,9 +190,9 @@ const AdminDashboard = () => {
           {/* Top Products */}
           <Card className="p-6 sm:p-10 border-surface_container flex flex-col">
             <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
-              <h3 className="text-xl sm:text-2xl font-black text-on_surface tracking-tight uppercase">Top Products</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-on_surface tracking-tight uppercase">{t('admin.top_products')}</h3>
               <Link to="/admin/products">
-                <Button variant="ghost" size="sm" className="p-0 text-primary uppercase tracking-widest text-[10px] sm:text-[11px]">VIEW ALL</Button>
+                <Button variant="ghost" size="sm" className="p-0 text-primary uppercase tracking-widest text-[10px] sm:text-[11px]">{t('admin.view_all')}</Button>
               </Link>
             </div>
             
@@ -208,7 +210,7 @@ const AdminDashboard = () => {
                       {product.name}
                     </h4>
                     <Badge variant="primary" className="text-[10px] px-3 py-1 font-black">
-                      {product.totalSold} sold
+                      {product.totalSold} {t('admin.sold')}
                     </Badge>
                   </div>
                 </div>
@@ -216,7 +218,7 @@ const AdminDashboard = () => {
             </div>
             {(!topProducts || topProducts.length === 0) && (
               <div className="text-center text-on_surface_variant text-sm font-bold mt-10">
-                Chưa có dữ liệu sản phẩm
+                {t('admin.no_product_data')}
               </div>
             )}
           </Card>
@@ -224,7 +226,7 @@ const AdminDashboard = () => {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Smart AI Forecast */}
-          <LockedFeature requiredTier="PREMIUM" featureName="Dự báo doanh thu AI">
+          <LockedFeature requiredTier="PREMIUM" featureName={t('admin.ai_forecast')}>
             <Card className="p-0 shadow-2xl shadow-secondary/20 relative overflow-hidden group border-none min-h-[320px]">
               <div className="absolute inset-0">
                 <img 
@@ -235,24 +237,24 @@ const AdminDashboard = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/85 to-secondary/60"></div>
               </div>
 
-              <div className="relative z-10 h-full p-10 flex flex-col justify-between">
+              <div className="relative z-10 h-full p-10 flex flex-col justify-between text-white">
                 <div className="space-y-4">
                   <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-on_primary mb-6">
                     <Activity size={24} strokeWidth={3} className="text-white" />
                   </div>
-                  <h3 className="text-[11px] font-black text-white/70 uppercase tracking-[0.2em]">Smart AI Forecast</h3>
+                  <h3 className="text-[11px] font-black text-white/70 uppercase tracking-[0.2em]">{t('admin.ai_forecast')}</h3>
                   <h2 className="text-4xl font-black text-white leading-tight tracking-tight">
-                    Next Month: ${forecast?.predictedRevenue?.toLocaleString() || '---'}
+                    {t('admin.next_month')}: ${forecast?.predictedRevenue?.toLocaleString() || '---'}
                   </h2>
                   <p className="text-white/90 font-bold leading-relaxed pr-6 text-sm">
-                    Based on your growing trend, we predict a steady surge in sales.
+                    {t('admin.forecast_desc')}
                   </p>
                 </div>
                 
                 <div className="mt-8 flex items-center gap-3 bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
                   <div className={`w-3 h-3 rounded-full bg-yellow-400 animate-pulse`}></div>
                   <span className="text-xs font-black text-white uppercase tracking-widest">
-                    Confidence: 94%
+                    {t('admin.confidence')}: 94%
                   </span>
                 </div>
               </div>
@@ -260,16 +262,16 @@ const AdminDashboard = () => {
           </LockedFeature>
 
           {/* Behavior Analysis - Frequently Bought Together */}
-          <LockedFeature requiredTier="PREMIUM" featureName="Phân tích giỏ hàng (Market Basket)">
+          <LockedFeature requiredTier="PREMIUM" featureName={t('admin.bought_together')}>
             <Card className="lg:col-span-2 p-10 border-surface_container relative overflow-hidden group">
               <div className="flex items-center justify-between mb-8 border-b border-surface_container pb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-secondary/10 rounded-xl">
                     <Package size={20} className="text-secondary" />
                   </div>
-                  <h3 className="text-2xl font-black text-on_surface tracking-tight">Frequently Bought Together</h3>
+                  <h3 className="text-2xl font-black text-on_surface tracking-tight">{t('admin.bought_together')}</h3>
                 </div>
-                <Badge variant="surface" className="bg-secondary/5 text-secondary border-none px-3 py-1 font-black">MARKETING INSIGHTS</Badge>
+                <Badge variant="surface" className="bg-secondary/5 text-secondary border-none px-3 py-1 font-black">{t('admin.marketing_insights')}</Badge>
               </div>
               
               <div className="grid md:grid-cols-3 gap-6 relative z-10">
@@ -289,7 +291,7 @@ const AdminDashboard = () => {
                         </h4>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-on_surface_variant">Found in {bundle.count} orders</span>
+                        <span className="text-[11px] font-black text-on_surface_variant">{t('admin.found_in_orders', { count: bundle.count })}</span>
                         <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
                           <Activity size={14} />
                         </div>
@@ -299,17 +301,17 @@ const AdminDashboard = () => {
                 ))}
                 {(!bundles || bundles.length === 0) && (
                   <div className="col-span-3 text-center py-10 text-on_surface_variant font-bold">
-                    Dữ liệu đang được phân tích... Hãy tạo thêm đơn hàng đa sản phẩm để xem gợi ý.
+                    {t('admin.analyzing')}
                   </div>
                 )}
               </div>
 
               <div className="mt-8 p-4 bg-primary/5 rounded-2xl flex items-center justify-between">
                 <p className="text-xs font-bold text-on_surface_variant leading-relaxed max-w-md">
-                  💡 <strong>Gợi ý:</strong> Tạo combo giảm giá cho các cặp sản phẩm trên để tăng giá trị trung bình đơn hàng (AOV).
+                  {t('admin.tip')} <strong>{t('admin.bundle_tip')}</strong>
                 </p>
                 <Link to="/admin/banners">
-                  <Button variant="ghost" size="sm" className="text-primary font-black text-[10px] uppercase tracking-widest">TẠO CHIẾN DỊCH</Button>
+                  <Button variant="ghost" size="sm" className="text-primary font-black text-[10px] uppercase tracking-widest">{t('admin.create_campaign')}</Button>
                 </Link>
               </div>
             </Card>

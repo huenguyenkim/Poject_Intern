@@ -53,5 +53,23 @@ export const showWarningToast = (content) => {
   });
 };
 
+
+/**
+ * showInfoToast: Displays an info notification.
+ * @param {string} content - The info message content.
+ */
+export const showInfoToast = (content) => {
+  if (!message) {
+    console.warn('Info:', content);
+    return;
+  }
+
+  message.info({
+    content,
+    icon: 'ℹ️',
+    duration: 3,
+  });
+};
+
 // Default styles (maintained for potential future overrides)
 export const toastStyles = {};

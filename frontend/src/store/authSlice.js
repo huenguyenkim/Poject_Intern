@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { loginUserThunk, initializeAuthThunk, registerUserThunk, logoutUserThunk } from './authThunks';
+import { loginUserThunk, initializeAuthThunk, registerUserThunk, logoutUserThunk, updateProfileThunk } from './authThunks';
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -16,6 +16,7 @@ export const authSlice = createSlice({
       state.token = null; 
       state.status = 'idle';
       localStorage.removeItem('candy_token');
+      sessionStorage.removeItem('candy_token');
     },
     socialLogin: (state, action) => {
       state.user = action.payload.user;
@@ -25,6 +26,15 @@ export const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setCredentials: (state, action) => {
+      state.user = action.payload.user;
+      state.token = action.payload.accessToken || action.payload.token;
+      state.status = 'succeeded';
+      if (state.token) {
+        localStorage.setItem('candy_token', state.token);
+      }
+    
     }
   },
   extraReducers: (builder) => {
@@ -79,9 +89,20 @@ export const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.status = 'idle';
+      })
+      .addCase(updateProfileThunk.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(updateProfileThunk.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.user = action.payload;
+      })
+      .addCase(updateProfileThunk.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
   }
 });
 
-export const { logout, clearError, socialLogin } = authSlice.actions;
+export const { logout, clearError, socialLogin, setCredentials } = authSlice.actions;
 export default authSlice.reducer;

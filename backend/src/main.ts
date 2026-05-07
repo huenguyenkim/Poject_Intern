@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -6,11 +7,17 @@ import helmet from 'helmet';
 
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
+import { json, urlencoded } from 'express';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // 1. Tăng cường Bảo mật với Helmet (Security Headers)
   app.use(helmet());
+
+  // 2. Tăng giới hạn payload để lưu ảnh Base64
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   // 2. Cấu hình CORS Nghiêm ngặt
   // 2. Cấu hình CORS Nghiêm ngặt
@@ -60,7 +67,7 @@ async function bootstrap() {
   // 6. Set global prefix
   app.setGlobalPrefix('api');
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 
   // --- NON-BLOCKING CACHE WARMING ---
   // We use a self-invoking async function to not block the main listen event
